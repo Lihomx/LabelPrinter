@@ -1,116 +1,159 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
-let mainWindow;
+let mainWindow = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 860,
-    minWidth: 1000,
+    width: 1440,
+    height: 920,
+    minWidth: 1024,
     minHeight: 700,
-    title: 'LabelMaster Pro - 智能标签工作站',
-    icon: path.join(__dirname, '../public/favicon.ico'),
+    title: 'LabelMaster Pro - 智能热敏标签工作站 (桌面客户端版)',
+    backgroundColor: '#0f172a',
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: false,
+      preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
-      webSecurity: false,
-    },
+      nodeIntegration: false,
+      webSecurity: false // 允许本地与内联图片/Blob 加载
+    }
   });
 
-  const isDev = process.env.NODE_ENV === 'development';
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:3000');
+  // 隐藏顶部默认菜单栏，保持专业现代化界面
+  Menu.setApplicationMenu(null);
+
+  // 加载页面
+  if (process.env.VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 }
+
+// 注册 IPC 通信
+ipcMain.handle('get-printers', async () => {
+  if (!mainWindow) return { success: false, printers: [] };
+  try {
+    const printers = await mainWindow.webContents.getPrintersAsync();
+    return { success: true, printers };
+  } catch (err) {
+    return { success: false, error: err.message, printers: [] };
+  }
+});
+
+ipcMain.handle('print-silent', async (event, params) => {
+  const { printerName, widthMm, heightMm, htmlContent, copies = 1 } = params;
+
+  return new Promise((resolve) => {
+    try {
+      const printWin = new BrowserWindow({
+        show: false,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true
+        }
+      });
+
+      const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Silent Print</title>
+  <style>
+    @page {
+      size: ${widthMm}mm ${heightMm}mm;
+      margin: 0 !important;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      background: white;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .label-page {
+      width: ${widthMm}mm;
+      height: ${heightMm}mm;
+      page-break-after: always;
+      break-after: page;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .label-page:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+    img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+  </style>
+</head>
+<body>
+  ${htmlContent}
+</body>
+</html>`;
+
+      printWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(fullHtml)}`);
+
+      printWin.webContents.on('did-finish-load', () => {
+        // 渲染延迟等待图片/Canvas充分加载
+        setTimeout(() => {
+          const printOptions = {
+            silent: true,
+            printBackground: true,
+            margins: { marginType: 'none' },
+            pageSize: {
+              width: Math.round(widthMm * 1000), // 微米 microns (1mm = 1000 microns)
+              height: Math.round(heightMm * 1000)
+            },
+            copies: parseInt(copies, 10) || 1
+          };
+
+          if (printerName && printerName.trim() !== '') {
+            printOptions.deviceName = printerName.trim();
+          }
+
+          printWin.webContents.print(printOptions, (success, failureReason) => {
+            printWin.close();
+            if (!success) {
+              resolve({ success: false, error: failureReason });
+            } else {
+              resolve({ success: true });
+            }
+          });
+        }, 300);
+      });
+
+      printWin.webContents.on('did-fail-load', (e, code, desc) => {
+        printWin.close();
+        resolve({ success: false, error: desc });
+      });
+    } catch (err) {
+      resolve({ success: false, error: err.message });
+    }
+  });
+});
 
 app.whenReady().then(() => {
   createWindow();
-
-  // IPC: Query available local printers
-  ipcMain.handle('get-printers', async () => {
-    if (!mainWindow) return [];
-    return await mainWindow.webContents.getPrintersAsync();
-  });
-
-  // IPC: Direct Silent Thermal Print
-  ipcMain.handle('print-thermal', async (event, { labels, copies = 1, widthMm = 70, heightMm = 30, printerName }) => {
-    if (!labels || labels.length === 0) return { success: false, message: 'No labels' };
-
-    // Create a hidden printing window
-    const printWin = new BrowserWindow({
-      show: false,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-      },
-    });
-
-    // Build print HTML document with locked 0 margins
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <style>
-            @page {
-              size: ${widthMm}mm ${heightMm}mm;
-              margin: 0 !important;
-            }
-            body {
-              margin: 0 !important;
-              padding: 0 !important;
-              background: white;
-            }
-            .label-page {
-              width: ${widthMm}mm;
-              height: ${heightMm}mm;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              page-break-after: always;
-              overflow: hidden;
-            }
-            img {
-              max-width: 100%;
-              max-height: 100%;
-              object-fit: contain;
-            }
-          </style>
-        </head>
-        <body>
-          ${labels.map(dataUrl => `
-            <div class="label-page">
-              <img src="${dataUrl}" />
-            </div>
-          `).join('')}
-        </body>
-      </html>
-    `;
-
-    await printWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
-
-    return new Promise((resolve) => {
-      printWin.webContents.print({
-        silent: true,
-        printBackground: true,
-        deviceName: printerName || '',
-        copies: copies,
-        margins: {
-          marginType: 'none',
-        },
-        pageSize: {
-          width: widthMm * 1000, // microns
-          height: heightMm * 1000,
-        },
-      }, (success, failureReason) => {
-        printWin.close();
-        resolve({ success, failureReason });
-      });
-    });
-  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -118,5 +161,7 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 });

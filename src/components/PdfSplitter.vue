@@ -29,15 +29,26 @@
           </button>
         </div>
 
-        <!-- Help Guide Button -->
-        <button 
-          @click="showPrintHelpModal = true"
-          title="查看打印机尺寸设置、连吐纸解决方案及桌面客户端说明"
-          class="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all shadow-2xs flex-shrink-0"
-        >
-          <HelpCircle class="w-4 h-4 text-blue-600" />
-          <span>打印帮助说明</span>
-        </button>
+        <div class="flex items-center gap-2">
+          <!-- Client Badge if in Electron -->
+          <span 
+            v-if="isElectron" 
+            class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-2xs"
+          >
+            <Laptop class="w-3.5 h-3.5 text-emerald-600" />
+            <span>电脑客户端版</span>
+          </span>
+
+          <!-- Help Guide Button -->
+          <button 
+            @click="showPrintHelpModal = true"
+            title="查看打印机尺寸设置、连吐纸解决方案及桌面客户端说明"
+            class="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all shadow-2xs flex-shrink-0"
+          >
+            <HelpCircle class="w-4 h-4 text-blue-600" />
+            <span>打印帮助说明</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -596,8 +607,67 @@
         </div>
       </div>
 
-      <!-- Prominent Red Alert Banner Requested by User -->
-      <div class="bg-rose-50 border-2 border-rose-500 rounded-2xl p-4 sm:p-5 text-rose-950 shadow-sm flex items-start gap-3.5 animate-pulse-once">
+      <!-- Native Desktop Client Station (Direct hardware silent print) -->
+      <div v-if="isElectron" class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-2 border-emerald-500/60 rounded-2xl p-5 text-white shadow-xl space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-xs">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              ⚡ 桌面客户端极速直连通道已激活
+            </span>
+            <span class="text-xs text-slate-300 font-medium hidden sm:inline">硬件微米级走纸 · 免设 Windows 驱动尺寸 · 零弹窗出纸</span>
+          </div>
+
+          <div class="text-xs text-emerald-300 font-mono bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-800">
+            已锁定物理输出: {{ targetWidthMm }} × {{ targetHeightMm }} mm
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-4 pt-1">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2 bg-slate-800/90 px-3.5 py-2 rounded-xl border border-slate-600 shadow-inner">
+              <Printer class="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <div class="text-xs text-slate-300 font-medium">目标热敏机:</div>
+              <select 
+                v-model="selectedElectronPrinter"
+                class="bg-transparent text-white text-xs font-bold focus:outline-none cursor-pointer max-w-[240px] truncate"
+              >
+                <option v-for="p in electronPrinters" :key="p.name" :value="p.name" class="bg-slate-800 text-white">
+                  {{ p.displayName || p.name }} {{ p.isDefault ? ' (默认)' : '' }}
+                </option>
+              </select>
+              <button 
+                @click="loadElectronPrinters" 
+                title="重新扫描电脑连接的打印机"
+                class="p-1 text-slate-400 hover:text-emerald-400 hover:bg-slate-700 rounded transition-all"
+              >
+                <RefreshCw class="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div class="text-xs text-slate-400 hidden lg:block">
+              ✓ 客户端将直接向打印机下发精确毫米坐标，无需在系统驱动里新建纸张！
+            </div>
+          </div>
+
+          <button 
+            @click="triggerElectronSilentPrint"
+            :disabled="isElectronPrinting"
+            class="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-sm rounded-xl shadow-lg shadow-emerald-500/30 flex items-center gap-2.5 transition-all active:scale-95 disabled:opacity-50"
+          >
+            <Zap class="w-4 h-4 fill-current text-slate-950" />
+            <span>{{ isElectronPrinting ? '正在发送打印数据...' : `⚡ 一键极速静默打印 (${totalPrintQuantity} 张)` }}</span>
+          </button>
+        </div>
+
+        <div v-if="electronPrintSuccess" class="p-3 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-300 text-xs font-bold flex items-center gap-2 animate-fadeIn">
+          <CheckCircle2 class="w-4 h-4 text-emerald-400" />
+          <span>{{ electronPrintStatusMsg }}</span>
+        </div>
+      </div>
+
+      <!-- Prominent Red Alert Banner (Shown in Web browser or as driver setup reference) -->
+      <div v-if="!isElectron" class="bg-rose-50 border-2 border-rose-500 rounded-2xl p-4 sm:p-5 text-rose-950 shadow-sm flex items-start gap-3.5 animate-pulse-once">
         <AlertTriangle class="w-6 h-6 text-rose-600 flex-shrink-0 mt-0.5" />
         <div class="space-y-2 text-xs flex-1">
           <div class="text-sm sm:text-base font-black text-rose-700 flex items-center gap-2">
@@ -1316,7 +1386,7 @@ import {
   UploadCloud, FileUp, Layers, LayoutGrid, Search, ArrowRight, 
   CheckCircle2, Download, Printer, Scroll, FlaskConical, Crop, Check, RotateCcw, X,
   FolderOpen, Save, Plus, Trash2, Clock, FileText, Bookmark, Calendar, AlertTriangle, Info,
-  HelpCircle, Laptop, Settings
+  HelpCircle, Laptop, Settings, Zap, RefreshCw
 } from 'lucide-vue-next';
 import { t } from '@/i18n';
 import { 
@@ -1350,6 +1420,14 @@ const step1Tab = ref('new'); // 'new' | 'saved'
 // Print help modal state
 const showPrintHelpModal = ref(false);
 const activeHelpTab = ref('desktopApp'); // 'desktopApp' | 'customSize' | 'borrowSize' | 'pdfPrint' | 'calibration'
+
+// Electron Desktop Client native integration state
+const isElectron = ref(false);
+const electronPrinters = ref([]);
+const selectedElectronPrinter = ref('');
+const isElectronPrinting = ref(false);
+const electronPrintSuccess = ref(false);
+const electronPrintStatusMsg = ref('');
 
 // Freeform visual crop state
 const showFreeCropModal = ref(false);
@@ -1996,8 +2074,71 @@ const loadSavedProjectsList = async () => {
   }
 };
 
+const loadElectronPrinters = async () => {
+  if (typeof window !== 'undefined' && window.electronAPI?.getPrinters) {
+    try {
+      const res = await window.electronAPI.getPrinters();
+      if (res && res.success && Array.isArray(res.printers)) {
+        electronPrinters.value = res.printers;
+        if (!selectedElectronPrinter.value && res.printers.length > 0) {
+          const def = res.printers.find(p => p.isDefault);
+          selectedElectronPrinter.value = def ? def.name : res.printers[0].name;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load local electron printers:', e);
+    }
+  }
+};
+
+const triggerElectronSilentPrint = async () => {
+  if (!isElectron.value || !window.electronAPI?.printSilent) return;
+  if (previewList.value.length === 0) {
+    alert('暂无可打印标签');
+    return;
+  }
+
+  isElectronPrinting.value = true;
+  electronPrintSuccess.value = false;
+  electronPrintStatusMsg.value = '正在直接下发微米级硬件打印指令...';
+
+  try {
+    const pagesHtml = previewList.value.map(item => `
+      <div class="label-page">
+        <img src="${item.previewImage}" class="${orientation.value === 'rotate-90' ? 'rotate-90' : ''}" />
+      </div>
+    `).join('');
+
+    const res = await window.electronAPI.printSilent({
+      printerName: selectedElectronPrinter.value,
+      widthMm: targetWidthMm.value,
+      heightMm: targetHeightMm.value,
+      htmlContent: pagesHtml,
+      copies: 1
+    });
+
+    if (res && res.success) {
+      electronPrintSuccess.value = true;
+      electronPrintStatusMsg.value = `✓ 任务已成功直达【${selectedElectronPrinter.value || '默认热敏机'}】，正按精确尺寸输出 ${totalPrintQuantity.value} 张标签！`;
+      setTimeout(() => {
+        electronPrintSuccess.value = false;
+      }, 6000);
+    } else {
+      alert('静默打印失败: ' + (res?.error || '请确认打印机已开机并就绪'));
+    }
+  } catch (err) {
+    alert('打印调用异常: ' + err.message);
+  } finally {
+    isElectronPrinting.value = false;
+  }
+};
+
 onMounted(() => {
   loadSavedProjectsList();
+  if (typeof window !== 'undefined' && window.electronAPI?.isElectron) {
+    isElectron.value = true;
+    loadElectronPrinters();
+  }
 });
 
 const handleSaveCurrentProject = async () => {

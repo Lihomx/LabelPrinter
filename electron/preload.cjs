@@ -3,5 +3,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   isElectron: true,
   getPrinters: () => ipcRenderer.invoke('get-printers'),
-  printThermal: (options) => ipcRenderer.invoke('print-thermal', options),
+  printSilent: (options) => ipcRenderer.invoke('print-silent', options),
+  printToPdf: (options) => ipcRenderer.invoke('print-to-pdf', options)
 });
