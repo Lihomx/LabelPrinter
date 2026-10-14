@@ -166,7 +166,7 @@ export async function detectSuggestedLayout(pdfDoc) {
 /**
  * Slice PDF into individual label objects based on grid/mode
  */
-export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = null) {
+export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = null, customBox = null) {
   const labels = [];
   const numPages = pdfDoc.numPages;
   const renderScale = 2.5;
@@ -188,6 +188,41 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
     }).promise;
 
     const textContent = await page.getTextContent();
+
+    // 1. Freeform exact crop (strictly as framed by user mouse, no auto-trim)
+    if (mode === 'presetFreeform' && customBox) {
+      const box = {
+        x: Math.max(0, customBox.xRatio * canvas.width),
+        y: Math.max(0, customBox.yRatio * canvas.height),
+        w: Math.min(canvas.width, customBox.wRatio * canvas.width),
+        h: Math.min(canvas.height, customBox.hRatio * canvas.height),
+      };
+
+      if (box.w > 20 && box.h > 20 && !isRegionBlank(ctx, box.x, box.y, box.w, box.h)) {
+        const cellCanvas = document.createElement('canvas');
+        cellCanvas.width = box.w;
+        cellCanvas.height = box.h;
+        const cellCtx = cellCanvas.getContext('2d');
+        cellCtx.drawImage(canvas, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
+
+        const cellText = extractCellText(textContent.items, box, viewport, renderScale);
+
+        labels.push({
+          id: `p${pageNum}_free_${labels.length}`,
+          page: pageNum,
+          canvas: cellCanvas,
+          dataUrl: cellCanvas.toDataURL('image/png'),
+          barcode: cellText.barcode || `ITEM-${labels.length + 1}`,
+          title: cellText.title || '',
+          sku: cellText.sku || '',
+          quantity: 1,
+          selected: true,
+          width: cellCanvas.width,
+          height: cellCanvas.height,
+        });
+      }
+      continue;
+    }
 
     let gridCols = 1;
     let gridRows = 1;

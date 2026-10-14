@@ -114,14 +114,25 @@
           <span class="text-xs font-semibold text-slate-500 uppercase">{{ t('pdf.layoutMode') }}:</span>
           <select 
             v-model="selectedLayoutMode" 
-            @change="reprocessPdf"
+            @change="onLayoutModeChange"
             class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             <option value="presetA4_30">{{ t('pdf.presetA4_30') }}</option>
             <option value="presetML_2">{{ t('pdf.presetML_2') }}</option>
             <option value="presetVertical_2">{{ t('pdf.presetVertical_2') }}</option>
             <option value="presetSingleTL">{{ t('pdf.presetSingleTL') }}</option>
+            <option value="presetFreeform">{{ t('pdf.presetFreeform') }}</option>
           </select>
+
+          <!-- Freeform Edit Button -->
+          <button 
+            v-if="selectedLayoutMode === 'presetFreeform'"
+            @click="openFreeCropModal"
+            class="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold rounded-lg border border-brand-200 flex items-center gap-1.5 transition-all shadow-xs"
+          >
+            <Crop class="w-3.5 h-3.5" />
+            <span>重新拉框裁切</span>
+          </button>
         </div>
 
         <!-- View Mode Switch: Grouped vs Flat -->
@@ -365,15 +376,95 @@
           </div>
         </div>
       </div>
+
+      <!-- Freeform Visual Crop Modal -->
+      <div v-if="showFreeCropModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+          <!-- Modal Header -->
+          <div class="px-6 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <Crop class="w-4 h-4 text-brand-600" />
+                {{ t('pdf.freeCropTitle') }}
+              </h3>
+              <p class="text-[11px] text-slate-500 mt-0.5">{{ t('pdf.freeCropDesc') }}</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button 
+                @click="resetSelection" 
+                class="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1"
+              >
+                <RotateCcw class="w-3.5 h-3.5" />
+                <span>{{ t('pdf.freeCropReset') }}</span>
+              </button>
+              <button 
+                @click="showFreeCropModal = false" 
+                class="px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-semibold rounded-lg"
+              >
+                {{ t('pdf.freeCropCancel') }}
+              </button>
+              <button 
+                @click="applyFreeCrop" 
+                :disabled="!hasValidSelection"
+                class="px-5 py-1.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all"
+              >
+                <Check class="w-4 h-4" />
+                <span>{{ t('pdf.freeCropApply') }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Modal Interactive Canvas Body -->
+          <div 
+            class="flex-1 bg-slate-800 p-6 overflow-auto flex items-center justify-center relative select-none"
+            @mouseup="endCropMarquee"
+            @mouseleave="endCropMarquee"
+          >
+            <div 
+              class="relative shadow-2xl border border-slate-700 cursor-crosshair inline-block leading-none" 
+              ref="cropImgWrapperRef"
+              @mousedown.prevent="startCropMarquee"
+              @mousemove.prevent="moveCropMarquee"
+            >
+              <!-- High-res Page 1 Canvas -->
+              <canvas ref="cropCanvasRef" class="max-h-[68vh] object-contain block pointer-events-none"></canvas>
+
+              <!-- Marquee Crop Box Overlay -->
+              <div 
+                v-if="selectionBox.w > 0 && selectionBox.h > 0"
+                class="absolute border-2 border-brand-400 bg-brand-500/20 shadow-lg pointer-events-none"
+                :style="{
+                  left: `${selectionBox.x}px`,
+                  top: `${selectionBox.y}px`,
+                  width: `${selectionBox.w}px`,
+                  height: `${selectionBox.h}px`,
+                }"
+              >
+                <!-- Corner Handles -->
+                <div class="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-brand-600 rounded-xs"></div>
+                <div class="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-brand-600 rounded-xs"></div>
+                <div class="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-brand-600 rounded-xs"></div>
+                <div class="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-brand-600 rounded-xs"></div>
+
+                <!-- Dimension Badge -->
+                <div class="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-brand-600 text-white text-[10px] font-bold rounded shadow-md whitespace-nowrap">
+                  {{ selectionMmWidth }} × {{ selectionMmHeight }} mm
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, shallowRef, markRaw, computed } from 'vue';
+import { ref, shallowRef, markRaw, computed, nextTick } from 'vue';
 import { 
   UploadCloud, FileUp, Layers, LayoutGrid, Search, ArrowRight, 
-  CheckCircle2, Download, Printer, Scroll, FlaskConical 
+  CheckCircle2, Download, Printer, Scroll, FlaskConical, Crop, Check, RotateCcw, X 
 } from 'lucide-vue-next';
 import { t } from '@/i18n';
 import { 
@@ -390,6 +481,18 @@ const viewMode = ref('grouped');
 const rawLabels = ref([]);
 const searchQuery = ref('');
 const isGeneratingPdf = ref(false);
+
+// Freeform visual crop state
+const showFreeCropModal = ref(false);
+const cropCanvasRef = ref(null);
+const cropImgWrapperRef = ref(null);
+const isDrawingCrop = ref(false);
+const startCropX = ref(0);
+const startCropY = ref(0);
+const selectionBox = ref({ x: 0, y: 0, w: 0, h: 0 });
+const freeCropBox = ref(null);
+const cropPageWidth = ref(1);
+const cropPageHeight = ref(1);
 
 // Paper settings
 const selectedPaperId = ref('70x30');
@@ -515,10 +618,131 @@ const processFile = async (file) => {
   }
 };
 
+const onLayoutModeChange = () => {
+  if (selectedLayoutMode.value === 'presetFreeform') {
+    openFreeCropModal();
+  } else {
+    reprocessPdf();
+  }
+};
+
+const openFreeCropModal = async () => {
+  showFreeCropModal.value = true;
+  await nextTick();
+  await renderCropCanvas();
+};
+
+const renderCropCanvas = async () => {
+  if (!currentPdfDoc.value && rawLabels.value.length === 0) return;
+  const canvas = cropCanvasRef.value;
+  if (!canvas) return;
+
+  if (currentPdfDoc.value) {
+    const page = await currentPdfDoc.value.getPage(1);
+    const vp = page.getViewport({ scale: 1.5 });
+    canvas.width = vp.width;
+    canvas.height = vp.height;
+    cropPageWidth.value = vp.width;
+    cropPageHeight.value = vp.height;
+    const ctx = canvas.getContext('2d');
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+  } else if (rawLabels.value[0]?.canvas) {
+    const srcCanvas = rawLabels.value[0].canvas;
+    canvas.width = srcCanvas.width;
+    canvas.height = srcCanvas.height;
+    cropPageWidth.value = srcCanvas.width;
+    cropPageHeight.value = srcCanvas.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(srcCanvas, 0, 0);
+  }
+
+  if (freeCropBox.value) {
+    selectionBox.value = {
+      x: freeCropBox.value.xRatio * canvas.width,
+      y: freeCropBox.value.yRatio * canvas.height,
+      w: freeCropBox.value.wRatio * canvas.width,
+      h: freeCropBox.value.hRatio * canvas.height,
+    };
+  } else {
+    selectionBox.value = {
+      x: canvas.width * 0.1,
+      y: canvas.height * 0.1,
+      w: canvas.width * 0.8,
+      h: canvas.height * 0.4,
+    };
+  }
+};
+
+const startCropMarquee = (e) => {
+  if (!cropImgWrapperRef.value) return;
+  const rect = cropImgWrapperRef.value.getBoundingClientRect();
+  const scaleX = cropPageWidth.value / rect.width;
+  const scaleY = cropPageHeight.value / rect.height;
+
+  startCropX.value = (e.clientX - rect.left) * scaleX;
+  startCropY.value = (e.clientY - rect.top) * scaleY;
+  isDrawingCrop.value = true;
+  selectionBox.value = { x: startCropX.value, y: startCropY.value, w: 0, h: 0 };
+};
+
+const moveCropMarquee = (e) => {
+  if (!isDrawingCrop.value || !cropImgWrapperRef.value) return;
+  const rect = cropImgWrapperRef.value.getBoundingClientRect();
+  const scaleX = cropPageWidth.value / rect.width;
+  const scaleY = cropPageHeight.value / rect.height;
+
+  const currentX = (e.clientX - rect.left) * scaleX;
+  const currentY = (e.clientY - rect.top) * scaleY;
+
+  selectionBox.value = {
+    x: Math.max(0, Math.min(startCropX.value, currentX)),
+    y: Math.max(0, Math.min(startCropY.value, currentY)),
+    w: Math.abs(currentX - startCropX.value),
+    h: Math.abs(currentY - startCropY.value),
+  };
+};
+
+const endCropMarquee = () => {
+  isDrawingCrop.value = false;
+};
+
+const resetSelection = () => {
+  selectionBox.value = { x: 0, y: 0, w: 0, h: 0 };
+};
+
+const applyFreeCrop = async () => {
+  if (selectionBox.value.w < 20 || selectionBox.value.h < 20) return;
+  freeCropBox.value = {
+    xRatio: selectionBox.value.x / cropPageWidth.value,
+    yRatio: selectionBox.value.y / cropPageHeight.value,
+    wRatio: selectionBox.value.w / cropPageWidth.value,
+    hRatio: selectionBox.value.h / cropPageHeight.value,
+  };
+  showFreeCropModal.value = false;
+  await reprocessPdf();
+};
+
 const reprocessPdf = async () => {
   if (!currentPdfDoc.value) return;
-  rawLabels.value = await slicePdfLabels(currentPdfDoc.value, selectedLayoutMode.value);
+  rawLabels.value = await slicePdfLabels(
+    currentPdfDoc.value, 
+    selectedLayoutMode.value, 
+    null, 
+    freeCropBox.value
+  );
 };
+
+const selectionMmWidth = computed(() => {
+  if (!cropPageWidth.value) return 0;
+  return Math.round((selectionBox.value.w / cropPageWidth.value) * 210);
+});
+const selectionMmHeight = computed(() => {
+  if (!cropPageHeight.value) return 0;
+  return Math.round((selectionBox.value.h / cropPageHeight.value) * 297);
+});
+const hasValidSelection = computed(() => {
+  return selectionBox.value.w > 20 && selectionBox.value.h > 20;
+});
 
 // Quick load from workspace with proper base path
 const loadLocalSample = async (filePath, presetMode) => {
