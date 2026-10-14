@@ -2,8 +2,10 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { fileURLToPath, URL } from 'node:url';
 
+// https://vitejs.dev/config/
 export default defineConfig({
-  base: './', // 设为相对路径，完美兼容 GitHub Pages 和任意二级域名
+  // GitHub Pages 生产环境下严格使用仓库路径，本地开发使用相对路径
+  base: process.env.NODE_ENV === 'production' ? '/LabelPrinter/' : './',
   plugins: [vue()],
   resolve: {
     alias: {
