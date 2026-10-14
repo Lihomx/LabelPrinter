@@ -117,11 +117,11 @@
             @change="onLayoutModeChange"
             class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
+            <option value="presetFreeform">{{ t('pdf.presetFreeform') }}</option>
             <option value="presetA4_30">{{ t('pdf.presetA4_30') }}</option>
             <option value="presetML_2">{{ t('pdf.presetML_2') }}</option>
             <option value="presetVertical_2">{{ t('pdf.presetVertical_2') }}</option>
             <option value="presetSingleTL">{{ t('pdf.presetSingleTL') }}</option>
-            <option value="presetFreeform">{{ t('pdf.presetFreeform') }}</option>
           </select>
 
           <!-- Freeform Edit Button -->
@@ -417,39 +417,67 @@
 
           <!-- Modal Interactive Canvas Body -->
           <div 
-            class="flex-1 bg-slate-800 p-6 overflow-auto flex items-center justify-center relative select-none"
-            @mouseup="endCropMarquee"
-            @mouseleave="endCropMarquee"
+            class="flex-1 bg-slate-900 p-6 overflow-auto flex items-center justify-center relative select-none"
           >
             <div 
-              class="relative shadow-2xl border border-slate-700 cursor-crosshair inline-block leading-none" 
+              class="relative shadow-2xl border border-slate-700 cursor-crosshair inline-block leading-none select-none bg-white" 
               ref="cropImgWrapperRef"
-              @mousedown.prevent="startCropMarquee"
-              @mousemove.prevent="moveCropMarquee"
+              @mousedown="onCanvasMouseDown"
             >
               <!-- High-res Page 1 Canvas -->
-              <canvas ref="cropCanvasRef" class="max-h-[68vh] object-contain block pointer-events-none"></canvas>
+              <canvas ref="cropCanvasRef" class="max-h-[68vh] object-contain block pointer-events-none select-none"></canvas>
 
               <!-- Marquee Crop Box Overlay -->
               <div 
                 v-if="selectionBox.w > 0 && selectionBox.h > 0"
-                class="absolute border-2 border-brand-400 bg-brand-500/20 shadow-lg pointer-events-none"
+                class="absolute border-2 border-brand-500 bg-brand-500/20 shadow-lg cursor-move select-none"
                 :style="{
                   left: `${selectionBox.x}px`,
                   top: `${selectionBox.y}px`,
                   width: `${selectionBox.w}px`,
                   height: `${selectionBox.h}px`,
                 }"
+                @mousedown.stop="onBoxMouseDown"
               >
-                <!-- Corner Handles -->
-                <div class="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-brand-600 rounded-xs"></div>
-                <div class="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-brand-600 rounded-xs"></div>
-                <div class="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-brand-600 rounded-xs"></div>
-                <div class="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-brand-600 rounded-xs"></div>
+                <!-- 4 Corner Handles -->
+                <div 
+                  class="absolute -top-2 -left-2 w-4 h-4 bg-white border-2 border-brand-600 rounded-sm cursor-nwse-resize shadow hover:scale-125 transition-transform"
+                  @mousedown.stop="(e) => onHandleMouseDown(e, 'nw')"
+                ></div>
+                <div 
+                  class="absolute -top-2 -right-2 w-4 h-4 bg-white border-2 border-brand-600 rounded-sm cursor-nesw-resize shadow hover:scale-125 transition-transform"
+                  @mousedown.stop="(e) => onHandleMouseDown(e, 'ne')"
+                ></div>
+                <div 
+                  class="absolute -bottom-2 -left-2 w-4 h-4 bg-white border-2 border-brand-600 rounded-sm cursor-nesw-resize shadow hover:scale-125 transition-transform"
+                  @mousedown.stop="(e) => onHandleMouseDown(e, 'sw')"
+                ></div>
+                <div 
+                  class="absolute -bottom-2 -right-2 w-4 h-4 bg-white border-2 border-brand-600 rounded-sm cursor-nwse-resize shadow hover:scale-125 transition-transform"
+                  @mousedown.stop="(e) => onHandleMouseDown(e, 'se')"
+                ></div>
+
+                <!-- 4 Edge Midpoint Handles -->
+                <div 
+                  class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-5 h-3 bg-white border-2 border-brand-600 rounded-sm cursor-ns-resize shadow hover:scale-125 transition-transform"
+                  @mousedown.stop="(e) => onHandleMouseDown(e, 'n')"
+                ></div>
+                <div 
+                  class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-3 bg-white border-2 border-brand-600 rounded-sm cursor-ns-resize shadow hover:scale-125 transition-transform"
+                  @mousedown.stop="(e) => onHandleMouseDown(e, 's')"
+                ></div>
+                <div 
+                  class="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3 h-5 bg-white border-2 border-brand-600 rounded-sm cursor-ew-resize shadow hover:scale-125 transition-transform"
+                  @mousedown.stop="(e) => onHandleMouseDown(e, 'w')"
+                ></div>
+                <div 
+                  class="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3 h-5 bg-white border-2 border-brand-600 rounded-sm cursor-ew-resize shadow hover:scale-125 transition-transform"
+                  @mousedown.stop="(e) => onHandleMouseDown(e, 'e')"
+                ></div>
 
                 <!-- Dimension Badge -->
-                <div class="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-brand-600 text-white text-[10px] font-bold rounded shadow-md whitespace-nowrap">
-                  {{ selectionMmWidth }} × {{ selectionMmHeight }} mm
+                <div class="absolute -top-7 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-brand-600 text-white text-[11px] font-bold rounded shadow-md whitespace-nowrap pointer-events-none flex items-center gap-1">
+                  <span>{{ selectionMmWidth }} × {{ selectionMmHeight }} mm</span>
                 </div>
               </div>
             </div>
@@ -476,7 +504,7 @@ const currentStep = ref(1);
 const isDragging = ref(false);
 const fileInputRef = ref(null);
 const currentPdfDoc = shallowRef(null);
-const selectedLayoutMode = ref('presetA4_30');
+const selectedLayoutMode = ref('presetFreeform');
 const viewMode = ref('grouped');
 const rawLabels = ref([]);
 const searchQuery = ref('');
@@ -486,13 +514,17 @@ const isGeneratingPdf = ref(false);
 const showFreeCropModal = ref(false);
 const cropCanvasRef = ref(null);
 const cropImgWrapperRef = ref(null);
-const isDrawingCrop = ref(false);
-const startCropX = ref(0);
-const startCropY = ref(0);
 const selectionBox = ref({ x: 0, y: 0, w: 0, h: 0 });
+const savedBox = ref({ x: 0, y: 0, w: 0, h: 0 });
+const dragMode = ref(null); // 'draw' | 'move' | 'nw' | 'ne' | 'se' | 'sw' | 'n' | 's' | 'w' | 'e'
+const dragStartX = ref(0);
+const dragStartY = ref(0);
 const freeCropBox = ref(null);
 const cropPageWidth = ref(1);
 const cropPageHeight = ref(1);
+const pdfOriginalWidthMm = ref(210);
+const pdfOriginalHeightMm = ref(297);
+const originalImageCanvas = shallowRef(null);
 
 // Paper settings
 const selectedPaperId = ref('70x30');
@@ -527,7 +559,7 @@ const selectPaperPreset = (preset) => {
 
 const canGoToStep = (step) => {
   if (step === 1) return true;
-  if (step === 2) return rawLabels.value.length > 0;
+  if (step === 2) return rawLabels.value.length > 0 || currentPdfDoc.value !== null;
   if (step === 3 || step === 4) return rawLabels.value.length > 0;
   return false;
 };
@@ -537,21 +569,13 @@ const processPdfFile = async (fileOrUrl) => {
   try {
     const doc = await loadPdfDocument(fileOrUrl);
     currentPdfDoc.value = markRaw(doc);
-    // Auto-detect layout preset
-    const detected = await detectSuggestedLayout(currentPdfDoc.value);
-    selectedLayoutMode.value = detected;
-    
-    // Auto-select initial paper size matching format
-    if (detected === 'presetML_2') {
-      selectPaperPreset(paperPresets.find(p => p.id === '100x150'));
-    } else if (detected === 'presetVertical_2') {
-      selectPaperPreset(paperPresets.find(p => p.id === '100x100'));
-    } else {
-      selectPaperPreset(paperPresets.find(p => p.id === '70x30'));
-    }
 
-    await reprocessPdf();
+    // Keep presetFreeform as default first mode
+    selectedLayoutMode.value = 'presetFreeform';
     currentStep.value = 2;
+
+    // Immediately open freeform crop modal
+    await openFreeCropModal();
   } catch (err) {
     console.error('Error loading PDF:', err);
     alert(`无法解析文件: ${err.message || '请确认是否为有效的 PDF 文件'}`);
@@ -573,6 +597,7 @@ const processImageFile = async (file) => {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
 
+      originalImageCanvas.value = canvas;
       const trimmed = trimWhiteBorder(canvas);
       const dataUrl = trimmed.toDataURL('image/png');
 
@@ -633,115 +658,273 @@ const openFreeCropModal = async () => {
 };
 
 const renderCropCanvas = async () => {
-  if (!currentPdfDoc.value && rawLabels.value.length === 0) return;
+  if (!currentPdfDoc.value && !originalImageCanvas.value && rawLabels.value.length === 0) return;
   const canvas = cropCanvasRef.value;
   if (!canvas) return;
 
   if (currentPdfDoc.value) {
     const page = await currentPdfDoc.value.getPage(1);
-    const vp = page.getViewport({ scale: 1.5 });
+    const vp = page.getViewport({ scale: 2.0 });
+    const pageVp = page.getViewport({ scale: 1.0 });
+    pdfOriginalWidthMm.value = Math.round(pageVp.width * (25.4 / 72));
+    pdfOriginalHeightMm.value = Math.round(pageVp.height * (25.4 / 72));
+
     canvas.width = vp.width;
     canvas.height = vp.height;
     cropPageWidth.value = vp.width;
     cropPageHeight.value = vp.height;
     const ctx = canvas.getContext('2d');
     await page.render({ canvasContext: ctx, viewport: vp }).promise;
-  } else if (rawLabels.value[0]?.canvas) {
-    const srcCanvas = rawLabels.value[0].canvas;
+  } else if (originalImageCanvas.value || rawLabels.value[0]?.canvas) {
+    const srcCanvas = originalImageCanvas.value || rawLabels.value[0].canvas;
     canvas.width = srcCanvas.width;
     canvas.height = srcCanvas.height;
     cropPageWidth.value = srcCanvas.width;
     cropPageHeight.value = srcCanvas.height;
+    pdfOriginalWidthMm.value = Math.round(srcCanvas.width * 0.264583);
+    pdfOriginalHeightMm.value = Math.round(srcCanvas.height * 0.264583);
     const ctx = canvas.getContext('2d');
     ctx.drawImage(srcCanvas, 0, 0);
   }
 
-  if (freeCropBox.value) {
-    selectionBox.value = {
-      x: freeCropBox.value.xRatio * canvas.width,
-      y: freeCropBox.value.yRatio * canvas.height,
-      w: freeCropBox.value.wRatio * canvas.width,
-      h: freeCropBox.value.hRatio * canvas.height,
-    };
-  } else {
-    selectionBox.value = {
-      x: canvas.width * 0.1,
-      y: canvas.height * 0.1,
-      w: canvas.width * 0.8,
-      h: canvas.height * 0.4,
-    };
+  await nextTick();
+  if (cropImgWrapperRef.value) {
+    const rect = cropImgWrapperRef.value.getBoundingClientRect();
+    if (freeCropBox.value) {
+      selectionBox.value = {
+        x: freeCropBox.value.xRatio * rect.width,
+        y: freeCropBox.value.yRatio * rect.height,
+        w: freeCropBox.value.wRatio * rect.width,
+        h: freeCropBox.value.hRatio * rect.height,
+      };
+    } else {
+      selectionBox.value = {
+        x: rect.width * 0.1,
+        y: rect.height * 0.1,
+        w: rect.width * 0.8,
+        h: rect.height * 0.4,
+      };
+    }
   }
 };
 
-const startCropMarquee = (e) => {
+// 1. Mouse down on canvas background -> Draw new crop box
+const onCanvasMouseDown = (e) => {
   if (!cropImgWrapperRef.value) return;
+  e.preventDefault();
   const rect = cropImgWrapperRef.value.getBoundingClientRect();
-  const scaleX = cropPageWidth.value / rect.width;
-  const scaleY = cropPageHeight.value / rect.height;
+  const startX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+  const startY = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
 
-  startCropX.value = (e.clientX - rect.left) * scaleX;
-  startCropY.value = (e.clientY - rect.top) * scaleY;
-  isDrawingCrop.value = true;
-  selectionBox.value = { x: startCropX.value, y: startCropY.value, w: 0, h: 0 };
+  dragMode.value = 'draw';
+  dragStartX.value = startX;
+  dragStartY.value = startY;
+  savedBox.value = { ...selectionBox.value };
+  selectionBox.value = { x: startX, y: startY, w: 0, h: 0 };
+
+  window.addEventListener('mousemove', onGlobalCropMouseMove);
+  window.addEventListener('mouseup', onGlobalCropMouseUp);
 };
 
-const moveCropMarquee = (e) => {
-  if (!isDrawingCrop.value || !cropImgWrapperRef.value) return;
-  const rect = cropImgWrapperRef.value.getBoundingClientRect();
-  const scaleX = cropPageWidth.value / rect.width;
-  const scaleY = cropPageHeight.value / rect.height;
+// 2. Mouse down on marquee box body -> Move box
+const onBoxMouseDown = (e) => {
+  e.preventDefault();
+  dragMode.value = 'move';
+  dragStartX.value = e.clientX;
+  dragStartY.value = e.clientY;
+  savedBox.value = { ...selectionBox.value };
 
-  const currentX = (e.clientX - rect.left) * scaleX;
-  const currentY = (e.clientY - rect.top) * scaleY;
-
-  selectionBox.value = {
-    x: Math.max(0, Math.min(startCropX.value, currentX)),
-    y: Math.max(0, Math.min(startCropY.value, currentY)),
-    w: Math.abs(currentX - startCropX.value),
-    h: Math.abs(currentY - startCropY.value),
-  };
+  window.addEventListener('mousemove', onGlobalCropMouseMove);
+  window.addEventListener('mouseup', onGlobalCropMouseUp);
 };
 
-const endCropMarquee = () => {
-  isDrawingCrop.value = false;
+// 3. Mouse down on any handle -> Resize box
+const onHandleMouseDown = (e, handle) => {
+  e.preventDefault();
+  dragMode.value = handle;
+  dragStartX.value = e.clientX;
+  dragStartY.value = e.clientY;
+  savedBox.value = { ...selectionBox.value };
+
+  window.addEventListener('mousemove', onGlobalCropMouseMove);
+  window.addEventListener('mouseup', onGlobalCropMouseUp);
+};
+
+// 4. Global mouse move handler for drag/move/resize
+const onGlobalCropMouseMove = (e) => {
+  if (!dragMode.value || !cropImgWrapperRef.value) return;
+  const rect = cropImgWrapperRef.value.getBoundingClientRect();
+  const mode = dragMode.value;
+
+  if (mode === 'draw') {
+    const currentX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    const currentY = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+    selectionBox.value = {
+      x: Math.min(dragStartX.value, currentX),
+      y: Math.min(dragStartY.value, currentY),
+      w: Math.abs(currentX - dragStartX.value),
+      h: Math.abs(currentY - dragStartY.value),
+    };
+  } else if (mode === 'move') {
+    const dx = e.clientX - dragStartX.value;
+    const dy = e.clientY - dragStartY.value;
+    const maxX = Math.max(0, rect.width - savedBox.value.w);
+    const maxY = Math.max(0, rect.height - savedBox.value.h);
+    selectionBox.value = {
+      x: Math.max(0, Math.min(maxX, savedBox.value.x + dx)),
+      y: Math.max(0, Math.min(maxY, savedBox.value.y + dy)),
+      w: savedBox.value.w,
+      h: savedBox.value.h,
+    };
+  } else if (mode === 'se') {
+    const dx = e.clientX - dragStartX.value;
+    const dy = e.clientY - dragStartY.value;
+    const newW = Math.max(15, Math.min(rect.width - savedBox.value.x, savedBox.value.w + dx));
+    const newH = Math.max(15, Math.min(rect.height - savedBox.value.y, savedBox.value.h + dy));
+    selectionBox.value = { ...savedBox.value, w: newW, h: newH };
+  } else if (mode === 'e') {
+    const dx = e.clientX - dragStartX.value;
+    const newW = Math.max(15, Math.min(rect.width - savedBox.value.x, savedBox.value.w + dx));
+    selectionBox.value = { ...savedBox.value, w: newW };
+  } else if (mode === 's') {
+    const dy = e.clientY - dragStartY.value;
+    const newH = Math.max(15, Math.min(rect.height - savedBox.value.y, savedBox.value.h + dy));
+    selectionBox.value = { ...savedBox.value, h: newH };
+  } else if (mode === 'nw') {
+    const right = savedBox.value.x + savedBox.value.w;
+    const bottom = savedBox.value.y + savedBox.value.h;
+    const curX = Math.max(0, Math.min(right - 15, e.clientX - rect.left));
+    const curY = Math.max(0, Math.min(bottom - 15, e.clientY - rect.top));
+    selectionBox.value = { x: curX, y: curY, w: right - curX, h: bottom - curY };
+  } else if (mode === 'w') {
+    const right = savedBox.value.x + savedBox.value.w;
+    const curX = Math.max(0, Math.min(right - 15, e.clientX - rect.left));
+    selectionBox.value = { ...savedBox.value, x: curX, w: right - curX };
+  } else if (mode === 'n') {
+    const bottom = savedBox.value.y + savedBox.value.h;
+    const curY = Math.max(0, Math.min(bottom - 15, e.clientY - rect.top));
+    selectionBox.value = { ...savedBox.value, y: curY, h: bottom - curY };
+  } else if (mode === 'ne') {
+    const bottom = savedBox.value.y + savedBox.value.h;
+    const curY = Math.max(0, Math.min(bottom - 15, e.clientY - rect.top));
+    const dx = e.clientX - dragStartX.value;
+    const newW = Math.max(15, Math.min(rect.width - savedBox.value.x, savedBox.value.w + dx));
+    selectionBox.value = { x: savedBox.value.x, y: curY, w: newW, h: bottom - curY };
+  } else if (mode === 'sw') {
+    const right = savedBox.value.x + savedBox.value.w;
+    const curX = Math.max(0, Math.min(right - 15, e.clientX - rect.left));
+    const dy = e.clientY - dragStartY.value;
+    const newH = Math.max(15, Math.min(rect.height - savedBox.value.y, savedBox.value.h + dy));
+    selectionBox.value = { x: curX, y: savedBox.value.y, w: right - curX, h: newH };
+  }
+};
+
+// 5. Global mouse up handler
+const onGlobalCropMouseUp = () => {
+  if (dragMode.value === 'draw' && (selectionBox.value.w < 15 || selectionBox.value.h < 15)) {
+    if (savedBox.value && savedBox.value.w >= 15 && savedBox.value.h >= 15) {
+      selectionBox.value = { ...savedBox.value };
+    }
+  }
+  dragMode.value = null;
+  window.removeEventListener('mousemove', onGlobalCropMouseMove);
+  window.removeEventListener('mouseup', onGlobalCropMouseUp);
 };
 
 const resetSelection = () => {
-  selectionBox.value = { x: 0, y: 0, w: 0, h: 0 };
+  if (!cropImgWrapperRef.value) return;
+  const rect = cropImgWrapperRef.value.getBoundingClientRect();
+  selectionBox.value = {
+    x: rect.width * 0.1,
+    y: rect.height * 0.1,
+    w: rect.width * 0.8,
+    h: rect.height * 0.4,
+  };
 };
 
 const applyFreeCrop = async () => {
-  if (selectionBox.value.w < 20 || selectionBox.value.h < 20) return;
+  if (!cropImgWrapperRef.value || selectionBox.value.w < 10 || selectionBox.value.h < 10) return;
+  const rect = cropImgWrapperRef.value.getBoundingClientRect();
   freeCropBox.value = {
-    xRatio: selectionBox.value.x / cropPageWidth.value,
-    yRatio: selectionBox.value.y / cropPageHeight.value,
-    wRatio: selectionBox.value.w / cropPageWidth.value,
-    hRatio: selectionBox.value.h / cropPageHeight.value,
+    xRatio: selectionBox.value.x / rect.width,
+    yRatio: selectionBox.value.y / rect.height,
+    wRatio: selectionBox.value.w / rect.width,
+    hRatio: selectionBox.value.h / rect.height,
   };
+
+  // Auto select best target paper size based on ratio
+  const mmW = selectionMmWidth.value;
+  const mmH = selectionMmHeight.value;
+  if (mmW >= 90 && mmH >= 120) {
+    selectPaperPreset(paperPresets.find(p => p.id === '100x150'));
+  } else if (mmW >= 85 && mmH >= 85) {
+    selectPaperPreset(paperPresets.find(p => p.id === '100x100'));
+  } else if (mmW >= 60) {
+    selectPaperPreset(paperPresets.find(p => p.id === '70x30'));
+  } else {
+    selectPaperPreset(paperPresets.find(p => p.id === '50x30'));
+  }
+
   showFreeCropModal.value = false;
   await reprocessPdf();
 };
 
 const reprocessPdf = async () => {
-  if (!currentPdfDoc.value) return;
-  rawLabels.value = await slicePdfLabels(
-    currentPdfDoc.value, 
-    selectedLayoutMode.value, 
-    null, 
-    freeCropBox.value
-  );
+  if (currentPdfDoc.value) {
+    rawLabels.value = await slicePdfLabels(
+      currentPdfDoc.value, 
+      selectedLayoutMode.value, 
+      null, 
+      freeCropBox.value
+    );
+  } else if (originalImageCanvas.value && freeCropBox.value) {
+    const orig = originalImageCanvas.value;
+    const box = {
+      x: Math.max(0, freeCropBox.value.xRatio * orig.width),
+      y: Math.max(0, freeCropBox.value.yRatio * orig.height),
+      w: Math.min(orig.width, freeCropBox.value.wRatio * orig.width),
+      h: Math.min(orig.height, freeCropBox.value.hRatio * orig.height),
+    };
+    const cellCanvas = document.createElement('canvas');
+    cellCanvas.width = box.w;
+    cellCanvas.height = box.h;
+    const cellCtx = cellCanvas.getContext('2d');
+    cellCtx.drawImage(orig, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
+
+    rawLabels.value = [{
+      id: `img_${Date.now()}`,
+      page: 1,
+      col: 1,
+      row: 1,
+      canvas: cellCanvas,
+      dataUrl: cellCanvas.toDataURL('image/png'),
+      barcode: 'IMAGE-LABEL',
+      title: '图片自定义裁切标',
+      sku: '',
+      quantity: 1,
+      selected: true,
+      width: cellCanvas.width,
+      height: cellCanvas.height,
+    }];
+  }
 };
 
 const selectionMmWidth = computed(() => {
-  if (!cropPageWidth.value) return 0;
-  return Math.round((selectionBox.value.w / cropPageWidth.value) * 210);
+  if (!cropImgWrapperRef.value) return 0;
+  const rect = cropImgWrapperRef.value.getBoundingClientRect();
+  if (!rect.width) return 0;
+  return Math.round((selectionBox.value.w / rect.width) * (pdfOriginalWidthMm.value || 210));
 });
+
 const selectionMmHeight = computed(() => {
-  if (!cropPageHeight.value) return 0;
-  return Math.round((selectionBox.value.h / cropPageHeight.value) * 297);
+  if (!cropImgWrapperRef.value) return 0;
+  const rect = cropImgWrapperRef.value.getBoundingClientRect();
+  if (!rect.height) return 0;
+  return Math.round((selectionBox.value.h / rect.height) * (pdfOriginalHeightMm.value || 297));
 });
+
 const hasValidSelection = computed(() => {
-  return selectionBox.value.w > 20 && selectionBox.value.h > 20;
+  return selectionBox.value.w > 10 && selectionBox.value.h > 10;
 });
 
 // Quick load from workspace with proper base path

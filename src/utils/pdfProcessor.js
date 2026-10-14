@@ -198,7 +198,7 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
         h: Math.min(canvas.height, customBox.hRatio * canvas.height),
       };
 
-      if (box.w > 20 && box.h > 20 && !isRegionBlank(ctx, box.x, box.y, box.w, box.h)) {
+      if (box.w > 10 && box.h > 10) {
         const cellCanvas = document.createElement('canvas');
         cellCanvas.width = box.w;
         cellCanvas.height = box.h;
