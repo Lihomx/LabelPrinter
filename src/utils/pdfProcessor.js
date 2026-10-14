@@ -1,8 +1,8 @@
-import * as pdfjsLib from 'pdfjs-dist';
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
+import pdfWorker from 'pdfjs-dist/legacy/build/pdf.worker.min.js?url';
 import { PDFDocument } from 'pdf-lib';
 
-// Use local bundled worker for 100% offline & firewall-proof operation
+// Use local legacy worker without ES2022 private fields to prevent Proxy collisions
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 /**

@@ -370,7 +370,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, shallowRef, markRaw, computed } from 'vue';
 import { 
   UploadCloud, FileUp, Layers, LayoutGrid, Search, ArrowRight, 
   CheckCircle2, Download, Printer, Scroll, FlaskConical 
@@ -378,13 +378,13 @@ import {
 import { t } from '@/i18n';
 import { 
   loadPdfDocument, detectSuggestedLayout, slicePdfLabels, 
-  groupLabelsByBarcode, exportThermalPdf 
+  groupLabelsByBarcode, exportThermalPdf, trimWhiteBorder
 } from '@/utils/pdfProcessor';
 
 const currentStep = ref(1);
 const isDragging = ref(false);
 const fileInputRef = ref(null);
-const currentPdfDoc = ref(null);
+const currentPdfDoc = shallowRef(null);
 const selectedLayoutMode = ref('presetA4_30');
 const viewMode = ref('grouped');
 const rawLabels = ref([]);
@@ -432,7 +432,8 @@ const canGoToStep = (step) => {
 // Process PDF file
 const processPdfFile = async (fileOrUrl) => {
   try {
-    currentPdfDoc.value = await loadPdfDocument(fileOrUrl);
+    const doc = await loadPdfDocument(fileOrUrl);
+    currentPdfDoc.value = markRaw(doc);
     // Auto-detect layout preset
     const detected = await detectSuggestedLayout(currentPdfDoc.value);
     selectedLayoutMode.value = detected;
