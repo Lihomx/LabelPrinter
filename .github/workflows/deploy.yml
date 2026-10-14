@@ -1,13 +1,12 @@
-name: Deploy to GitHub Pages
+name: Deploy LabelMaster Pro
 
 on:
   push:
     branches:
       - main
-      - master
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -17,9 +16,6 @@ concurrency:
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -35,8 +31,18 @@ jobs:
         run: npm ci
 
       - name: Build project
-        run: npm run build
+        run: |
+          npm run build
+          touch dist/.nojekyll
 
+      # 方案一：自动部署到 gh-pages 分支（兼容 Deploy from a branch 模式）
+      - name: Deploy to gh-pages branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages
+
+      # 方案二：通过 GitHub Actions 原生 Pages 部署（兼容 GitHub Actions 模式）
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -44,4 +50,5 @@ jobs:
 
       - name: Deploy to GitHub Pages
         id: deployment
+        continue-on-error: true
         uses: actions/deploy-pages@v4
