@@ -2,29 +2,41 @@
   <div class="space-y-6">
     <!-- Stepper Navigation (Infotrekx 4-Step Style) -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-      <div class="flex items-center justify-between max-w-4xl mx-auto">
-        <button 
-          v-for="(step, idx) in steps" 
-          :key="idx"
-          @click="currentStep = idx + 1"
-          :disabled="!canGoToStep(idx + 1)"
-          class="flex items-center gap-2 group transition-all"
-          :class="[
-            currentStep === idx + 1 ? 'text-brand-600 font-bold' : 
-            currentStep > idx + 1 ? 'text-slate-800' : 'text-slate-400 cursor-not-allowed'
-          ]"
-        >
-          <div 
-            class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all"
+      <div class="flex items-center justify-between max-w-5xl mx-auto gap-4">
+        <div class="flex items-center justify-between flex-1">
+          <button 
+            v-for="(step, idx) in steps" 
+            :key="idx"
+            @click="currentStep = idx + 1"
+            :disabled="!canGoToStep(idx + 1)"
+            class="flex items-center gap-2 group transition-all"
             :class="[
-              currentStep === idx + 1 ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20' :
-              currentStep > idx + 1 ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-400'
+              currentStep === idx + 1 ? 'text-brand-600 font-bold' : 
+              currentStep > idx + 1 ? 'text-slate-800' : 'text-slate-400 cursor-not-allowed'
             ]"
           >
-            {{ idx + 1 }}
-          </div>
-          <span class="text-sm hidden sm:inline">{{ step.title }}</span>
-          <div v-if="idx < steps.length - 1" class="w-8 sm:w-16 h-0.5 bg-slate-200 ml-2" />
+            <div 
+              class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all"
+              :class="[
+                currentStep === idx + 1 ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20' :
+                currentStep > idx + 1 ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-400'
+              ]"
+            >
+              {{ idx + 1 }}
+            </div>
+            <span class="text-sm hidden sm:inline">{{ step.title }}</span>
+            <div v-if="idx < steps.length - 1" class="w-6 sm:w-12 h-0.5 bg-slate-200 ml-2" />
+          </button>
+        </div>
+
+        <!-- Help Guide Button -->
+        <button 
+          @click="showPrintHelpModal = true"
+          title="查看打印机尺寸设置、连吐纸解决方案及桌面客户端说明"
+          class="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all shadow-2xs flex-shrink-0"
+        >
+          <HelpCircle class="w-4 h-4 text-blue-600" />
+          <span>打印帮助说明</span>
         </button>
       </div>
     </div>
@@ -558,6 +570,14 @@
 
         <div class="flex items-center gap-3">
           <button 
+            @click="showPrintHelpModal = true"
+            class="px-3.5 py-2 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-bold rounded-lg shadow-2xs flex items-center gap-1.5 transition-all"
+          >
+            <HelpCircle class="w-4 h-4 text-blue-600" />
+            <span>打印帮助说明</span>
+          </button>
+
+          <button 
             @click="downloadThermalPdf" 
             :disabled="isGeneratingPdf"
             class="px-4 py-2 border border-slate-300 hover:border-slate-400 text-slate-700 text-sm font-semibold rounded-lg shadow-xs flex items-center gap-2 transition-all bg-white"
@@ -587,19 +607,29 @@
             点击打印后，系统弹窗默认通常是 <span class="bg-rose-200/90 text-rose-950 px-1.5 py-0.5 rounded font-black underline decoration-rose-600">「E邮宝长 100mm * 150mm」</span>，<strong class="text-rose-700 font-black">绝对不能使用该默认尺寸！</strong>
             如果选了 100×150mm，打印机会按 15 厘米大面单走纸，直接导致<strong class="text-rose-700 font-black">连吐 4~5 张标签纸，并且条码会被旋转打断</strong>！
           </p>
-          <div class="flex flex-wrap items-center gap-2 sm:gap-3 pt-1 font-bold text-rose-900">
-            <span class="bg-white px-3 py-1.5 rounded-lg border border-rose-300 shadow-2xs flex items-center gap-1.5">
-              <span class="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">1</span>
-              <span>纸张尺寸：必须选与实际装纸一致（当前: {{ targetWidthMm }} × {{ targetHeightMm }} mm）</span>
-            </span>
-            <span class="bg-white px-3 py-1.5 rounded-lg border border-rose-300 shadow-2xs flex items-center gap-1.5">
-              <span class="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">2</span>
-              <span>缩放：实际大小 / 100%（勿选适合可打印区域）</span>
-            </span>
-            <span class="bg-white px-3 py-1.5 rounded-lg border border-rose-300 shadow-2xs flex items-center gap-1.5">
-              <span class="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">3</span>
-              <span>边距：无</span>
-            </span>
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 font-bold text-rose-900">
+              <span class="bg-white px-3 py-1.5 rounded-lg border border-rose-300 shadow-2xs flex items-center gap-1.5">
+                <span class="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">1</span>
+                <span>纸张尺寸：选与实际装纸一致（当前: {{ targetWidthMm }} × {{ targetHeightMm }} mm）</span>
+              </span>
+              <span class="bg-white px-3 py-1.5 rounded-lg border border-rose-300 shadow-2xs flex items-center gap-1.5">
+                <span class="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">2</span>
+                <span>缩放：实际大小 / 100%（勿选适合可打印区域）</span>
+              </span>
+              <span class="bg-white px-3 py-1.5 rounded-lg border border-rose-300 shadow-2xs flex items-center gap-1.5">
+                <span class="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">3</span>
+                <span>边距：无</span>
+              </span>
+            </div>
+
+            <button 
+              @click="showPrintHelpModal = true"
+              class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 flex-shrink-0"
+            >
+              <HelpCircle class="w-4 h-4" />
+              <span>查看图文解决教程 ➔</span>
+            </button>
           </div>
         </div>
       </div>
@@ -957,6 +987,316 @@
       </div>
     </Teleport>
 
+    <!-- Print Help Guide Modal (Teleported to document.body) -->
+    <Teleport to="body">
+      <div v-if="showPrintHelpModal" class="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <!-- Modal Header -->
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
+                <Printer class="w-5 h-5" />
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <span>热敏标签打印机设置与避坑完全指引</span>
+                  <span class="text-[11px] font-normal px-2 py-0.5 bg-brand-100 text-brand-700 rounded-full">汉印 / 佳博 / 斑马 / 得力 / 快麦通用</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">解决连吐多张、无 70×30/50×30 纸张选项、条码旋转变形及缝隙错位问题</p>
+              </div>
+            </div>
+
+            <button 
+              @click="showPrintHelpModal = false"
+              class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+            >
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+
+          <!-- Nav Tabs -->
+          <div class="flex border-b border-slate-200 px-6 bg-slate-50/50 gap-2 overflow-x-auto">
+            <button 
+              @click="activeHelpTab = 'desktopApp'" 
+              class="px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap"
+              :class="activeHelpTab === 'desktopApp' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
+            >
+              <Laptop class="w-3.5 h-3.5" />
+              <span>电脑客户端软件版（免驱动设置）</span>
+            </button>
+            <button 
+              @click="activeHelpTab = 'customSize'" 
+              class="px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap"
+              :class="activeHelpTab === 'customSize' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
+            >
+              <Settings class="w-3.5 h-3.5" />
+              <span>方案 1: 在电脑驱动添加纸张尺寸</span>
+            </button>
+            <button 
+              @click="activeHelpTab = 'borrowSize'" 
+              class="px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap"
+              :class="activeHelpTab === 'borrowSize' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
+            >
+              <CheckCircle2 class="w-3.5 h-3.5" />
+              <span>方案 2: 免设电脑·借用等高规格</span>
+            </button>
+            <button 
+              @click="activeHelpTab = 'pdfPrint'" 
+              class="px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap"
+              :class="activeHelpTab === 'pdfPrint' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
+            >
+              <FileText class="w-3.5 h-3.5" />
+              <span>方案 3: 导出 PDF 客户端全自动打印</span>
+            </button>
+            <button 
+              @click="activeHelpTab = 'calibration'" 
+              class="px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap"
+              :class="activeHelpTab === 'calibration' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
+            >
+              <AlertTriangle class="w-3.5 h-3.5" />
+              <span>硬件: 汉印 (HPRT) 一键缝隙校准</span>
+            </button>
+          </div>
+
+          <!-- Modal Body Content -->
+          <div class="p-6 overflow-y-auto max-h-[68vh] space-y-6 text-sm text-slate-700">
+            <!-- TAB: desktopApp -->
+            <div v-if="activeHelpTab === 'desktopApp'" class="space-y-4">
+              <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2">
+                <div class="font-bold text-emerald-900 text-sm flex items-center gap-2">
+                  <CheckCircle2 class="w-5 h-5 text-emerald-600" />
+                  <span>解答：如果用电脑软件版（桌面客户端），是不是就完全不用自己手动去 Windows 驱动添加尺寸了？</span>
+                </div>
+                <div class="text-xs text-emerald-900 leading-relaxed font-semibold">
+                  👉 答案是：<strong class="text-emerald-700 text-sm">100% 确定！完全不需要手动设置任何纸张尺寸！</strong>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                  <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                    <span class="w-5 h-5 rounded-full bg-slate-400 text-white flex items-center justify-center text-[10px]">旧</span>
+                    <span>为什么纯网页版（当前浏览器）需要选尺寸？</span>
+                  </div>
+                  <p class="text-slate-600 leading-relaxed text-[12px]">
+                    浏览器运行在<strong>“安全沙箱”</strong>中，出于安全限制，网页无法越过系统直接给 USB 打印机硬件发送私有毫米控制指令。网页打印时必须弹出操作系统的通用打印框，而通用打印框里的尺寸完全受限于打印机驱动出厂自带的预设列表。如果驱动没预装 70x30，浏览器就不知道该选什么。
+                  </p>
+                </div>
+
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl space-y-2">
+                  <div class="font-bold text-blue-900 flex items-center gap-1.5">
+                    <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">新</span>
+                    <span>电脑软件客户端版本（桌面版）如何彻底解决？</span>
+                  </div>
+                  <p class="text-blue-900 leading-relaxed text-[12px]">
+                    桌面客户端拥有本地系统的完全硬件访问权限：
+                    <br />
+                    ① <strong>免驱动尺寸限制</strong>：软件直接通过底层打印 API 或 USB 端口向打印机发送原生的毫米坐标指令（如 <code class="bg-blue-100 text-blue-800 px-1 py-0.5 rounded font-mono">SIZE 70 mm, 30 mm</code>），即使驱动里根本没有 70x30，打印机也能按 30mm 走纸！
+                    <br />
+                    ② <strong>真正零弹窗静默打印</strong>：点击打印瞬间出纸，省去每次选打印机、选尺寸的繁琐操作！
+                  </p>
+                </div>
+              </div>
+
+              <div class="p-4 bg-slate-900 text-slate-200 rounded-xl space-y-2 text-xs">
+                <div class="font-bold text-white flex items-center gap-1.5">
+                  <Laptop class="w-4 h-4 text-brand-400" />
+                  <span>LabelMaster Pro 桌面客户端已原生内置支持</span>
+                </div>
+                <p class="text-slate-300 leading-relaxed text-[11px]">
+                  本项目底层架构已预留了原生 Electron 静默热敏打印对接接口（<code class="text-brand-300 font-mono">window.electronAPI.printThermal</code>）。如果您需要运行免弹窗、免驱动预设尺寸的桌面软件版，可随时直接打包生成 Windows (.exe) 安装包！
+                </p>
+              </div>
+            </div>
+
+            <!-- TAB: customSize -->
+            <div v-if="activeHelpTab === 'customSize'" class="space-y-4">
+              <div class="p-3.5 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 space-y-1">
+                <div class="font-bold text-sm">💡 方案 1 原理：为什么强烈推荐在电脑驱动新建一次尺寸？</div>
+                <p class="leading-relaxed">
+                  市面上的标签卷纸有几百种规格，打印机出厂只会预装十几个常用尺寸。只要花 30 秒在电脑打印机首选项里新建一次您的规格（如 70x30 或 50x30），保存后<strong>不仅本网页，您电脑上的所有软件都能直接选中该尺寸</strong>！
+                </p>
+              </div>
+
+              <div class="space-y-3">
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-400">Windows 10 / 11 详细操作步骤（以汉印 HPRT N41BT 为例）：</h4>
+                <div class="space-y-2 text-xs">
+                  <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
+                    <span class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">1</span>
+                    <div>
+                      <div class="font-bold text-slate-800">打开“设备和打印机”</div>
+                      <div class="text-slate-500 mt-0.5">按键盘 <strong>Win + R</strong> 键呼出运行框，输入 <strong>control printers</strong> 并回车（或在 Windows 设置中搜索“打印机”）。</div>
+                    </div>
+                  </div>
+
+                  <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
+                    <span class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">2</span>
+                    <div>
+                      <div class="font-bold text-slate-800">进入打印机首选项</div>
+                      <div class="text-slate-500 mt-0.5">找到您的热敏打印机（如 <strong>HPRT N41BT</strong>），<strong>右键点击</strong>选择 <strong>【打印首选项 (Printing Preferences)】</strong>。</div>
+                    </div>
+                  </div>
+
+                  <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
+                    <span class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">3</span>
+                    <div>
+                      <div class="font-bold text-slate-800">点击“新建”纸张尺寸</div>
+                      <div class="text-slate-500 mt-0.5">在弹出的首选项窗口中，切换到<strong>【页面设置 (Page Setup)】</strong>标签页，点击右侧的<strong>【新建 (New...)】</strong>按钮。</div>
+                    </div>
+                  </div>
+
+                  <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
+                    <span class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">4</span>
+                    <div>
+                      <div class="font-bold text-slate-800">输入您的卷纸尺寸并保存</div>
+                      <div class="text-slate-500 mt-0.5">
+                        • <strong>纸张名称</strong>：输入便于识别的名字，如 <code class="font-bold text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200">70x30</code>（或 <code class="font-bold text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200">50x30</code>）
+                        <br />
+                        • <strong>宽度</strong>：输入实际测量宽度，如 <code class="font-bold text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200">70.0 mm</code>
+                        <br />
+                        • <strong>高度</strong>：输入实际测量高度，如 <code class="font-bold text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200">30.0 mm</code>
+                        <br />
+                        点击“确定”保存，再点击首选项窗口的“应用”和“确定”。
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-3 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 class="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>完成设置后，刷新网页再次点击打印，系统打印弹窗下拉菜单中就会永久出现刚刚新建的尺寸！</span>
+              </div>
+            </div>
+
+            <!-- TAB: borrowSize -->
+            <div v-if="activeHelpTab === 'borrowSize'" class="space-y-4">
+              <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
+                <div class="font-bold text-sm">🎯 方案 2 原理：热敏机走纸只认“高度”！</div>
+                <p class="leading-relaxed">
+                  热敏打印机是单向连续滚动的，<strong>每次吐纸多长是由「页面高度 mm」控制的</strong>。只要选中的尺寸高度与您的卷纸完全一致，即使宽度略大，打印机马达也会按同样的高度走纸，缝隙对齐完全正常，绝不会多吐白标！
+                </p>
+              </div>
+
+              <div class="border border-slate-200 rounded-xl overflow-hidden">
+                <table class="w-full text-xs text-left">
+                  <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                    <tr>
+                      <th class="p-3">您的实际卷纸尺寸</th>
+                      <th class="p-3">打印机下拉菜单没有该规格</th>
+                      <th class="p-3">可在下拉菜单中直接借用的替代尺寸</th>
+                      <th class="p-3">打印效果验证</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-3 font-bold text-slate-800">70 × 30 mm</td>
+                      <td class="p-3 text-rose-600">无 70×30</td>
+                      <td class="p-3 font-bold text-emerald-600">80mm * 30mm（汉印自带）</td>
+                      <td class="p-3 text-slate-600">高度同为 30mm，单张精准停靠切口，完美出纸</td>
+                    </tr>
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-3 font-bold text-slate-800">50 × 25 mm</td>
+                      <td class="p-3 text-rose-600">无 50×25</td>
+                      <td class="p-3 font-bold text-emerald-600">50*25 或 100mm*25mm</td>
+                      <td class="p-3 text-slate-600">高度同为 25mm，单张精准走纸</td>
+                    </tr>
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-3 font-bold text-slate-800">50 × 20 mm</td>
+                      <td class="p-3 text-slate-400">-</td>
+                      <td class="p-3 font-bold text-emerald-600">50mm * 20mm（汉印自带）</td>
+                      <td class="p-3 text-slate-600">直接原生支持</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1 text-slate-600">
+                <div class="font-bold text-slate-800">💡 避坑特别注意：</div>
+                <div>千万不要借用高度相差很大的尺寸！例如卷纸是 30mm 高，如果借用 150mm 或 60mm 高度，打印机就会按 150mm 持续走纸，导致连吐多张！</div>
+              </div>
+            </div>
+
+            <!-- TAB: pdfPrint -->
+            <div v-if="activeHelpTab === 'pdfPrint'" class="space-y-4">
+              <div class="p-3.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 space-y-1">
+                <div class="font-bold text-sm">📄 方案 3 原理：PDF 矢量流原生携带物理尺寸信息</div>
+                <p class="leading-relaxed">
+                  本系统导出的 PDF 是标准 1:1 热敏矢量文件，文件内部已严格封装了目标物理尺寸（如 70mm × 30mm）。使用专业的 PDF 阅读器打印，阅读器会直接向打印机驱动发送此尺寸指令，完全绕过浏览器下拉菜单的手动选择。
+                </p>
+              </div>
+
+              <div class="space-y-2 text-xs">
+                <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-start gap-3">
+                  <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">1</span>
+                  <div>
+                    <div class="font-bold text-slate-800">点击页面上的【导出标准热敏 PDF】下载文件</div>
+                    <div class="text-slate-500 mt-0.5">系统会自动生成已排版完成的高清矢量标签 PDF。</div>
+                  </div>
+                </div>
+
+                <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-start gap-3">
+                  <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">2</span>
+                  <div>
+                    <div class="font-bold text-slate-800">用 Adobe Acrobat Reader 或极速 PDF 打开</div>
+                    <div class="text-slate-500 mt-0.5">不要用浏览器打开，请使用电脑已安装的 PDF 客户端软件打开。</div>
+                  </div>
+                </div>
+
+                <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-start gap-3">
+                  <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">3</span>
+                  <div>
+                    <div class="font-bold text-slate-800">勾选「根据 PDF 页面大小选择纸张来源」</div>
+                    <div class="text-slate-500 mt-0.5">在打印对话框的页面处理中勾选此项，缩放选择“实际大小”，然后点击打印即可！</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB: calibration -->
+            <div v-if="activeHelpTab === 'calibration'" class="space-y-4">
+              <div class="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 space-y-1">
+                <div class="font-bold text-sm">⚡ 为什么换新纸后必须做机身缝隙校准？</div>
+                <p class="leading-relaxed">
+                  热敏打印机内部有一个光学穿透传感器用来检测两张标签之间的透光缝隙。当更换了不同底纸厚度、不同间隙大小的卷纸时，如果不进行校准，传感器可能会误判缝隙，导致走纸停在标签正中间打乱。
+                </p>
+              </div>
+
+              <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 text-xs">
+                <div class="font-bold text-slate-800 flex items-center gap-2">
+                  <span class="px-2 py-0.5 bg-brand-600 text-white rounded font-mono text-[11px]">操作手法</span>
+                  <span>汉印 (HPRT N41BT / N41 / 汉印全系) 缝隙测纸操作：</span>
+                </div>
+                <div class="space-y-1.5 text-slate-700 pl-2 border-l-2 border-brand-500">
+                  <div>1. 装好标签卷纸，拉出少许，合紧打印机左右两侧卡扣。</div>
+                  <div>2. 确保打印机处于开机通电状态（机身正面指示灯为蓝灯常亮）。</div>
+                  <div>3. <strong>用手指按住机身顶部的进纸键（FEED 键）不松手</strong>，持续约 2~3 秒。</div>
+                  <div>4. <strong>听到打印机“哔”的一声（或指示灯闪烁一下）时，立即松开手指</strong>。</div>
+                  <div>5. 打印机会自动向前吐出 1~2 张标签进行自动测距学习，随后自动向后回退对齐到第一张缝隙切口！</div>
+                </div>
+              </div>
+
+              <div class="p-3 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 class="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>校准完成后，每按一下 FEED 键就只会刚好吐出一张标签，位置精准无误！</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>如遇疑难问题，可优先采用【方案 1】新建驱动尺寸或【方案 2】借用等高规格。</span>
+            <button 
+              @click="showPrintHelpModal = false"
+              class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg transition-all"
+            >
+              我知道了
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Save Notification Toast -->
     <Teleport to="body">
       <div 
@@ -975,7 +1315,8 @@ import { ref, shallowRef, markRaw, computed, nextTick, onMounted } from 'vue';
 import { 
   UploadCloud, FileUp, Layers, LayoutGrid, Search, ArrowRight, 
   CheckCircle2, Download, Printer, Scroll, FlaskConical, Crop, Check, RotateCcw, X,
-  FolderOpen, Save, Plus, Trash2, Clock, FileText, Bookmark, Calendar, AlertTriangle, Info
+  FolderOpen, Save, Plus, Trash2, Clock, FileText, Bookmark, Calendar, AlertTriangle, Info,
+  HelpCircle, Laptop, Settings
 } from 'lucide-vue-next';
 import { t } from '@/i18n';
 import { 
@@ -1005,6 +1346,10 @@ const savedProjectsList = ref([]);
 const showSavedProjectsModal = ref(false);
 const saveToastMessage = ref('');
 const step1Tab = ref('new'); // 'new' | 'saved'
+
+// Print help modal state
+const showPrintHelpModal = ref(false);
+const activeHelpTab = ref('desktopApp'); // 'desktopApp' | 'customSize' | 'borrowSize' | 'pdfPrint' | 'calibration'
 
 // Freeform visual crop state
 const showFreeCropModal = ref(false);
