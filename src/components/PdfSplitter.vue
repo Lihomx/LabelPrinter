@@ -240,6 +240,22 @@
         </div>
       </div>
 
+      <div v-else-if="selectedLayoutMode === 'presetFreeform'" class="text-center py-16 bg-white rounded-xl border-2 border-dashed border-brand-200 p-8 flex flex-col items-center justify-center space-y-3">
+        <div class="w-16 h-16 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center">
+          <Crop class="w-8 h-8" />
+        </div>
+        <h4 class="text-base font-bold text-slate-800">当前已启用：自由鼠标框选裁切模式</h4>
+        <p class="text-xs text-slate-500 max-w-md leading-relaxed">
+          点击下方按钮打开框选画布，按住鼠标拖拽即可框选任意标签区域，支持拖动平移及8个手柄微调，确认后将自动应用至全部页面。
+        </p>
+        <button 
+          @click="openFreeCropModal"
+          class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-brand-500/25 flex items-center gap-2 transition-all hover:scale-105"
+        >
+          <Crop class="w-4 h-4" />
+          <span>🖱️ 立即打开鼠标框选画布</span>
+        </button>
+      </div>
       <div v-else class="text-center py-16 bg-white rounded-xl border border-slate-200 text-slate-400">
         没有匹配的标签项目
       </div>
@@ -376,9 +392,11 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Freeform Visual Crop Modal -->
-      <div v-if="showFreeCropModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+    <!-- Freeform Visual Crop Modal (Teleported to document.body) -->
+    <Teleport to="body">
+      <div v-if="showFreeCropModal" class="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
           <!-- Modal Header -->
           <div class="px-6 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
@@ -484,7 +502,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
@@ -565,17 +583,21 @@ const canGoToStep = (step) => {
 };
 
 // Process PDF file
-const processPdfFile = async (fileOrUrl) => {
+const processPdfFile = async (fileOrUrl, forcePreset = null) => {
   try {
     const doc = await loadPdfDocument(fileOrUrl);
     currentPdfDoc.value = markRaw(doc);
 
-    // Keep presetFreeform as default first mode
-    selectedLayoutMode.value = 'presetFreeform';
-    currentStep.value = 2;
-
-    // Immediately open freeform crop modal
-    await openFreeCropModal();
+    if (forcePreset) {
+      selectedLayoutMode.value = forcePreset;
+      currentStep.value = 2;
+      await reprocessPdf();
+    } else {
+      // Default to freeform crop for user-uploaded custom files
+      selectedLayoutMode.value = 'presetFreeform';
+      currentStep.value = 2;
+      await openFreeCropModal();
+    }
   } catch (err) {
     console.error('Error loading PDF:', err);
     alert(`无法解析文件: ${err.message || '请确认是否为有效的 PDF 文件'}`);
@@ -939,7 +961,7 @@ const loadLocalSample = async (filePath, presetMode) => {
     const response = await fetch(fullUrl);
     if (!response.ok) throw new Error(`无法获取样本文件 (${response.status})`);
     const blob = await response.blob();
-    await processPdfFile(blob);
+    await processPdfFile(blob, presetMode);
   } catch (err) {
     console.error('Could not load sample file directly:', err);
     alert('载入样本失败: ' + err.message);
