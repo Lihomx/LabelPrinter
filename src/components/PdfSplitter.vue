@@ -29,85 +29,301 @@
       </div>
     </div>
 
-    <!-- Step 1: Upload PDF -->
-    <div v-if="currentStep === 1" class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
-      <div 
-        @dragover.prevent="isDragging = true"
-        @dragleave.prevent="isDragging = false"
-        @drop.prevent="handleFileDrop"
-        class="border-2 border-dashed rounded-2xl p-12 text-center transition-all cursor-pointer relative"
-        :class="isDragging ? 'border-brand-500 bg-brand-50/50' : 'border-slate-300 hover:border-brand-400 hover:bg-slate-50/50'"
-        @click="triggerFileInput"
-      >
-        <input 
-          ref="fileInputRef" 
-          type="file" 
-          accept=".pdf, image/*, .png, .jpg, .jpeg, .webp" 
-          class="hidden" 
-          @change="handleFileSelect" 
-        />
-        
-        <div class="w-16 h-16 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <UploadCloud class="w-8 h-8" />
+    <!-- Step 1: Upload PDF or Open Saved Project -->
+    <div v-if="currentStep === 1" class="space-y-6">
+      <!-- Mode Tabs: New Project vs Saved Projects -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-2 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <button 
+            @click="step1Tab = 'new'"
+            class="px-5 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2"
+            :class="step1Tab === 'new' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'"
+          >
+            <Plus class="w-4 h-4" />
+            <span>{{ t('pdf.newProject') }} (上传本地文件)</span>
+          </button>
+          <button 
+            @click="step1Tab = 'saved'"
+            class="px-5 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2"
+            :class="step1Tab === 'saved' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'"
+          >
+            <FolderOpen class="w-4 h-4" />
+            <span>{{ t('pdf.savedProjects') }} ({{ savedProjectsList.length }})</span>
+          </button>
         </div>
-        
-        <h3 class="text-lg font-bold text-slate-800 mb-1">
-          {{ t('pdf.dropzoneTitle') }}
-        </h3>
-        <p class="text-sm text-slate-500 max-w-md mx-auto mb-6">
-          {{ t('pdf.dropzoneDesc') }}
-        </p>
 
-        <div class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all">
-          <FileUp class="w-4 h-4" />
-          {{ t('pdf.browse') }}
+        <div v-if="step1Tab === 'saved'" class="flex items-center gap-2">
+          <label class="px-3.5 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg cursor-pointer flex items-center gap-1.5 transition-all">
+            <FileUp class="w-3.5 h-3.5 text-brand-600" />
+            <span>{{ t('pdf.importProject') }} (.json)</span>
+            <input type="file" accept=".json" class="hidden" @change="onImportJsonFile" />
+          </label>
         </div>
       </div>
 
-      <!-- Quick Load Real Test Samples from Workspace -->
-      <div class="mt-8 border-t border-slate-100 pt-6">
-        <div class="flex items-center gap-2 mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-          <FlaskConical class="w-4 h-4 text-brand-500" />
-          快速载入工作区真实客户实测文件：
+      <!-- Tab A: Upload New File -->
+      <div v-if="step1Tab === 'new'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 space-y-8">
+        <!-- Dropzone -->
+        <div 
+          @dragover.prevent="isDragging = true"
+          @dragleave.prevent="isDragging = false"
+          @drop.prevent="handleFileDrop"
+          class="border-2 border-dashed rounded-2xl p-12 text-center transition-all cursor-pointer relative"
+          :class="isDragging ? 'border-brand-500 bg-brand-50/50' : 'border-slate-300 hover:border-brand-400 hover:bg-slate-50/50'"
+          @click="triggerFileInput"
+        >
+          <input 
+            ref="fileInputRef" 
+            type="file" 
+            accept=".pdf, image/*, .png, .jpg, .jpeg, .webp" 
+            class="hidden" 
+            @change="handleFileSelect" 
+          />
+          
+          <div class="w-16 h-16 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <UploadCloud class="w-8 h-8" />
+          </div>
+          
+          <h3 class="text-lg font-bold text-slate-800 mb-1">
+            {{ t('pdf.dropzoneTitle') }}
+          </h3>
+          <p class="text-sm text-slate-500 max-w-md mx-auto mb-6">
+            {{ t('pdf.dropzoneDesc') }}
+          </p>
+
+          <div class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all">
+            <FileUp class="w-4 h-4" />
+            {{ t('pdf.browse') }}
+          </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-          <button 
-            @click="loadLocalSample('samples/labels_152.pdf', 'presetA4_30')"
-            class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
-          >
-            <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">① 152件 A4 30拼标</span>
-            <span class="text-[11px] text-slate-500 mt-0.5">3列×10行 · 手机屏幕配件</span>
-          </button>
 
-          <button 
-            @click="loadLocalSample('samples/mercadolibre_2up.pdf', 'presetML_2')"
-            class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
-          >
-            <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">② 美客多 FULL 左右拼</span>
-            <span class="text-[11px] text-slate-500 mt-0.5">1行×2列 · 墨西哥仓箱唛</span>
-          </button>
+        <!-- Quick Load Real Test Samples from Workspace -->
+        <div class="border-t border-slate-100 pt-6">
+          <div class="flex items-center gap-2 mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <FlaskConical class="w-4 h-4 text-brand-500" />
+            快速载入工作区真实客户实测文件：
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            <button 
+              @click="loadLocalSample('samples/labels_152.pdf', 'presetA4_30')"
+              class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
+            >
+              <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">① 152件 A4 30拼标</span>
+              <span class="text-[11px] text-slate-500 mt-0.5">3列×10行 · 手机屏幕配件</span>
+            </button>
 
-          <button 
-            @click="loadLocalSample('samples/carton_vertical_3.pdf', 'presetVertical_2')"
-            class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
-          >
-            <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">③ 上下双拼箱唛 (末页单标)</span>
-            <span class="text-[11px] text-slate-500 mt-0.5">2行×1列 · 自动过滤白边</span>
-          </button>
+            <button 
+              @click="loadLocalSample('samples/mercadolibre_2up.pdf', 'presetML_2')"
+              class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
+            >
+              <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">② 美客多 FULL 左右拼</span>
+              <span class="text-[11px] text-slate-500 mt-0.5">1行×2列 · 墨西哥仓箱唛</span>
+            </button>
 
+            <button 
+              @click="loadLocalSample('samples/carton_vertical_3.pdf', 'presetVertical_2')"
+              class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
+            >
+              <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">③ 上下双拼箱唛 (末页单标)</span>
+              <span class="text-[11px] text-slate-500 mt-0.5">2行×1列 · 自动过滤白边</span>
+            </button>
+
+            <button 
+              @click="loadLocalSample('samples/perfume_single.pdf', 'presetSingleTL')"
+              class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
+            >
+              <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">④ 左上角单标 (香水标)</span>
+              <span class="text-[11px] text-slate-500 mt-0.5">整页A4自动抓取左上角</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Access to Recent Saved Projects -->
+        <div v-if="savedProjectsList.length > 0" class="border-t border-slate-100 pt-6">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <Clock class="w-4 h-4 text-brand-500" />
+              <span>最近保存的项目：</span>
+            </div>
+            <button 
+              @click="step1Tab = 'saved'"
+              class="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1"
+            >
+              <span>查看全部 ({{ savedProjectsList.length }})</span>
+              <ArrowRight class="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <div 
+              v-for="p in savedProjectsList.slice(0, 3)" 
+              :key="p.id"
+              class="p-3 bg-slate-50 hover:bg-white border border-slate-200 hover:border-brand-400 rounded-xl transition-all shadow-xs flex items-center justify-between gap-3 group"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 bg-white border border-slate-200 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
+                  <img v-if="p.thumbnail" :src="p.thumbnail" class="w-full h-full object-contain" />
+                  <FileText v-else class="w-5 h-5 text-slate-300" />
+                </div>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-slate-800 truncate group-hover:text-brand-600">{{ p.name }}</div>
+                  <div class="text-[10px] text-slate-400">{{ p.labelCount }} 款 · 计划 {{ p.totalQuantity }} 张</div>
+                </div>
+              </div>
+              <button 
+                @click="handleOpenProject(p)"
+                class="px-2.5 py-1.5 bg-white hover:bg-brand-50 text-brand-600 border border-slate-200 hover:border-brand-300 text-xs font-bold rounded-lg transition-all flex-shrink-0"
+              >
+                打开
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab B: Browse All Saved Projects -->
+      <div v-else-if="step1Tab === 'saved'" class="space-y-4">
+        <div v-if="savedProjectsList.length === 0" class="text-center py-16 bg-white rounded-xl border border-slate-200 p-8 space-y-4">
+          <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
+            <FolderOpen class="w-8 h-8" />
+          </div>
+          <h4 class="text-base font-bold text-slate-800">{{ t('pdf.emptySaved') }}</h4>
+          <p class="text-xs text-slate-400 max-w-sm mx-auto">
+            在第2步中可随时自定义项目名称并点击【保存项目】，保存后即可在此一键重新打开或导出备份。
+          </p>
           <button 
-            @click="loadLocalSample('samples/perfume_single.pdf', 'presetSingleTL')"
-            class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
+            @click="step1Tab = 'new'"
+            class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm inline-flex items-center gap-2"
           >
-            <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">④ 左上角单标 (香水标)</span>
-            <span class="text-[11px] text-slate-500 mt-0.5">整页A4自动抓取左上角</span>
+            <Plus class="w-4 h-4" />
+            <span>立即新建上传项目</span>
           </button>
+        </div>
+
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div 
+            v-for="p in savedProjectsList" 
+            :key="p.id"
+            class="bg-white rounded-xl border border-slate-200 hover:border-brand-400 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group"
+          >
+            <!-- Card Header & Thumbnail -->
+            <div class="p-4 space-y-3">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0 flex-1">
+                  <h4 class="text-sm font-bold text-slate-800 truncate group-hover:text-brand-600" :title="p.name">
+                    {{ p.name }}
+                  </h4>
+                  <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                    <Clock class="w-3 h-3" />
+                    <span>{{ formatTime(p.updatedAt) }}</span>
+                    <span>·</span>
+                    <span class="truncate max-w-[120px]">{{ p.sourceFileName }}</span>
+                  </div>
+                </div>
+
+                <span class="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded">
+                  {{ p.targetWidthMm }}×{{ p.targetHeightMm }}mm
+                </span>
+              </div>
+
+              <!-- Thumbnail Preview Box -->
+              <div class="w-full h-32 bg-slate-50 border border-slate-100 rounded-lg overflow-hidden flex items-center justify-center p-2 relative">
+                <img v-if="p.thumbnail" :src="p.thumbnail" class="max-w-full max-h-full object-contain" />
+                <div v-else class="text-slate-300 text-xs flex flex-col items-center gap-1">
+                  <FileText class="w-6 h-6" />
+                  <span>无缩略图</span>
+                </div>
+
+                <!-- Floating Count Tag -->
+                <div class="absolute bottom-2 right-2 px-2 py-0.5 bg-slate-900/80 text-white text-[10px] font-mono rounded">
+                  {{ p.labelCount }} 款 · 共 {{ p.totalQuantity }} 张
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Actions Footer -->
+            <div class="px-4 py-3 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between">
+              <button 
+                @click="handleOpenProject(p)"
+                class="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1.5 transition-all"
+              >
+                <FolderOpen class="w-3.5 h-3.5" />
+                <span>打开项目</span>
+              </button>
+
+              <div class="flex items-center gap-1">
+                <button 
+                  @click="handleExportProject(p)"
+                  title="导出为 JSON 备份文件"
+                  class="p-1.5 hover:bg-white text-slate-500 hover:text-slate-800 border border-transparent hover:border-slate-200 rounded-md transition-all text-xs"
+                >
+                  <Download class="w-3.5 h-3.5" />
+                </button>
+                <button 
+                  @click="handleDeleteProject(p.id, p.name)"
+                  title="删除此项目"
+                  class="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-md transition-all text-xs"
+                >
+                  <Trash2 class="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Step 2: Confirm Labels & Quantities (Paso 2 Infotrekx Style) -->
     <div v-if="currentStep === 2" class="space-y-4">
+      <!-- Project Metadata & Custom Naming Bar -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 flex-1 min-w-[260px]">
+          <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center flex-shrink-0">
+            <Bookmark class="w-4 h-4" />
+          </div>
+          <div class="flex-1">
+            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
+              <span>{{ t('pdf.projectName') }} (可自定义命名)</span>
+              <span v-if="currentProjectId" class="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded font-mono">已保存到本地</span>
+            </div>
+            <input 
+              v-model="currentProjectName"
+              type="text"
+              placeholder="输入项目自定义名称 (例如：美客多大号外箱标_批次A)..."
+              class="w-full text-sm font-bold text-slate-800 bg-transparent border-b border-dashed border-slate-300 hover:border-brand-500 focus:border-brand-500 focus:outline-none transition-colors py-0.5"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Save Project Button -->
+          <button 
+            @click="handleSaveCurrentProject"
+            class="px-4 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
+          >
+            <Save class="w-3.5 h-3.5" />
+            <span>{{ t('pdf.saveProject') }}</span>
+          </button>
+
+          <!-- Open History Projects Modal -->
+          <button 
+            @click="showSavedProjectsModal = true"
+            class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all"
+          >
+            <FolderOpen class="w-3.5 h-3.5 text-slate-500" />
+            <span>历史项目 ({{ savedProjectsList.length }})</span>
+          </button>
+
+          <!-- Create New Project -->
+          <button 
+            @click="handleCreateNewProject"
+            class="px-3 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all"
+          >
+            <Plus class="w-3.5 h-3.5" />
+            <span>{{ t('pdf.newProject') }}</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Toolbar: Layout presets & View Mode Switcher -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-3">
@@ -503,20 +719,137 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- History Saved Projects Modal (Teleported to document.body) -->
+    <Teleport to="body">
+      <div v-if="showSavedProjectsModal" class="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden">
+          <!-- Modal Header -->
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center">
+                <FolderOpen class="w-4 h-4" />
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-slate-800">已保存的历史标签项目 ({{ savedProjectsList.length }})</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">点击可直接打开项目；所有数据保存在您的浏览器本地，安全离线可用</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <label class="px-3 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg cursor-pointer flex items-center gap-1.5 transition-all">
+                <FileUp class="w-3.5 h-3.5 text-brand-600" />
+                <span>导入备份 (.json)</span>
+                <input type="file" accept=".json" class="hidden" @change="onImportJsonFile" />
+              </label>
+              <button 
+                @click="showSavedProjectsModal = false"
+                class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                <X class="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Modal Body Grid -->
+          <div class="p-6 overflow-y-auto max-h-[65vh]">
+            <div v-if="savedProjectsList.length === 0" class="text-center py-12 text-slate-400 space-y-3">
+              <FolderOpen class="w-12 h-12 text-slate-300 mx-auto" />
+              <p class="text-sm font-medium">暂无已保存项目</p>
+              <p class="text-xs text-slate-400">在工作区给项目命名并点击【保存项目】，即可保存在此。</p>
+            </div>
+
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div 
+                v-for="p in savedProjectsList" 
+                :key="p.id"
+                class="bg-white rounded-xl border border-slate-200 hover:border-brand-500 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group"
+              >
+                <div class="p-4 space-y-2.5">
+                  <div class="flex items-start justify-between gap-2">
+                    <h4 class="text-xs font-bold text-slate-800 truncate group-hover:text-brand-600" :title="p.name">
+                      {{ p.name }}
+                    </h4>
+                    <span class="text-[10px] font-bold px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded flex-shrink-0">
+                      {{ p.targetWidthMm }}×{{ p.targetHeightMm }}mm
+                    </span>
+                  </div>
+
+                  <div class="text-[11px] text-slate-400 flex items-center gap-1">
+                    <Clock class="w-3 h-3" />
+                    <span>{{ formatTime(p.updatedAt) }}</span>
+                    <span>·</span>
+                    <span>{{ p.labelCount }} 款 ({{ p.totalQuantity }}张)</span>
+                  </div>
+
+                  <!-- Thumbnail Box -->
+                  <div class="w-full h-24 bg-slate-50 border border-slate-100 rounded-lg overflow-hidden flex items-center justify-center p-1.5">
+                    <img v-if="p.thumbnail" :src="p.thumbnail" class="max-w-full max-h-full object-contain" />
+                    <FileText v-else class="w-6 h-6 text-slate-300" />
+                  </div>
+                </div>
+
+                <div class="px-3 py-2 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between">
+                  <button 
+                    @click="handleOpenProject(p)"
+                    class="px-3 py-1 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-md shadow-xs flex items-center gap-1"
+                  >
+                    <span>打开此项目</span>
+                  </button>
+
+                  <div class="flex items-center gap-1">
+                    <button 
+                      @click="handleExportProject(p)"
+                      title="导出备份 JSON"
+                      class="p-1 hover:bg-white text-slate-500 rounded text-xs"
+                    >
+                      <Download class="w-3.5 h-3.5" />
+                    </button>
+                    <button 
+                      @click="handleDeleteProject(p.id, p.name)"
+                      title="删除项目"
+                      class="p-1 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded text-xs"
+                    >
+                      <Trash2 class="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Save Notification Toast -->
+    <Teleport to="body">
+      <div 
+        v-if="saveToastMessage" 
+        class="fixed bottom-6 right-6 z-[10000] px-4 py-2.5 bg-slate-900/90 text-white rounded-xl shadow-2xl flex items-center gap-2 border border-slate-700 backdrop-blur"
+      >
+        <CheckCircle2 class="w-4 h-4 text-emerald-400 flex-shrink-0" />
+        <span class="text-xs font-bold">{{ saveToastMessage }}</span>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, shallowRef, markRaw, computed, nextTick } from 'vue';
+import { ref, shallowRef, markRaw, computed, nextTick, onMounted } from 'vue';
 import { 
   UploadCloud, FileUp, Layers, LayoutGrid, Search, ArrowRight, 
-  CheckCircle2, Download, Printer, Scroll, FlaskConical, Crop, Check, RotateCcw, X 
+  CheckCircle2, Download, Printer, Scroll, FlaskConical, Crop, Check, RotateCcw, X,
+  FolderOpen, Save, Plus, Trash2, Clock, FileText, Bookmark, Calendar
 } from 'lucide-vue-next';
 import { t } from '@/i18n';
 import { 
   loadPdfDocument, detectSuggestedLayout, slicePdfLabels, 
   groupLabelsByBarcode, exportThermalPdf, trimWhiteBorder
 } from '@/utils/pdfProcessor';
+import { 
+  getAllProjects, getProject, saveProject, deleteProject, 
+  exportProjectJson, importProjectJson 
+} from '@/utils/projectStorage';
 
 const currentStep = ref(1);
 const isDragging = ref(false);
@@ -527,6 +860,15 @@ const viewMode = ref('grouped');
 const rawLabels = ref([]);
 const searchQuery = ref('');
 const isGeneratingPdf = ref(false);
+
+// Project management state
+const currentProjectId = ref(null);
+const currentProjectName = ref('');
+const currentSourceFileName = ref('');
+const savedProjectsList = ref([]);
+const showSavedProjectsModal = ref(false);
+const saveToastMessage = ref('');
+const step1Tab = ref('new'); // 'new' | 'saved'
 
 // Freeform visual crop state
 const showFreeCropModal = ref(false);
@@ -588,6 +930,13 @@ const processPdfFile = async (fileOrUrl, forcePreset = null) => {
     const doc = await loadPdfDocument(fileOrUrl);
     currentPdfDoc.value = markRaw(doc);
 
+    // Initialize default project name from file
+    const rawName = fileOrUrl?.name || (typeof fileOrUrl === 'string' ? fileOrUrl.split('/').pop() : 'PDF标签');
+    currentSourceFileName.value = rawName;
+    if (!currentProjectId.value || !currentProjectName.value) {
+      currentProjectName.value = rawName.replace(/\.[^/.]+$/, "") + ' - ' + new Date().toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+    }
+
     if (forcePreset) {
       selectedLayoutMode.value = forcePreset;
       currentStep.value = 2;
@@ -624,6 +973,10 @@ const processImageFile = async (file) => {
       const dataUrl = trimmed.toDataURL('image/png');
 
       const fileName = file.name ? file.name.replace(/\.[^/.]+$/, "") : 'IMAGE-LABEL';
+      currentSourceFileName.value = file.name || '图片标签';
+      if (!currentProjectId.value || !currentProjectName.value) {
+        currentProjectName.value = fileName + ' - ' + new Date().toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+      }
 
       rawLabels.value = [{
         id: `img_${Date.now()}`,
@@ -958,6 +1311,11 @@ const loadLocalSample = async (filePath, presetMode) => {
     const cleanPath = filePath.startsWith('/') ? filePath.slice(1) : filePath;
     const fullUrl = `${cleanBase}${cleanPath}`;
     
+    const sampleBaseName = filePath.split('/').pop().replace(/\.[^/.]+$/, "");
+    currentSourceFileName.value = sampleBaseName;
+    currentProjectName.value = `实测_${sampleBaseName} - ${new Date().toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })}`;
+    currentProjectId.value = null;
+
     const response = await fetch(fullUrl);
     if (!response.ok) throw new Error(`无法获取样本文件 (${response.status})`);
     const blob = await response.blob();
@@ -1064,5 +1422,149 @@ const triggerThermalPrint = async () => {
       printWindow.print();
     };
   }
+};
+
+// ==========================================
+// Project Management & Persistence Functions
+// ==========================================
+
+const loadSavedProjectsList = async () => {
+  try {
+    savedProjectsList.value = await getAllProjects();
+  } catch (err) {
+    console.error('Failed to load saved projects:', err);
+  }
+};
+
+onMounted(() => {
+  loadSavedProjectsList();
+});
+
+const handleSaveCurrentProject = async () => {
+  if (rawLabels.value.length === 0) {
+    alert('暂无标签可保存，请先上传并裁切标签');
+    return;
+  }
+
+  const nameToSave = currentProjectName.value.trim() || `标签项目_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}_${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
+  currentProjectName.value = nameToSave;
+
+  const projectPayload = {
+    id: currentProjectId.value || `proj_${Date.now()}`,
+    name: nameToSave,
+    sourceFileName: currentSourceFileName.value || '自定义标签',
+    layoutMode: selectedLayoutMode.value,
+    freeCropBox: freeCropBox.value,
+    selectedPaperId: selectedPaperId.value,
+    targetWidthMm: targetWidthMm.value,
+    targetHeightMm: targetHeightMm.value,
+    autoRotate: autoRotate.value,
+    fitMode: fitMode.value,
+    viewMode: viewMode.value,
+    rawLabels: rawLabels.value,
+  };
+
+  try {
+    const saved = await saveProject(projectPayload);
+    currentProjectId.value = saved.id;
+    await loadSavedProjectsList();
+    saveToastMessage.value = `项目【${saved.name}】已成功保存！`;
+    setTimeout(() => {
+      saveToastMessage.value = '';
+    }, 3000);
+  } catch (err) {
+    console.error('Failed to save project:', err);
+    alert('保存项目失败: ' + err.message);
+  }
+};
+
+const handleOpenProject = async (projectItem) => {
+  try {
+    const full = await getProject(projectItem.id);
+    if (!full) throw new Error('未找到该项目的完整数据');
+
+    currentProjectId.value = full.id;
+    currentProjectName.value = full.name;
+    currentSourceFileName.value = full.sourceFileName || '';
+    selectedLayoutMode.value = full.layoutMode || 'presetFreeform';
+    freeCropBox.value = full.freeCropBox || null;
+    selectedPaperId.value = full.selectedPaperId || '70x30';
+    targetWidthMm.value = full.targetWidthMm || 70;
+    targetHeightMm.value = full.targetHeightMm || 30;
+    autoRotate.value = full.autoRotate !== false;
+    fitMode.value = full.fitMode || 'proportional';
+    viewMode.value = full.viewMode || 'grouped';
+    rawLabels.value = full.rawLabels || [];
+
+    currentPdfDoc.value = null; // Stored project is standalone
+    originalImageCanvas.value = null;
+    showSavedProjectsModal.value = false;
+    currentStep.value = 2;
+
+    saveToastMessage.value = `已打开项目【${full.name}】`;
+    setTimeout(() => {
+      saveToastMessage.value = '';
+    }, 2500);
+  } catch (err) {
+    console.error('Failed to open project:', err);
+    alert('打开项目失败: ' + err.message);
+  }
+};
+
+const handleDeleteProject = async (id, name) => {
+  if (!confirm(`确定要删除保存项目【${name || '此项目'}】吗？此操作无法撤销。`)) return;
+  try {
+    await deleteProject(id);
+    if (currentProjectId.value === id) {
+      currentProjectId.value = null;
+    }
+    await loadSavedProjectsList();
+  } catch (err) {
+    alert('删除失败: ' + err.message);
+  }
+};
+
+const handleCreateNewProject = () => {
+  currentProjectId.value = null;
+  currentProjectName.value = '';
+  currentSourceFileName.value = '';
+  currentPdfDoc.value = null;
+  originalImageCanvas.value = null;
+  rawLabels.value = [];
+  freeCropBox.value = null;
+  currentStep.value = 1;
+  step1Tab.value = 'new';
+};
+
+const handleExportProject = async (projectItem) => {
+  try {
+    const full = await getProject(projectItem.id);
+    if (full) {
+      exportProjectJson(full);
+    }
+  } catch (err) {
+    alert('导出项目失败: ' + err.message);
+  }
+};
+
+const onImportJsonFile = async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  try {
+    const imported = await importProjectJson(file);
+    await loadSavedProjectsList();
+    alert(`成功导入项目【${imported.name}】！`);
+    await handleOpenProject(imported);
+  } catch (err) {
+    alert('导入失败: ' + err.message);
+  } finally {
+    e.target.value = '';
+  }
+};
+
+const formatTime = (ts) => {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return `${d.getMonth() + 1}-${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
 </script>
