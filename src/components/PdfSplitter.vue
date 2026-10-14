@@ -608,6 +608,51 @@
           </div>
         </div>
       </div>
+
+      <!-- Thermal Printing Pitfall & Troubleshooting Guide -->
+      <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-5 text-amber-950 space-y-3">
+        <div class="flex items-center gap-2 font-bold text-amber-900 text-sm">
+          <AlertTriangle class="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <span>热敏打印机防踩坑指南（避免连吐多张、条码拉伸变形、跨缝打断）</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs pt-1">
+          <!-- Item 1 -->
+          <div class="p-3 bg-white/80 rounded-xl border border-amber-200/60 shadow-xs space-y-1.5">
+            <div class="font-bold text-amber-900 flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">1</span>
+              <span>纸张尺寸必须匹配实际卷纸</span>
+            </div>
+            <p class="text-amber-800 leading-relaxed text-[11px]">
+              弹出打印窗口时，<strong>纸张尺寸必须选择与打印机里实际装入的卷纸一致（如当前的 {{ targetWidthMm }} × {{ targetHeightMm }} mm）</strong>！
+              <span class="text-rose-600 font-bold block mt-0.5">⚠️ 绝不能使用系统默认的「E邮宝长 100×150mm」！</span>
+              若选 100×150mm，打印机会以为是一张 15 厘米的大面单，从而连吐 4~5 张标签纸，并且条码会被旋转切断。
+            </p>
+          </div>
+
+          <!-- Item 2 -->
+          <div class="p-3 bg-white/80 rounded-xl border border-amber-200/60 shadow-xs space-y-1.5">
+            <div class="font-bold text-amber-900 flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">2</span>
+              <span>缩放选 100% · 边距选无</span>
+            </div>
+            <p class="text-amber-800 leading-relaxed text-[11px]">
+              打印设置中，<strong>缩放请勾选「实际大小 / 100%」</strong>（不要选“适合可打印区域”避免变形）；<strong>边距选择「无」</strong>，保证标签 1:1 满幅贴合。
+            </p>
+          </div>
+
+          <!-- Item 3 -->
+          <div class="p-3 bg-white/80 rounded-xl border border-amber-200/60 shadow-xs space-y-1.5">
+            <div class="font-bold text-amber-900 flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">3</span>
+              <span>汉印 (HPRT) 打印机缝隙自动校准</span>
+            </div>
+            <p class="text-amber-800 leading-relaxed text-[11px]">
+              装好新卷纸后，开机状态下<strong>长按打印机顶部的 FEED 走纸键约 2 秒</strong>，听到“哔”一声松手，打印机会自动走纸学习标签缝隙定位，校准后每次打印均能精准停在每张标签的切线处！
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Freeform Visual Crop Modal (Teleported to document.body) -->
@@ -839,7 +884,7 @@ import { ref, shallowRef, markRaw, computed, nextTick, onMounted } from 'vue';
 import { 
   UploadCloud, FileUp, Layers, LayoutGrid, Search, ArrowRight, 
   CheckCircle2, Download, Printer, Scroll, FlaskConical, Crop, Check, RotateCcw, X,
-  FolderOpen, Save, Plus, Trash2, Clock, FileText, Bookmark, Calendar
+  FolderOpen, Save, Plus, Trash2, Clock, FileText, Bookmark, Calendar, AlertTriangle
 } from 'lucide-vue-next';
 import { t } from '@/i18n';
 import { 
@@ -1039,8 +1084,10 @@ const renderCropCanvas = async () => {
 
   if (currentPdfDoc.value) {
     const page = await currentPdfDoc.value.getPage(1);
-    const vp = page.getViewport({ scale: 2.0 });
     const pageVp = page.getViewport({ scale: 1.0 });
+    const maxDim = Math.max(pageVp.width, pageVp.height);
+    const targetScale = Math.min(8.0, Math.max(3.0, 1800 / maxDim));
+    const vp = page.getViewport({ scale: targetScale });
     pdfOriginalWidthMm.value = Math.round(pageVp.width * (25.4 / 72));
     pdfOriginalHeightMm.value = Math.round(pageVp.height * (25.4 / 72));
 
@@ -1404,7 +1451,7 @@ const downloadThermalPdf = async () => {
   }
 };
 
-// Direct silent thermal print
+// Direct silent thermal print via iframe with strict @page geometry
 const triggerThermalPrint = async () => {
   if (previewList.value.length === 0) return;
   
@@ -1419,21 +1466,85 @@ const triggerThermalPrint = async () => {
     return;
   }
 
-  // Otherwise in standard Web mode: generate standard thermal PDF blob and open print window
-  const blob = await exportThermalPdf(displayItems.value, {
-    targetWidthMm: targetWidthMm.value,
-    targetHeightMm: targetHeightMm.value,
-    fitMode: fitMode.value,
-    autoRotate: autoRotate.value,
-  });
-  const url = URL.createObjectURL(blob);
-  const printWindow = window.open(url, '_blank');
-  if (printWindow) {
-    printWindow.onload = () => {
-      printWindow.focus();
-      printWindow.print();
-    };
-  }
+  // Web High-Precision Thermal Direct Print via Iframe with strict @page geometry
+  // This instructs Chrome/Edge print engine of the exact physical millimeter dimensions
+  const printIframe = document.createElement('iframe');
+  printIframe.style.position = 'fixed';
+  printIframe.style.right = '0';
+  printIframe.style.bottom = '0';
+  printIframe.style.width = '0';
+  printIframe.style.height = '0';
+  printIframe.style.border = '0';
+  document.body.appendChild(printIframe);
+
+  const pagesHtml = previewList.value.map(item => `
+    <div class="thermal-page">
+      <img src="${item.dataUrl}" class="${autoRotate.value && item.width < item.height && targetWidthMm.value > targetHeightMm.value ? 'rotate-90' : ''}" />
+    </div>
+  `).join('');
+
+  const iframeDoc = printIframe.contentWindow.document;
+  iframeDoc.open();
+  iframeDoc.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>LabelMaster_Print_${targetWidthMm.value}x${targetHeightMm.value}mm</title>
+        <style>
+          @page {
+            size: ${targetWidthMm.value}mm ${targetHeightMm.value}mm;
+            margin: 0;
+          }
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+          html, body {
+            width: ${targetWidthMm.value}mm;
+            height: ${targetHeightMm.value}mm;
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+          }
+          .thermal-page {
+            width: ${targetWidthMm.value}mm;
+            height: ${targetHeightMm.value}mm;
+            page-break-after: always;
+            page-break-inside: avoid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+          }
+          .thermal-page img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: ${fitMode.value === 'stretch' ? 'fill' : 'contain'};
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+          }
+          .thermal-page img.rotate-90 {
+            transform: rotate(90deg);
+          }
+        </style>
+      </head>
+      <body>
+        ${pagesHtml}
+      </body>
+    </html>
+  `);
+  iframeDoc.close();
+
+  setTimeout(() => {
+    printIframe.contentWindow.focus();
+    printIframe.contentWindow.print();
+    setTimeout(() => {
+      if (document.body.contains(printIframe)) {
+        document.body.removeChild(printIframe);
+      }
+    }, 60000);
+  }, 400);
 };
 
 // ==========================================

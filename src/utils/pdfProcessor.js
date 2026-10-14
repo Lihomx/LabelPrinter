@@ -169,12 +169,17 @@ export async function detectSuggestedLayout(pdfDoc) {
 export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = null, customBox = null) {
   const labels = [];
   const numPages = pdfDoc.numPages;
-  const renderScale = 2.5;
 
   for (let pageNum = 1; pageNum <= numPages; pageNum++) {
     if (onProgress) onProgress(pageNum, numPages);
 
     const page = await pdfDoc.getPage(pageNum);
+    const unscaledVp = page.getViewport({ scale: 1.0 });
+    const maxDim = Math.max(unscaledVp.width, unscaledVp.height);
+    // Dynamic Ultra-HD sampling: target 300-400 DPI equivalent, minimum 2400px resolution
+    const minPixels = 2400;
+    const renderScale = Math.min(10.0, Math.max(4.0, minPixels / maxDim));
+
     const viewport = page.getViewport({ scale: renderScale });
     
     const canvas = document.createElement('canvas');
