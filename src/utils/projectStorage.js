@@ -70,53 +70,85 @@ export async function getProject(id) {
 
 /**
  * Save or update project
- * Strips raw non-serializable DOM canvas elements before storing
+ * Strips raw non-serializable DOM canvas elements and Vue 3 reactive proxies before storing
  */
 export async function saveProject(projectData) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
+    try {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
 
-    // Sanitize rawLabels to remove raw HTMLCanvasElement before IndexedDB serialization
-    const cleanLabels = (projectData.rawLabels || []).map(label => ({
-      id: label.id,
-      page: label.page || 1,
-      col: label.col || 1,
-      row: label.row || 1,
-      dataUrl: label.dataUrl,
-      barcode: label.barcode || '',
-      title: label.title || '',
-      sku: label.sku || '',
-      quantity: parseInt(label.quantity) || 1,
-      selected: label.selected !== false,
-      width: label.width || 0,
-      height: label.height || 0,
-    }));
+      // Deeply sanitize rawLabels to extract only serializable primitives and dataUrl
+      const cleanLabels = (projectData.rawLabels || []).map((label, index) => {
+        let dataUrl = '';
+        if (typeof label.dataUrl === 'string' && label.dataUrl.length > 0) {
+          dataUrl = label.dataUrl;
+        } else if (label.canvas && typeof label.canvas.toDataURL === 'function') {
+          try {
+            dataUrl = label.canvas.toDataURL('image/png');
+          } catch {
+            dataUrl = '';
+          }
+        }
 
-    const cleanProject = {
-      id: projectData.id || `proj_${Date.now()}`,
-      name: projectData.name || `标签项目_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}`,
-      createdAt: projectData.createdAt || Date.now(),
-      updatedAt: Date.now(),
-      sourceFileName: projectData.sourceFileName || '未命名文件',
-      layoutMode: projectData.layoutMode || 'presetFreeform',
-      freeCropBox: projectData.freeCropBox || null,
-      selectedPaperId: projectData.selectedPaperId || '70x30',
-      targetWidthMm: projectData.targetWidthMm || 70,
-      targetHeightMm: projectData.targetHeightMm || 30,
-      autoRotate: projectData.autoRotate !== false,
-      fitMode: projectData.fitMode || 'proportional',
-      viewMode: projectData.viewMode || 'grouped',
-      rawLabels: cleanLabels,
-      totalQuantity: cleanLabels.reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0),
-      labelCount: cleanLabels.length,
-      thumbnail: cleanLabels[0]?.dataUrl || null,
-    };
+        return {
+          id: String(label.id || `lbl_${index}_${Date.now()}`),
+          page: Number(label.page) || 1,
+          col: Number(label.col) || 1,
+          row: Number(label.row) || 1,
+          dataUrl: dataUrl,
+          barcode: String(label.barcode ?? ''),
+          title: String(label.title ?? ''),
+          sku: String(label.sku ?? ''),
+          quantity: Math.max(1, parseInt(label.quantity, 10) || 1),
+          selected: label.selected !== false,
+          width: Number(label.width) || 0,
+          height: Number(label.height) || 0,
+        };
+      });
 
-    const request = store.put(cleanProject);
-    request.onsuccess = () => resolve(cleanProject);
-    request.onerror = () => reject(request.error);
+      // Plain unproxied freeCropBox
+      let cleanFreeCropBox = null;
+      if (projectData.freeCropBox) {
+        cleanFreeCropBox = {
+          xRatio: Number(projectData.freeCropBox.xRatio) || 0,
+          yRatio: Number(projectData.freeCropBox.yRatio) || 0,
+          wRatio: Number(projectData.freeCropBox.wRatio) || 0,
+          hRatio: Number(projectData.freeCropBox.hRatio) || 0,
+        };
+      }
+
+      const cleanProject = {
+        id: String(projectData.id || `proj_${Date.now()}`),
+        name: String(projectData.name || `标签项目_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}`),
+        createdAt: Number(projectData.createdAt) || Date.now(),
+        updatedAt: Date.now(),
+        sourceFileName: String(projectData.sourceFileName || '未命名文件'),
+        layoutMode: String(projectData.layoutMode || 'presetFreeform'),
+        freeCropBox: cleanFreeCropBox,
+        selectedPaperId: String(projectData.selectedPaperId || '70x30'),
+        targetWidthMm: Number(projectData.targetWidthMm) || 70,
+        targetHeightMm: Number(projectData.targetHeightMm) || 30,
+        autoRotate: projectData.autoRotate !== false,
+        fitMode: String(projectData.fitMode || 'proportional'),
+        viewMode: String(projectData.viewMode || 'grouped'),
+        rawLabels: cleanLabels,
+        totalQuantity: cleanLabels.reduce((sum, item) => sum + (parseInt(item.quantity, 10) || 0), 0),
+        labelCount: cleanLabels.length,
+        thumbnail: cleanLabels[0]?.dataUrl || null,
+      };
+
+      // Guarantee 100% plain object with zero Proxies, zero DOM nodes, zero exotic prototypes
+      const serializablePayload = JSON.parse(JSON.stringify(cleanProject));
+
+      const request = store.put(serializablePayload);
+      request.onsuccess = () => resolve(serializablePayload);
+      request.onerror = (e) => reject(e.target?.error || request.error);
+      tx.onabort = (e) => reject(e.target?.error || tx.error);
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
@@ -139,10 +171,11 @@ export async function deleteProject(id) {
  * Export project as downloadable JSON backup file
  */
 export function exportProjectJson(project) {
-  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(project, null, 2));
+  const clean = JSON.parse(JSON.stringify(project));
+  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(clean, null, 2));
   const downloadAnchor = document.createElement('a');
   downloadAnchor.setAttribute('href', dataStr);
-  downloadAnchor.setAttribute('download', `${project.name || 'label_project'}.labelmaster.json`);
+  downloadAnchor.setAttribute('download', `${clean.name || 'label_project'}.labelmaster.json`);
   document.body.appendChild(downloadAnchor);
   downloadAnchor.click();
   downloadAnchor.remove();

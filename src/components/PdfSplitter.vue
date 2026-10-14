@@ -1050,16 +1050,28 @@ const renderCropCanvas = async () => {
     cropPageHeight.value = vp.height;
     const ctx = canvas.getContext('2d');
     await page.render({ canvasContext: ctx, viewport: vp }).promise;
-  } else if (originalImageCanvas.value || rawLabels.value[0]?.canvas) {
-    const srcCanvas = originalImageCanvas.value || rawLabels.value[0].canvas;
-    canvas.width = srcCanvas.width;
-    canvas.height = srcCanvas.height;
-    cropPageWidth.value = srcCanvas.width;
-    cropPageHeight.value = srcCanvas.height;
-    pdfOriginalWidthMm.value = Math.round(srcCanvas.width * 0.264583);
-    pdfOriginalHeightMm.value = Math.round(srcCanvas.height * 0.264583);
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(srcCanvas, 0, 0);
+  } else if (originalImageCanvas.value || rawLabels.value[0]?.canvas || rawLabels.value[0]?.dataUrl) {
+    let srcCanvas = originalImageCanvas.value || rawLabels.value[0]?.canvas;
+    if (!srcCanvas && rawLabels.value[0]?.dataUrl) {
+      const img = new Image();
+      img.src = rawLabels.value[0].dataUrl;
+      await img.decode();
+      const tempC = document.createElement('canvas');
+      tempC.width = img.naturalWidth || img.width;
+      tempC.height = img.naturalHeight || img.height;
+      tempC.getContext('2d').drawImage(img, 0, 0);
+      srcCanvas = tempC;
+    }
+    if (srcCanvas) {
+      canvas.width = srcCanvas.width;
+      canvas.height = srcCanvas.height;
+      cropPageWidth.value = srcCanvas.width;
+      cropPageHeight.value = srcCanvas.height;
+      pdfOriginalWidthMm.value = Math.round(srcCanvas.width * 0.264583);
+      pdfOriginalHeightMm.value = Math.round(srcCanvas.height * 0.264583);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(srcCanvas, 0, 0);
+    }
   }
 
   await nextTick();
@@ -1449,12 +1461,19 @@ const handleSaveCurrentProject = async () => {
   const nameToSave = currentProjectName.value.trim() || `标签项目_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}_${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
   currentProjectName.value = nameToSave;
 
+  const cleanBox = freeCropBox.value ? {
+    xRatio: Number(freeCropBox.value.xRatio) || 0,
+    yRatio: Number(freeCropBox.value.yRatio) || 0,
+    wRatio: Number(freeCropBox.value.wRatio) || 0,
+    hRatio: Number(freeCropBox.value.hRatio) || 0,
+  } : null;
+
   const projectPayload = {
     id: currentProjectId.value || `proj_${Date.now()}`,
     name: nameToSave,
     sourceFileName: currentSourceFileName.value || '自定义标签',
     layoutMode: selectedLayoutMode.value,
-    freeCropBox: freeCropBox.value,
+    freeCropBox: cleanBox,
     selectedPaperId: selectedPaperId.value,
     targetWidthMm: targetWidthMm.value,
     targetHeightMm: targetHeightMm.value,
