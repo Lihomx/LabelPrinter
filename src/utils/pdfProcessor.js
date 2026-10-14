@@ -1,8 +1,9 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
 import { PDFDocument } from 'pdf-lib';
 
-// Configure pdfjs worker for Vite
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+// Use local bundled worker for 100% offline & firewall-proof operation
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 /**
  * Checks if a canvas context region is mostly blank/white
@@ -33,7 +34,7 @@ function isRegionBlank(ctx, x, y, width, height, threshold = 0.985) {
 /**
  * Find bounding box of content inside a canvas region (trim white borders)
  */
-function trimWhiteBorder(canvas) {
+export function trimWhiteBorder(canvas) {
   const ctx = canvas.getContext('2d');
   const w = canvas.width;
   const h = canvas.height;
@@ -99,16 +100,32 @@ function trimWhiteBorder(canvas) {
 }
 
 /**
- * Load PDF file and parse page-by-page
+ * Load PDF file and parse page-by-page using strict Uint8Array
  */
 export async function loadPdfDocument(fileOrUrl) {
-  let loadingTask;
+  let uint8Array;
   if (typeof fileOrUrl === 'string') {
-    loadingTask = pdfjsLib.getDocument(fileOrUrl);
+    const res = await fetch(fileOrUrl);
+    if (!res.ok) {
+      throw new Error(`无法获取文件 (HTTP ${res.status})`);
+    }
+    const ab = await res.arrayBuffer();
+    uint8Array = new Uint8Array(ab);
   } else {
-    const arrayBuffer = await fileOrUrl.arrayBuffer();
-    loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+    const ab = await fileOrUrl.arrayBuffer();
+    uint8Array = new Uint8Array(ab);
   }
+
+  // Verify PDF header magic bytes "%PDF-"
+  if (uint8Array.length < 5 || 
+      uint8Array[0] !== 0x25 || 
+      uint8Array[1] !== 0x50 || 
+      uint8Array[2] !== 0x44 || 
+      uint8Array[3] !== 0x46) {
+    throw new Error('文件不是有效的 PDF 格式（可能传入了图片或损坏的文件）');
+  }
+
+  const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
   return await loadingTask.promise;
 }
 
@@ -116,7 +133,6 @@ export async function loadPdfDocument(fileOrUrl) {
  * Automatically analyze layout from PDF dimensions and text
  */
 export async function detectSuggestedLayout(pdfDoc) {
-  const numPages = pdfDoc.numPages;
   const firstPage = await pdfDoc.getPage(1);
   const viewport = firstPage.getViewport({ scale: 1.0 });
   const textContent = await firstPage.getTextContent();
@@ -124,7 +140,6 @@ export async function detectSuggestedLayout(pdfDoc) {
 
   // 1. Check for Mercado Libre 2-in-1
   if (textItems.includes('FULL') || textItems.includes('ENTREGAR A FULL') || textItems.includes('BULTOS')) {
-    // If aspect ratio is approx A4 landscape or portrait with 2 labels
     if (viewport.width > viewport.height || textItems.includes('Envío:')) {
       return 'presetML_2';
     }
@@ -154,7 +169,7 @@ export async function detectSuggestedLayout(pdfDoc) {
 export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = null) {
   const labels = [];
   const numPages = pdfDoc.numPages;
-  const renderScale = 2.5; // High resolution rendering for sharp barcodes
+  const renderScale = 2.5;
 
   for (let pageNum = 1; pageNum <= numPages; pageNum++) {
     if (onProgress) onProgress(pageNum, numPages);
@@ -162,7 +177,6 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
     const page = await pdfDoc.getPage(pageNum);
     const viewport = page.getViewport({ scale: renderScale });
     
-    // Render PDF page to memory canvas
     const canvas = document.createElement('canvas');
     canvas.width = viewport.width;
     canvas.height = viewport.height;
@@ -173,7 +187,6 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
       viewport: viewport,
     }).promise;
 
-    // Get text content to extract SKU/Barcode
     const textContent = await page.getTextContent();
 
     let gridCols = 1;
@@ -190,7 +203,6 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
       gridCols = 1;
       gridRows = 2;
     } else if (mode === 'presetSingleTL') {
-      // Crop top-left region: approx 35% width, 15% height of A4
       customSlicing = [{
         col: 0,
         row: 0,
@@ -239,7 +251,6 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
         const x = c * cellW;
         const y = r * cellH;
 
-        // Skip blank cells (vital for page 6 of 30-up PDF or page 2 of vertical 2-up)
         if (isRegionBlank(ctx, x + 5, y + 5, cellW - 10, cellH - 10)) {
           continue;
         }
@@ -280,7 +291,6 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
  * Match text items to cell bounding box coordinates
  */
 function extractCellText(items, box, viewport, renderScale) {
-  // Convert PDF coordinates (origin at bottom-left) to Canvas coordinates (origin top-left)
   const cellTexts = [];
   for (const item of items) {
     const itemX = item.transform[4] * renderScale;
@@ -305,7 +315,6 @@ function extractCellText(items, box, viewport, renderScale) {
     } else if (txt.startsWith('ENVÍO:')) {
       barcode = txt;
     } else if (/^[A-Z0-9]{6,14}$/.test(txt) && !barcode) {
-      // Typical SKU/Barcode identifier like IASF90617, MXRC03, ZTXX53163
       barcode = txt;
     } else if (txt.length > 10 && !title) {
       title = txt;
@@ -337,7 +346,7 @@ export function groupLabelsByBarcode(labels) {
 
   return Array.from(map.values()).map(g => ({
     ...g,
-    quantity: g.count, // Default quantity = total occurrences in PDF
+    quantity: g.count,
   }));
 }
 
@@ -354,7 +363,6 @@ export async function exportThermalPdf(labels, options = {}) {
 
   const pdfDoc = await PDFDocument.create();
 
-  // Convert mm to PDF points (1 inch = 25.4 mm = 72 points)
   const ptPerMm = 72 / 25.4;
   let targetW = targetWidthMm * ptPerMm;
   let targetH = targetHeightMm * ptPerMm;
@@ -362,7 +370,6 @@ export async function exportThermalPdf(labels, options = {}) {
   for (const label of labels) {
     const qty = Math.max(1, parseInt(label.quantity) || 1);
     
-    // Embed image into PDF
     const imgBytes = await fetch(label.dataUrl).then(res => res.arrayBuffer());
     const embeddedImg = await pdfDoc.embedPng(imgBytes);
 
@@ -372,7 +379,6 @@ export async function exportThermalPdf(labels, options = {}) {
       let imgW = embeddedImg.width;
       let imgH = embeddedImg.height;
 
-      // Auto rotation check
       let shouldRotate = false;
       if (autoRotate) {
         const isImgLandscape = imgW > imgH;
@@ -385,7 +391,6 @@ export async function exportThermalPdf(labels, options = {}) {
       const page = pdfDoc.addPage([pageW, pageH]);
 
       if (shouldRotate) {
-        // Swap dimensions for fitting
         const scale = Math.min(pageW / imgH, pageH / imgW);
         const drawW = imgW * scale;
         const drawH = imgH * scale;

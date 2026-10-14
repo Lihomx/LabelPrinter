@@ -42,7 +42,7 @@
         <input 
           ref="fileInputRef" 
           type="file" 
-          accept=".pdf" 
+          accept=".pdf, image/*, .png, .jpg, .jpeg, .webp" 
           class="hidden" 
           @change="handleFileSelect" 
         />
@@ -450,7 +450,67 @@ const processPdfFile = async (fileOrUrl) => {
     currentStep.value = 2;
   } catch (err) {
     console.error('Error loading PDF:', err);
-    alert('无法解析 PDF 文件，请确认是否为有效文件。');
+    alert(`无法解析文件: ${err.message || '请确认是否为有效的 PDF 文件'}`);
+  }
+};
+
+// Process Image file (PNG / JPG / WEBP)
+const processImageFile = async (file) => {
+  try {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const img = new Image();
+      img.src = e.target.result;
+      await img.decode();
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+
+      const trimmed = trimWhiteBorder(canvas);
+      const dataUrl = trimmed.toDataURL('image/png');
+
+      const fileName = file.name ? file.name.replace(/\.[^/.]+$/, "") : 'IMAGE-LABEL';
+
+      rawLabels.value = [{
+        id: `img_${Date.now()}`,
+        page: 1,
+        col: 1,
+        row: 1,
+        canvas: trimmed,
+        dataUrl: dataUrl,
+        barcode: fileName,
+        title: fileName,
+        sku: '',
+        quantity: 1,
+        selected: true,
+        width: trimmed.width,
+        height: trimmed.height,
+      }];
+
+      if (trimmed.width > trimmed.height * 1.5) {
+        selectPaperPreset(paperPresets.find(p => p.id === '70x30'));
+      } else {
+        selectPaperPreset(paperPresets.find(p => p.id === '100x100'));
+      }
+
+      currentStep.value = 2;
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    console.error('Error processing image:', err);
+    alert('解析图片标签失败: ' + err.message);
+  }
+};
+
+const processFile = async (file) => {
+  if (!file) return;
+  if (file.type?.startsWith('image/') || /\.(png|jpe?g|webp|bmp)$/i.test(file.name || '')) {
+    await processImageFile(file);
+  } else {
+    await processPdfFile(file);
   }
 };
 
@@ -459,28 +519,34 @@ const reprocessPdf = async () => {
   rawLabels.value = await slicePdfLabels(currentPdfDoc.value, selectedLayoutMode.value);
 };
 
-// Quick load from workspace
+// Quick load from workspace with proper base path
 const loadLocalSample = async (filePath, presetMode) => {
   selectedLayoutMode.value = presetMode;
   try {
-    // Read local sample via fetch
-    const response = await fetch(`/${filePath}`);
+    const base = import.meta.env.BASE_URL || './';
+    const cleanBase = base.endsWith('/') ? base : `${base}/`;
+    const cleanPath = filePath.startsWith('/') ? filePath.slice(1) : filePath;
+    const fullUrl = `${cleanBase}${cleanPath}`;
+    
+    const response = await fetch(fullUrl);
+    if (!response.ok) throw new Error(`无法获取样本文件 (${response.status})`);
     const blob = await response.blob();
     await processPdfFile(blob);
   } catch (err) {
     console.error('Could not load sample file directly:', err);
+    alert('载入样本失败: ' + err.message);
   }
 };
 
 const triggerFileInput = () => fileInputRef.value?.click();
 const handleFileSelect = (e) => {
   const file = e.target.files?.[0];
-  if (file) processPdfFile(file);
+  if (file) processFile(file);
 };
 const handleFileDrop = (e) => {
   isDragging.value = false;
   const file = e.dataTransfer.files?.[0];
-  if (file && file.type === 'application/pdf') processPdfFile(file);
+  if (file) processFile(file);
 };
 
 // Filtered labels
