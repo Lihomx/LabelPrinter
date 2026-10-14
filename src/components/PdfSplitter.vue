@@ -576,6 +576,34 @@
         </div>
       </div>
 
+      <!-- Prominent Red Alert Banner Requested by User -->
+      <div class="bg-rose-50 border-2 border-rose-500 rounded-2xl p-4 sm:p-5 text-rose-950 shadow-sm flex items-start gap-3.5 animate-pulse-once">
+        <AlertTriangle class="w-6 h-6 text-rose-600 flex-shrink-0 mt-0.5" />
+        <div class="space-y-2 text-xs flex-1">
+          <div class="text-sm sm:text-base font-black text-rose-700 flex items-center gap-2">
+            <span>🚨 打印设置特别提醒：弹出的打印窗口中，必须正确选择「纸张尺寸」！</span>
+          </div>
+          <p class="leading-relaxed text-rose-900 font-medium text-xs sm:text-sm">
+            点击打印后，系统弹窗默认通常是 <span class="bg-rose-200/90 text-rose-950 px-1.5 py-0.5 rounded font-black underline decoration-rose-600">「E邮宝长 100mm * 150mm」</span>，<strong class="text-rose-700 font-black">绝对不能使用该默认尺寸！</strong>
+            如果选了 100×150mm，打印机会按 15 厘米大面单走纸，直接导致<strong class="text-rose-700 font-black">连吐 4~5 张标签纸，并且条码会被旋转打断</strong>！
+          </p>
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3 pt-1 font-bold text-rose-900">
+            <span class="bg-white px-3 py-1.5 rounded-lg border border-rose-300 shadow-2xs flex items-center gap-1.5">
+              <span class="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">1</span>
+              <span>纸张尺寸：必须选与实际装纸一致（当前: {{ targetWidthMm }} × {{ targetHeightMm }} mm）</span>
+            </span>
+            <span class="bg-white px-3 py-1.5 rounded-lg border border-rose-300 shadow-2xs flex items-center gap-1.5">
+              <span class="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">2</span>
+              <span>缩放：实际大小 / 100%（勿选适合可打印区域）</span>
+            </span>
+            <span class="bg-white px-3 py-1.5 rounded-lg border border-rose-300 shadow-2xs flex items-center gap-1.5">
+              <span class="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">3</span>
+              <span>边距：无</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
       <!-- Thermal Roll Realistic Visualizer -->
       <div class="bg-slate-100 rounded-2xl p-8 flex flex-col items-center justify-center min-h-[400px] border border-slate-200 overflow-x-auto">
         <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
@@ -597,6 +625,7 @@
             <img 
               :src="item.dataUrl" 
               class="max-w-full max-h-full object-contain" 
+              style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;"
               :class="autoRotate && item.width < item.height && targetWidthMm > targetHeightMm ? 'rotate-90' : ''"
             />
             <div class="absolute bottom-1 right-1.5 text-[9px] font-mono text-slate-300">
@@ -609,46 +638,108 @@
         </div>
       </div>
 
+      <!-- Solution for missing paper sizes across different printers -->
+      <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-5 text-blue-950 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 font-bold text-blue-950 text-sm">
+            <Info class="w-5 h-5 text-blue-600 flex-shrink-0" />
+            <span>问：打印机下拉列表中没有 {{ targetWidthMm }}×{{ targetHeightMm }} mm（或其它打印机尺寸不同）怎么办？</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <!-- Solution 1 -->
+          <div class="p-3.5 bg-white rounded-xl border border-blue-200 shadow-2xs space-y-2 flex flex-col justify-between">
+            <div class="space-y-1.5">
+              <div class="font-bold text-blue-900 flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">方案 1</span>
+                <span>在电脑驱动新建尺寸（强烈推荐·30秒一劳永逸）</span>
+              </div>
+              <p class="text-slate-600 text-[11px] leading-relaxed">
+                不同品牌打印机出厂预装尺寸各不相同。您可以轻松在电脑驱动里新建一次该规格：
+              </p>
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] space-y-1 font-mono text-slate-700">
+                <div>① 按键盘 <strong>Win + R</strong> 键，输入 <strong>control printers</strong> 打开设备和打印机；</div>
+                <div>② 右键您的打印机（如 <strong>HPRT N41BT</strong>），点击<strong>「打印首选项」</strong>；</div>
+                <div>③ 在【页面设置】标签页，点击<strong>「新建」</strong>按钮；</div>
+                <div>④ 输入名称如 <strong>{{ targetWidthMm }}x{{ targetHeightMm }}</strong>，输入宽度 <strong>{{ targetWidthMm }}mm</strong>、高度 <strong>{{ targetHeightMm }}mm</strong>，点击确定保存。</div>
+              </div>
+            </div>
+            <div class="text-[10px] text-emerald-600 font-semibold pt-1">
+              ✓ 保存后，浏览器打印弹窗就会永久出现该精确尺寸！
+            </div>
+          </div>
+
+          <!-- Solution 2 -->
+          <div class="p-3.5 bg-white rounded-xl border border-blue-200 shadow-2xs space-y-2 flex flex-col justify-between">
+            <div class="space-y-1.5">
+              <div class="font-bold text-blue-900 flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">方案 2</span>
+                <span>直接借用驱动自带的“等高”尺寸（免设电脑）</span>
+              </div>
+              <p class="text-slate-600 text-[11px] leading-relaxed">
+                热敏条码打印机是由<strong>「标签高度」决定马达走纸长度</strong>的！
+              </p>
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] space-y-1 text-slate-700">
+                <div>• 若您的实际卷纸是 <strong>70 × 30 mm</strong>，而汉印驱动下拉菜单里有 <strong>80mm * 30mm</strong>：</div>
+                <div>• 您可以直接在下拉菜单选择 <strong>80mm * 30mm</strong>！</div>
+                <div>• 因为高度同为 30mm，打印机传感器按 30mm 走纸，依然会精准卡在缝隙切口，每按一次吐一张，绝不会连吐多张！</div>
+              </div>
+            </div>
+            <div class="text-[10px] text-amber-700 font-semibold pt-1">
+              💡 核心口诀：只要下拉菜单里的「高度 mm」与实际卷纸一致，就能正常单张定位！
+            </div>
+          </div>
+
+          <!-- Solution 3 -->
+          <div class="p-3.5 bg-white rounded-xl border border-blue-200 shadow-2xs space-y-2 flex flex-col justify-between">
+            <div class="space-y-1.5">
+              <div class="font-bold text-blue-900 flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">方案 3</span>
+                <span>导出标准热敏 PDF 自动识别尺寸</span>
+              </div>
+              <p class="text-slate-600 text-[11px] leading-relaxed">
+                不想在网页端选尺寸？直接使用 PDF 客户端全自动打印：
+              </p>
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] space-y-1 text-slate-700">
+                <div>① 点击上方<strong>「导出标准热敏 PDF」</strong>按钮下载文件；</div>
+                <div>② 用电脑上的 PDF 阅读器（如 Adobe Acrobat Reader 或极速PDF）打开；</div>
+                <div>③ 打印时勾选<strong>「根据 PDF 页面大小选择纸张来源」</strong>；</div>
+                <div>④ 阅读器会自动把 PDF 内嵌的精确毫米尺寸发给打印机，无需手动选择。</div>
+              </div>
+            </div>
+            <div class="text-[10px] text-indigo-600 font-semibold pt-1">
+              ✓ 最受跨境大卖家欢迎的稳定批量打印方案！
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Thermal Printing Pitfall & Troubleshooting Guide -->
       <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-5 text-amber-950 space-y-3">
         <div class="flex items-center gap-2 font-bold text-amber-900 text-sm">
           <AlertTriangle class="w-5 h-5 text-amber-600 flex-shrink-0" />
-          <span>热敏打印机防踩坑指南（避免连吐多张、条码拉伸变形、跨缝打断）</span>
+          <span>热敏打印机缝隙校准与日常排查指南</span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs pt-1">
-          <!-- Item 1 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1">
           <div class="p-3 bg-white/80 rounded-xl border border-amber-200/60 shadow-xs space-y-1.5">
             <div class="font-bold text-amber-900 flex items-center gap-1.5">
-              <span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">1</span>
-              <span>纸张尺寸必须匹配实际卷纸</span>
+              <span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">!</span>
+              <span>汉印 (HPRT N41BT) 打印机缝隙自动校准（必做）</span>
             </div>
             <p class="text-amber-800 leading-relaxed text-[11px]">
-              弹出打印窗口时，<strong>纸张尺寸必须选择与打印机里实际装入的卷纸一致（如当前的 {{ targetWidthMm }} × {{ targetHeightMm }} mm）</strong>！
-              <span class="text-rose-600 font-bold block mt-0.5">⚠️ 绝不能使用系统默认的「E邮宝长 100×150mm」！</span>
-              若选 100×150mm，打印机会以为是一张 15 厘米的大面单，从而连吐 4~5 张标签纸，并且条码会被旋转切断。
+              装好新卷纸并合紧机盖后，开机状态下<strong>长按打印机顶部的 FEED 走纸键约 2 秒</strong>，听到打印机“哔”一声松手，打印机会自动走纸 1~2 张学习标签缝隙定位并自动回吸，校准后每次打印均能精准卡在每张标签的切线处！
             </p>
           </div>
 
-          <!-- Item 2 -->
           <div class="p-3 bg-white/80 rounded-xl border border-amber-200/60 shadow-xs space-y-1.5">
             <div class="font-bold text-amber-900 flex items-center gap-1.5">
-              <span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">2</span>
-              <span>缩放选 100% · 边距选无</span>
+              <span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">!</span>
+              <span>打印出现白条/字迹断续排查</span>
             </div>
             <p class="text-amber-800 leading-relaxed text-[11px]">
-              打印设置中，<strong>缩放请勾选「实际大小 / 100%」</strong>（不要选“适合可打印区域”避免变形）；<strong>边距选择「无」</strong>，保证标签 1:1 满幅贴合。
-            </p>
-          </div>
-
-          <!-- Item 3 -->
-          <div class="p-3 bg-white/80 rounded-xl border border-amber-200/60 shadow-xs space-y-1.5">
-            <div class="font-bold text-amber-900 flex items-center gap-1.5">
-              <span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">3</span>
-              <span>汉印 (HPRT) 打印机缝隙自动校准</span>
-            </div>
-            <p class="text-amber-800 leading-relaxed text-[11px]">
-              装好新卷纸后，开机状态下<strong>长按打印机顶部的 FEED 走纸键约 2 秒</strong>，听到“哔”一声松手，打印机会自动走纸学习标签缝隙定位，校准后每次打印均能精准停在每张标签的切线处！
+              若打印出来的条码颜色浅或发白，可用棉签蘸取少许酒精轻轻擦拭打印头陶瓷发热片；同时可在打印首选项里将“打印浓度 (Darkness)”调高 2~3 档，条码对比度会显著提升。
             </p>
           </div>
         </div>
@@ -884,7 +975,7 @@ import { ref, shallowRef, markRaw, computed, nextTick, onMounted } from 'vue';
 import { 
   UploadCloud, FileUp, Layers, LayoutGrid, Search, ArrowRight, 
   CheckCircle2, Download, Printer, Scroll, FlaskConical, Crop, Check, RotateCcw, X,
-  FolderOpen, Save, Plus, Trash2, Clock, FileText, Bookmark, Calendar, AlertTriangle
+  FolderOpen, Save, Plus, Trash2, Clock, FileText, Bookmark, Calendar, AlertTriangle, Info
 } from 'lucide-vue-next';
 import { t } from '@/i18n';
 import { 
@@ -948,6 +1039,7 @@ const steps = [
 const paperPresets = [
   { id: '50x30', name: '50 × 30 mm (小号单品标)', width: 50, height: 30 },
   { id: '70x30', name: '70 × 30 mm (标准商品条码)', width: 70, height: 30 },
+  { id: '80x30', name: '80 × 30 mm (汉印自带规格/等高兼容)', width: 80, height: 30 },
   { id: '75x50', name: '75 × 50 mm (中号商品贴)', width: 75, height: 50 },
   { id: '100x100', name: '100 × 100 mm (合规/箱唛)', width: 100, height: 100 },
   { id: '100x150', name: '100 × 150 mm (4×6寸美客多大箱唛)', width: 100, height: 150 },
