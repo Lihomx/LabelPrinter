@@ -1971,14 +1971,8 @@ const triggerThermalPrint = async () => {
   if (previewList.value.length === 0) return;
   
   // If running inside Electron, trigger silent native print
-  if (window.electronAPI && window.electronAPI.printThermal) {
-    await window.electronAPI.printThermal({
-      labels: previewList.value.map(i => i.dataUrl),
-      widthMm: targetWidthMm.value,
-      heightMm: targetHeightMm.value,
-    });
-    alert('已发送至本地热敏打印机，正在静默打印！');
-    return;
+  if (isElectron.value && window.electronAPI?.printSilent) {
+    return triggerElectronSilentPrint();
   }
 
   // Web High-Precision Thermal Direct Print via Iframe with strict @page geometry
@@ -2103,11 +2097,23 @@ const triggerElectronSilentPrint = async () => {
   electronPrintStatusMsg.value = '正在直接下发微米级硬件打印指令...';
 
   try {
-    const pagesHtml = previewList.value.map(item => `
-      <div class="label-page">
-        <img src="${item.previewImage}" class="${orientation.value === 'rotate-90' ? 'rotate-90' : ''}" />
-      </div>
-    `).join('');
+    const isStretch = fitMode.value === 'stretch';
+    const pagesHtml = previewList.value.map(item => {
+      const shouldRotate = autoRotate.value && item.width < item.height && targetWidthMm.value > targetHeightMm.value;
+      if (shouldRotate) {
+        return `
+          <div class="label-page">
+            <img src="${item.dataUrl}" style="max-width: ${targetHeightMm.value}mm; max-height: ${targetWidthMm.value}mm; transform: rotate(90deg); object-fit: ${isStretch ? 'fill' : 'contain'};" />
+          </div>
+        `;
+      } else {
+        return `
+          <div class="label-page">
+            <img src="${item.dataUrl}" style="max-width: 100%; max-height: 100%; object-fit: ${isStretch ? 'fill' : 'contain'};" />
+          </div>
+        `;
+      }
+    }).join('');
 
     const res = await window.electronAPI.printSilent({
       printerName: selectedElectronPrinter.value,

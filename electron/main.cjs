@@ -77,7 +77,7 @@ ipcMain.handle('print-silent', async (event, params) => {
     html, body {
       margin: 0;
       padding: 0;
-      width: 100%;
+      width: ${widthMm}mm;
       background: white;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
@@ -98,9 +98,6 @@ ipcMain.handle('print-silent', async (event, params) => {
       break-after: auto;
     }
     img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
       image-rendering: -webkit-optimize-contrast;
       image-rendering: crisp-edges;
     }
@@ -111,7 +108,20 @@ ipcMain.handle('print-silent', async (event, params) => {
 </body>
 </html>`;
 
-      printWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(fullHtml)}`);
+      // 使用系统临时目录保存 HTML 文件，彻底避免 data: URL 长度上限限制
+      const tempFile = path.join(app.getPath('temp'), `label_print_${Date.now()}_${Math.random().toString(36).slice(2)}.html`);
+      fs.writeFileSync(tempFile, fullHtml, 'utf8');
+
+      const cleanup = () => {
+        try {
+          if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+        } catch (e) {}
+        try {
+          if (!printWin.isDestroyed()) printWin.close();
+        } catch (e) {}
+      };
+
+      printWin.loadFile(tempFile);
 
       printWin.webContents.on('did-finish-load', () => {
         // 渲染延迟等待图片/Canvas充分加载
@@ -132,18 +142,18 @@ ipcMain.handle('print-silent', async (event, params) => {
           }
 
           printWin.webContents.print(printOptions, (success, failureReason) => {
-            printWin.close();
+            cleanup();
             if (!success) {
               resolve({ success: false, error: failureReason });
             } else {
               resolve({ success: true });
             }
           });
-        }, 300);
+        }, 350);
       });
 
       printWin.webContents.on('did-fail-load', (e, code, desc) => {
-        printWin.close();
+        cleanup();
         resolve({ success: false, error: desc });
       });
     } catch (err) {
