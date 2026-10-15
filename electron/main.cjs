@@ -78,15 +78,20 @@ ipcMain.handle('print-silent', async (event, params) => {
       margin: 0;
       padding: 0;
       width: ${widthMm}mm;
+      height: ${heightMm}mm;
       background: white;
+      overflow: hidden;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
     .label-page {
       width: ${widthMm}mm;
       height: ${heightMm}mm;
+      max-height: ${heightMm}mm;
       page-break-after: always;
       break-after: page;
+      page-break-inside: avoid;
+      break-inside: avoid;
       overflow: hidden;
       display: flex;
       align-items: center;
@@ -129,6 +134,7 @@ ipcMain.handle('print-silent', async (event, params) => {
           const printOptions = {
             silent: true,
             printBackground: true,
+            preferCSSPageSize: true,
             margins: { marginType: 'none' },
             pageSize: {
               width: Math.round(widthMm * 1000), // 微米 microns (1mm = 1000 microns)

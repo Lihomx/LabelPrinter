@@ -618,9 +618,51 @@
             <span class="text-xs text-slate-300 font-medium hidden sm:inline">硬件微米级走纸 · 免设 Windows 驱动尺寸 · 零弹窗出纸</span>
           </div>
 
-          <div class="text-xs text-emerald-300 font-mono bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-800">
-            已锁定物理输出: {{ targetWidthMm }} × {{ targetHeightMm }} mm
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs text-slate-300 font-medium">当前卷纸:</span>
+            <button 
+              @click="setQuickSize(50, 25)"
+              class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all border"
+              :class="targetWidthMm === 50 && targetHeightMm === 25 ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'"
+            >
+              50 × 25 mm
+            </button>
+            <button 
+              @click="setQuickSize(50, 30)"
+              class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all border"
+              :class="targetWidthMm === 50 && targetHeightMm === 30 ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'"
+            >
+              50 × 30 mm
+            </button>
+            <button 
+              @click="setQuickSize(70, 30)"
+              class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all border"
+              :class="targetWidthMm === 70 && targetHeightMm === 30 ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'"
+            >
+              70 × 30 mm
+            </button>
+            <button 
+              @click="setQuickSize(80, 30)"
+              class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all border"
+              :class="targetWidthMm === 80 && targetHeightMm === 30 ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'"
+            >
+              80 × 30 mm
+            </button>
           </div>
+        </div>
+
+        <!-- Height check banner -->
+        <div class="text-[11px] bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 flex flex-wrap items-center justify-between gap-3 text-slate-300">
+          <div class="flex items-center gap-1.5">
+            <Info class="w-4 h-4 text-amber-400 flex-shrink-0" />
+            <span>走纸定位规则：实际装纸是 <strong>50 × 25 mm</strong> 必须选 <strong>50 × 25 mm</strong>。若选 30mm 或驱动默认 100mm 会因高度超长连吐空白标签！</span>
+          </div>
+          <button 
+            @click="showPrintHelpModal = true; activeHelpTab = 'calibration'"
+            class="text-amber-400 hover:text-amber-300 underline font-semibold flex-shrink-0"
+          >
+            汉印FEED校准教程 ➔
+          </button>
         </div>
 
         <div class="flex flex-wrap items-center justify-between gap-4 pt-1">
@@ -1460,6 +1502,7 @@ const steps = [
 ];
 
 const paperPresets = [
+  { id: '50x25', name: '50 × 25 mm (常见商品条码/单品贴)', width: 50, height: 25 },
   { id: '50x30', name: '50 × 30 mm (小号单品标)', width: 50, height: 30 },
   { id: '70x30', name: '70 × 30 mm (标准商品条码)', width: 70, height: 30 },
   { id: '80x30', name: '80 × 30 mm (汉印自带规格/等高兼容)', width: 80, height: 30 },
@@ -1468,6 +1511,14 @@ const paperPresets = [
   { id: '100x150', name: '100 × 150 mm (4×6寸美客多大箱唛)', width: 100, height: 150 },
   { id: 'custom', name: '自定义尺寸...', width: targetWidthMm.value, height: targetHeightMm.value },
 ];
+
+const setQuickSize = (w, h) => {
+  targetWidthMm.value = w;
+  targetHeightMm.value = h;
+  const match = paperPresets.find(p => p.width === w && p.height === h);
+  if (match) selectedPaperId.value = match.id;
+  else selectedPaperId.value = 'custom';
+};
 
 const selectPaperPreset = (preset) => {
   selectedPaperId.value = preset.id;
