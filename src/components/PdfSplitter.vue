@@ -410,6 +410,38 @@
         </div>
       </div>
 
+      <!-- Batch Quantity Bar in Step 2 -->
+      <div class="bg-indigo-50/80 border border-indigo-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2 text-indigo-950 font-bold">
+          <Layers class="w-4 h-4 text-indigo-600 flex-shrink-0" />
+          <span>批量设置每款打印张数:</span>
+          <span class="text-slate-500 font-normal hidden sm:inline">一键将当前所有款式统一设为指定数量</span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="flex items-center bg-white rounded-lg border border-indigo-200 overflow-hidden shadow-2xs">
+            <button @click="batchQuantity = Math.max(1, batchQuantity - 1)" class="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold">-</button>
+            <input v-model.number="batchQuantity" type="number" min="1" class="w-12 text-center text-xs font-bold text-indigo-900 focus:outline-none" />
+            <button @click="batchQuantity += 1" class="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold">+</button>
+          </div>
+
+          <button 
+            @click="applyBatchQuantity(batchQuantity)" 
+            class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-2xs transition-all active:scale-95"
+          >
+            应用到全部款式
+          </button>
+
+          <div class="flex items-center gap-1 pl-2 border-l border-indigo-200">
+            <button @click="applyBatchQuantity(1)" class="px-2 py-1 bg-white hover:bg-indigo-100 text-indigo-700 rounded border border-indigo-200 text-[11px] font-semibold">1张</button>
+            <button @click="applyBatchQuantity(10)" class="px-2 py-1 bg-white hover:bg-indigo-100 text-indigo-700 rounded border border-indigo-200 text-[11px] font-semibold">10张</button>
+            <button @click="applyBatchQuantity(30)" class="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-700 rounded border border-indigo-200 text-[11px] font-bold">30张</button>
+            <button @click="applyBatchQuantity(50)" class="px-2 py-1 bg-white hover:bg-indigo-100 text-indigo-700 rounded border border-indigo-200 text-[11px] font-semibold">50张</button>
+            <button @click="applyBatchQuantity(100)" class="px-2 py-1 bg-white hover:bg-indigo-100 text-indigo-700 rounded border border-indigo-200 text-[11px] font-semibold">100张</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Search / Filter bar -->
       <div class="relative">
         <Search class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -579,7 +611,16 @@
           <p class="text-xs text-slate-500 mt-0.5">目标热敏卷纸尺寸: {{ targetWidthMm }} × {{ targetHeightMm }} mm · 计划输出 {{ totalPrintQuantity }} 张</p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Copies multiplier -->
+          <div class="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-xs shadow-2xs">
+            <span class="text-slate-500 font-bold">打印份数:</span>
+            <button @click="printCopies = Math.max(1, printCopies - 1)" class="w-6 h-6 bg-white hover:bg-slate-100 text-slate-700 rounded border border-slate-200 font-bold text-xs flex items-center justify-center shadow-2xs">-</button>
+            <input v-model.number="printCopies" type="number" min="1" class="w-12 text-center text-xs font-bold text-brand-600 bg-transparent focus:outline-none" />
+            <button @click="printCopies += 1" class="w-6 h-6 bg-white hover:bg-slate-100 text-slate-700 rounded border border-slate-200 font-bold text-xs flex items-center justify-center shadow-2xs">+</button>
+            <button @click="printCopies = 30" class="ml-1 px-2 py-0.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded border border-brand-200 text-[11px] font-bold">30张</button>
+          </div>
+
           <button 
             @click="showPrintHelpModal = true"
             class="px-3.5 py-2 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-bold rounded-lg shadow-2xs flex items-center gap-1.5 transition-all"
@@ -687,8 +728,21 @@
               </button>
             </div>
 
-            <div class="text-xs text-slate-400 hidden lg:block">
-              ✓ 客户端将直接向打印机下发精确毫米坐标，无需在系统驱动里新建纸张！
+            <!-- Print copies multiplier in Desktop Station -->
+            <div class="flex items-center gap-2 bg-slate-800/90 px-3 py-1.5 rounded-xl border border-slate-600 shadow-inner">
+              <span class="text-xs text-slate-300 font-bold">打印份数:</span>
+              <div class="flex items-center bg-slate-900 rounded-lg border border-slate-700 overflow-hidden">
+                <button @click="printCopies = Math.max(1, printCopies - 1)" class="px-2.5 py-0.5 text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs">-</button>
+                <input v-model.number="printCopies" type="number" min="1" class="w-12 text-center text-xs font-mono font-black text-emerald-400 bg-transparent focus:outline-none" />
+                <button @click="printCopies += 1" class="px-2.5 py-0.5 text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs">+</button>
+              </div>
+              <div class="flex items-center gap-1">
+                <button @click="printCopies = 1" class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all" :class="printCopies === 1 ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'">1</button>
+                <button @click="printCopies = 10" class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all" :class="printCopies === 10 ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'">10</button>
+                <button @click="printCopies = 30" class="px-2.5 py-0.5 rounded text-[11px] font-black border transition-all" :class="printCopies === 30 ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-black shadow-sm' : 'bg-slate-800 text-emerald-300 border-slate-700 hover:bg-slate-700'">30张</button>
+                <button @click="printCopies = 50" class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all" :class="printCopies === 50 ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'">50</button>
+                <button @click="printCopies = 100" class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all" :class="printCopies === 100 ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'">100</button>
+              </div>
             </div>
           </div>
 
@@ -2033,15 +2087,32 @@ const filteredLabels = computed(() => {
   );
 });
 
+const printCopies = ref(1); // Global batch copies multiplier in Step 4
+const batchQuantity = ref(30); // Default value for Step 2 batch quantity applicator
+
+const applyBatchQuantity = (val) => {
+  const q = Math.max(1, parseInt(val) || 1);
+  batchQuantity.value = q;
+  for (const item of rawLabels.value) {
+    item.quantity = q;
+  }
+  for (const item of displayItems.value) {
+    item.quantity = q;
+  }
+};
+
 const totalPrintQuantity = computed(() => {
-  return displayItems.value.reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0);
+  const copies = Math.max(1, parseInt(printCopies.value) || 1);
+  const base = displayItems.value.reduce((sum, item) => sum + (parseInt(item.quantity) || 1), 0);
+  return base * copies;
 });
 
 // Flattened list for roll simulation and output
 const previewList = computed(() => {
   const list = [];
+  const copies = Math.max(1, parseInt(printCopies.value) || 1);
   for (const item of displayItems.value) {
-    const qty = parseInt(item.quantity) || 0;
+    const qty = (parseInt(item.quantity) || 1) * copies;
     for (let i = 0; i < qty; i++) {
       list.push(item);
     }
@@ -2054,7 +2125,7 @@ const downloadThermalPdf = async () => {
   if (previewList.value.length === 0) return;
   isGeneratingPdf.value = true;
   try {
-    const blob = await exportThermalPdf(displayItems.value, {
+    const blob = await exportThermalPdf(previewList.value.map(item => ({ ...item, quantity: 1 })), {
       targetWidthMm: targetWidthMm.value,
       targetHeightMm: targetHeightMm.value,
       fitMode: fitMode.value,
