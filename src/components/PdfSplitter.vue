@@ -702,6 +702,46 @@
           </button>
         </div>
 
+        <!-- Position offset & hardware alignment toolbox -->
+        <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="text-slate-300 font-bold flex items-center gap-1">
+              <span>🎯 打印居中微调:</span>
+            </span>
+
+            <div class="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700">
+              <span class="text-slate-400 text-[11px]">X 水平(左右):</span>
+              <button @click="printOffsetX = Math.max(-10, Number((printOffsetX - 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">-</button>
+              <span class="w-12 text-center font-mono font-bold text-emerald-400">{{ printOffsetX > 0 ? '+' + printOffsetX : printOffsetX }} mm</span>
+              <button @click="printOffsetX = Math.min(10, Number((printOffsetX + 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">+</button>
+            </div>
+
+            <div class="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700">
+              <span class="text-slate-400 text-[11px]">Y 垂直(上下):</span>
+              <button @click="printOffsetY = Math.max(-10, Number((printOffsetY - 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">-</button>
+              <span class="w-12 text-center font-mono font-bold text-emerald-400">{{ printOffsetY > 0 ? '+' + printOffsetY : printOffsetY }} mm</span>
+              <button @click="printOffsetY = Math.min(10, Number((printOffsetY + 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">+</button>
+            </div>
+
+            <button 
+              v-if="printOffsetX !== 0 || printOffsetY !== 0"
+              @click="printOffsetX = 0; printOffsetY = 0;"
+              class="text-[11px] text-slate-400 hover:text-slate-200 underline"
+            >
+              归零
+            </button>
+          </div>
+
+          <button 
+            @click="handleOpenPreferences"
+            title="一键直接打开该打印机的 Windows 打印首选项设置"
+            class="px-3.5 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-400/40 text-indigo-200 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
+          >
+            <Settings class="w-3.5 h-3.5 text-indigo-300" />
+            <span>🛠️ 唤起汉印驱动首选项</span>
+          </button>
+        </div>
+
         <div v-if="electronPrintSuccess" class="p-3 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-300 text-xs font-bold flex items-center gap-2 animate-fadeIn">
           <CheckCircle2 class="w-4 h-4 text-emerald-400" />
           <span>{{ electronPrintStatusMsg }}</span>
@@ -1471,6 +1511,23 @@ const isElectronPrinting = ref(false);
 const electronPrintSuccess = ref(false);
 const electronPrintStatusMsg = ref('');
 
+// Print alignment offset fine-tuning (mm)
+const printOffsetX = ref(0);
+const printOffsetY = ref(0);
+
+const handleOpenPreferences = async () => {
+  if (typeof window !== 'undefined' && window.electronAPI?.openPrinterPreferences) {
+    if (!selectedElectronPrinter.value) {
+      alert('请先在下拉框中选择目标热敏打印机');
+      return;
+    }
+    const res = await window.electronAPI.openPrinterPreferences(selectedElectronPrinter.value);
+    if (!res?.success && res?.error) {
+      alert('无法打开打印首选项窗口: ' + res.error);
+    }
+  }
+};
+
 // Freeform visual crop state
 const showFreeCropModal = ref(false);
 const cropCanvasRef = ref(null);
@@ -2149,18 +2206,30 @@ const triggerElectronSilentPrint = async () => {
 
   try {
     const isStretch = fitMode.value === 'stretch';
+    const offsetX = Number(printOffsetX.value) || 0;
+    const offsetY = Number(printOffsetY.value) || 0;
+
     const pagesHtml = previewList.value.map(item => {
       const shouldRotate = autoRotate.value && item.width < item.height && targetWidthMm.value > targetHeightMm.value;
+      const transforms = [];
+      if (offsetX !== 0 || offsetY !== 0) {
+        transforms.push(`translate(${offsetX}mm, ${offsetY}mm)`);
+      }
+      if (shouldRotate) {
+        transforms.push('rotate(90deg)');
+      }
+      const transformCss = transforms.length > 0 ? `transform: ${transforms.join(' ')};` : '';
+
       if (shouldRotate) {
         return `
           <div class="label-page">
-            <img src="${item.dataUrl}" style="max-width: ${targetHeightMm.value}mm; max-height: ${targetWidthMm.value}mm; transform: rotate(90deg); object-fit: ${isStretch ? 'fill' : 'contain'};" />
+            <img src="${item.dataUrl}" style="max-width: ${targetHeightMm.value}mm; max-height: ${targetWidthMm.value}mm; ${transformCss} object-fit: ${isStretch ? 'fill' : 'contain'};" />
           </div>
         `;
       } else {
         return `
           <div class="label-page">
-            <img src="${item.dataUrl}" style="max-width: 100%; max-height: 100%; object-fit: ${isStretch ? 'fill' : 'contain'};" />
+            <img src="${item.dataUrl}" style="max-width: 100%; max-height: 100%; ${transformCss} object-fit: ${isStretch ? 'fill' : 'contain'};" />
           </div>
         `;
       }

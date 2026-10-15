@@ -35,6 +35,8 @@ function createWindow() {
   });
 }
 
+const { exec } = require('child_process');
+
 // 注册 IPC 通信
 ipcMain.handle('get-printers', async () => {
   if (!mainWindow) return { success: false, printers: [] };
@@ -44,6 +46,18 @@ ipcMain.handle('get-printers', async () => {
   } catch (err) {
     return { success: false, error: err.message, printers: [] };
   }
+});
+
+ipcMain.handle('open-printer-preferences', async (event, printerName) => {
+  if (!printerName || printerName.trim() === '') {
+    return { success: false, error: '请先在下拉列表中选中目标打印机' };
+  }
+  return new Promise((resolve) => {
+    exec(`rundll32 printui.dll,PrintUIEntry /e /n "${printerName.trim()}"`, (err) => {
+      if (err) resolve({ success: false, error: err.message });
+      else resolve({ success: true });
+    });
+  });
 });
 
 ipcMain.handle('print-silent', async (event, params) => {
