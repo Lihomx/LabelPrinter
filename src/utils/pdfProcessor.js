@@ -400,16 +400,24 @@ export function groupLabelsByBarcode(labels) {
         ...label,
         count: 0,
         subIds: [],
+        pages: [],
       });
     }
     const group = map.get(key);
-    group.count += 1;
+    const isSelected = label.selected !== false;
+    const qty = parseInt(label.quantity, 10) >= 0 ? parseInt(label.quantity, 10) : 1;
+    group.count += isSelected ? qty : 0;
     group.subIds.push(label.id);
+    if (label.page && !group.pages.includes(label.page)) {
+      group.pages.push(label.page);
+    }
   }
 
   return Array.from(map.values()).map(g => ({
     ...g,
     quantity: g.count,
+    selected: g.count > 0,
+    page: g.pages.length === 1 ? g.pages[0] : (g.pages.length > 1 ? g.pages.join(',') : (g.page || 1)),
   }));
 }
 

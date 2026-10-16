@@ -435,12 +435,65 @@
         </div>
       </div>
 
+      <!-- Page Selection Bar in Step 2 -->
+      <div class="bg-blue-50/90 border border-blue-200 rounded-xl p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 text-xs shadow-2xs">
+        <div class="flex items-center gap-2 text-blue-950 font-bold">
+          <FileText class="w-4 h-4 text-blue-600 flex-shrink-0" />
+          <span class="text-xs sm:text-sm">选择打印页码 / 标签:</span>
+          <span class="text-slate-600 font-normal">
+            共 {{ maxPdfPages }} 页 · 已勾选 <strong class="text-blue-700 font-bold font-mono">{{ selectedPagesCount }}</strong> 页 (计划输出 {{ totalPrintQuantity }} 张)
+          </span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Quick Page Selection Actions -->
+          <button 
+            @click="selectOnlyFirstPage" 
+            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-2xs transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
+            title="物流退货标/面单通常第1页为面单，第2页为说明/凭证"
+          >
+            <span>⚡ 仅打第 1 页</span>
+          </button>
+
+          <button 
+            @click="selectAllPages" 
+            class="px-2.5 py-1.5 bg-white hover:bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 transition-all cursor-pointer"
+          >
+            全选 (全部页码)
+          </button>
+
+          <button 
+            @click="invertPageSelection" 
+            class="px-2.5 py-1.5 bg-white hover:bg-blue-100 text-slate-700 font-semibold rounded-lg border border-slate-200 transition-all cursor-pointer"
+          >
+            反选
+          </button>
+
+          <!-- Custom Page Range Input -->
+          <div class="flex items-center bg-white rounded-lg border border-blue-300 overflow-hidden shadow-2xs pl-2">
+            <span class="text-slate-400 text-[11px] mr-1">指定页:</span>
+            <input 
+              v-model="pageRangeInput" 
+              @keyup.enter="applyPageRange"
+              placeholder="如: 1 或 1-3" 
+              class="w-20 sm:w-24 text-center text-xs font-mono font-bold text-blue-900 focus:outline-none py-1.5" 
+            />
+            <button 
+              @click="applyPageRange" 
+              class="px-2.5 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs transition-colors border-l border-blue-200 cursor-pointer"
+            >
+              应用
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Batch Quantity Bar in Step 2 -->
       <div class="bg-indigo-50/80 border border-indigo-200 rounded-xl p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-2 text-indigo-950 font-bold">
           <Layers class="w-4 h-4 text-indigo-600 flex-shrink-0" />
-          <span class="text-xs sm:text-sm">批量设置每款打印张数:</span>
-          <span class="text-slate-500 font-normal hidden md:inline">统一设置所有款式的打印张数</span>
+          <span class="text-xs sm:text-sm">批量设置已选每款张数:</span>
+          <span class="text-slate-500 font-normal hidden md:inline">统一设置所有已选款式的打印张数</span>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
@@ -462,7 +515,7 @@
             @click="applyBatchQuantity(batchQuantity)" 
             class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-2xs transition-all active:scale-95 flex items-center gap-1.5"
           >
-            一键应用到全部款式
+            一键应用到全部已选
           </button>
 
           <div class="flex items-center gap-1 pl-2 border-l border-indigo-200">
@@ -487,26 +540,62 @@
         <div 
           v-for="item in filteredLabels" 
           :key="item.id"
-          class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:border-brand-400 hover:shadow-md transition-all flex flex-col group relative"
+          class="rounded-xl border overflow-hidden shadow-sm transition-all flex flex-col group relative"
+          :class="[
+            item.selected !== false && item.quantity > 0
+              ? 'bg-white border-slate-200 hover:border-brand-400 hover:shadow-md'
+              : 'bg-slate-50 border-dashed border-slate-300 opacity-60'
+          ]"
         >
           <!-- Card Image Thumbnail with border preview -->
           <div class="p-3 bg-slate-50 flex items-center justify-center min-h-[140px] border-b border-slate-100 relative">
             <img :src="item.dataUrl" alt="Label" class="max-h-28 object-contain rounded shadow-xs" />
             
-            <!-- Quantity badge for Grouped View -->
+            <!-- Origin Page Badge & Checkbox toggle (Top-Left) -->
+            <button 
+              @click.stop="toggleItemSelection(item)"
+              class="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-md text-[11px] font-bold flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+              :class="item.selected !== false && item.quantity > 0 
+                ? 'bg-brand-600 hover:bg-brand-700 text-white' 
+                : 'bg-slate-700 hover:bg-slate-800 text-white'"
+              title="点击勾选或取消此页"
+            >
+              <CheckCircle2 v-if="item.selected !== false && item.quantity > 0" class="w-3.5 h-3.5 text-white" />
+              <div v-else class="w-3 h-3 rounded border border-white/60"></div>
+              <span>第 {{ item.page }} 页</span>
+            </button>
+
+            <!-- Quantity badge for Grouped View (Top-Right) -->
             <div 
-              v-if="viewMode === 'grouped'" 
+              v-if="viewMode === 'grouped' && item.selected !== false && item.quantity > 0" 
               class="absolute top-2 right-2 px-2 py-0.5 bg-brand-600 text-white text-xs font-bold rounded-full shadow-sm"
             >
               ×{{ item.quantity }}
+            </div>
+
+            <!-- Excluded Overlay when unselected -->
+            <div 
+              v-if="item.selected === false || item.quantity <= 0" 
+              class="absolute inset-0 bg-slate-900/20 backdrop-blur-[0.5px] flex items-center justify-center pointer-events-none"
+            >
+              <span class="px-2.5 py-1 bg-slate-900/80 text-white text-[11px] font-bold rounded-lg shadow-sm">
+                🚫 不打印此页
+              </span>
             </div>
           </div>
 
           <!-- Card Content & Quantity Modifier -->
           <div class="p-3 flex-1 flex flex-col justify-between space-y-2">
             <div>
-              <div class="font-bold text-xs text-slate-800 truncate" :title="item.barcode">
-                {{ item.barcode }}
+              <div class="font-bold text-xs text-slate-800 truncate flex items-center justify-between" :title="item.barcode">
+                <span class="truncate">{{ item.barcode }}</span>
+                <button 
+                  @click.stop="toggleItemSelection(item)"
+                  class="text-[11px] font-semibold transition-colors ml-1 flex-shrink-0 cursor-pointer"
+                  :class="item.selected !== false && item.quantity > 0 ? 'text-slate-400 hover:text-rose-500' : 'text-emerald-600 hover:text-emerald-700 font-bold'"
+                >
+                  {{ item.selected !== false && item.quantity > 0 ? '排除' : '恢复' }}
+                </button>
               </div>
               <div v-if="item.sku" class="text-[11px] text-brand-600 font-mono truncate" :title="item.sku">
                 SKU: {{ item.sku }}
@@ -521,18 +610,19 @@
               <span class="text-[11px] text-slate-400">{{ t('pdf.quantity') }}</span>
               <div class="flex items-center border border-slate-200 rounded-md overflow-hidden bg-slate-50">
                 <button 
-                  @click="item.quantity = Math.max(0, item.quantity - 1)" 
-                  class="px-2 py-0.5 text-slate-600 hover:bg-slate-200 transition-colors"
+                  @click="setItemQuantity(item, (Number(item.quantity) || 0) - 1)" 
+                  class="px-2 py-0.5 text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
                 >-</button>
                 <input 
-                  v-model.number="item.quantity" 
+                  :value="item.quantity" 
+                  @input="setItemQuantity(item, $event.target.value)"
                   type="number" 
                   min="0"
                   class="w-10 text-center text-xs font-bold bg-transparent focus:outline-none"
                 />
                 <button 
-                  @click="item.quantity += 1" 
-                  class="px-2 py-0.5 text-slate-600 hover:bg-slate-200 transition-colors"
+                  @click="setItemQuantity(item, (Number(item.quantity) || 0) + 1)" 
+                  class="px-2 py-0.5 text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
                 >+</button>
               </div>
             </div>
@@ -2171,6 +2261,129 @@ const filteredLabels = computed(() => {
   );
 });
 
+// Page range selection state
+const pageRangeInput = ref('');
+
+const maxPdfPages = computed(() => {
+  if (currentPdfDoc.value?.numPages) return currentPdfDoc.value.numPages;
+  return rawLabels.value.reduce((max, item) => Math.max(max, Number(item.page) || 1), 1);
+});
+
+const selectedPagesCount = computed(() => {
+  const pagesSet = new Set();
+  for (const item of rawLabels.value) {
+    if (item.selected !== false && (parseInt(item.quantity, 10) || 0) > 0) {
+      pagesSet.add(Number(item.page) || 1);
+    }
+  }
+  return pagesSet.size;
+});
+
+const selectOnlyFirstPage = () => {
+  pageRangeInput.value = '1';
+  for (const item of rawLabels.value) {
+    if (Number(item.page) === 1) {
+      item.selected = true;
+      if (!item.quantity || Number(item.quantity) < 1) item.quantity = 1;
+    } else {
+      item.selected = false;
+      item.quantity = 0;
+    }
+  }
+};
+
+const selectAllPages = () => {
+  pageRangeInput.value = '';
+  for (const item of rawLabels.value) {
+    item.selected = true;
+    if (!item.quantity || Number(item.quantity) < 1) item.quantity = 1;
+  }
+};
+
+const invertPageSelection = () => {
+  for (const item of rawLabels.value) {
+    const isCurSelected = item.selected !== false && (parseInt(item.quantity, 10) || 0) > 0;
+    item.selected = !isCurSelected;
+    item.quantity = !isCurSelected ? 1 : 0;
+  }
+};
+
+const parsePageRange = (str, max) => {
+  const result = new Set();
+  if (!str || !str.trim()) return result;
+  const parts = str.split(/[,，\s]+/);
+  for (const part of parts) {
+    const rangeMatch = part.match(/^(\d+)-(\d+)$/);
+    if (rangeMatch) {
+      const start = Math.max(1, parseInt(rangeMatch[1], 10));
+      const end = Math.min(max, parseInt(rangeMatch[2], 10));
+      for (let p = Math.min(start, end); p <= Math.max(start, end); p++) {
+        result.add(p);
+      }
+    } else {
+      const p = parseInt(part, 10);
+      if (!isNaN(p) && p >= 1 && p <= max) {
+        result.add(p);
+      }
+    }
+  }
+  return result;
+};
+
+const applyPageRange = () => {
+  if (!pageRangeInput.value.trim()) {
+    selectAllPages();
+    return;
+  }
+  const targets = parsePageRange(pageRangeInput.value, maxPdfPages.value);
+  if (targets.size === 0) {
+    alert(`请输入有效的页码范围（1 ~ ${maxPdfPages.value}）`);
+    return;
+  }
+  for (const item of rawLabels.value) {
+    const pageNum = Number(item.page) || 1;
+    if (targets.has(pageNum)) {
+      item.selected = true;
+      if (!item.quantity || Number(item.quantity) < 1) item.quantity = 1;
+    } else {
+      item.selected = false;
+      item.quantity = 0;
+    }
+  }
+};
+
+const toggleItemSelection = (item) => {
+  const isCurrentlySelected = item.selected !== false && (parseInt(item.quantity, 10) || 0) > 0;
+  const newTarget = !isCurrentlySelected;
+  
+  if (item.subIds && item.subIds.length > 0) {
+    for (const raw of rawLabels.value) {
+      if (item.subIds.includes(raw.id)) {
+        raw.selected = newTarget;
+        raw.quantity = newTarget ? Math.max(1, parseInt(raw.quantity, 10) || 1) : 0;
+      }
+    }
+  } else {
+    item.selected = newTarget;
+    item.quantity = newTarget ? Math.max(1, parseInt(item.quantity, 10) || 1) : 0;
+  }
+};
+
+const setItemQuantity = (item, newQty) => {
+  const qty = Math.max(0, parseInt(newQty, 10) || 0);
+  const isSelected = qty > 0;
+  item.quantity = qty;
+  item.selected = isSelected;
+  if (item.subIds && item.subIds.length > 0) {
+    for (const raw of rawLabels.value) {
+      if (item.subIds.includes(raw.id)) {
+        raw.quantity = qty;
+        raw.selected = isSelected;
+      }
+    }
+  }
+};
+
 const printCopies = ref(1); // Global batch copies multiplier in Step 4
 const batchQuantity = ref(30); // Default value for Step 2 batch quantity applicator
 
@@ -2196,19 +2409,24 @@ const normalizeBatchQuantity = () => {
 };
 
 const applyBatchQuantity = (val) => {
-  const q = Math.max(1, parseInt(val) || 1);
+  const q = Math.max(1, parseInt(val, 10) || 1);
   batchQuantity.value = q;
   for (const item of rawLabels.value) {
-    item.quantity = q;
+    if (item.selected !== false) {
+      item.quantity = q;
+    }
   }
   for (const item of displayItems.value) {
-    item.quantity = q;
+    if (item.selected !== false) {
+      item.quantity = q;
+    }
   }
 };
 
 const totalPrintQuantity = computed(() => {
   const copies = Math.max(1, parseInt(printCopies.value) || 1);
-  const base = displayItems.value.reduce((sum, item) => sum + (parseInt(item.quantity) || 1), 0);
+  const activeItems = displayItems.value.filter(item => item.selected !== false && (parseInt(item.quantity, 10) || 0) > 0);
+  const base = activeItems.reduce((sum, item) => sum + (parseInt(item.quantity, 10) || 0), 0);
   return base * copies;
 });
 
@@ -2217,8 +2435,11 @@ const previewList = computed(() => {
   const list = [];
   const copies = Math.max(1, parseInt(printCopies.value) || 1);
   for (const item of displayItems.value) {
-    const qty = (parseInt(item.quantity) || 1) * copies;
-    for (let i = 0; i < qty; i++) {
+    if (item.selected === false) continue;
+    const itemQty = parseInt(item.quantity, 10) || 0;
+    if (itemQty <= 0) continue;
+    const totalQty = itemQty * copies;
+    for (let i = 0; i < totalQty; i++) {
       list.push(item);
     }
   }
