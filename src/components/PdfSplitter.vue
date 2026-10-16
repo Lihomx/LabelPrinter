@@ -85,7 +85,32 @@
       </div>
 
       <!-- Tab A: Upload New File -->
-      <div v-if="step1Tab === 'new'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 space-y-8">
+      <div v-if="step1Tab === 'new'" class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 space-y-6">
+        <!-- New Smart Extractor & Layout Tool Banner -->
+        <div class="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border-2 border-amber-300 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 text-xs shadow-xs">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center font-bold text-base flex-shrink-0">
+              ✨
+            </div>
+            <div>
+              <div class="font-bold text-amber-950 flex items-center gap-2">
+                <span class="text-xs sm:text-sm">觉得裁切切图文字有点模糊？试试全新【PDF 智能提取与排版】工具！</span>
+                <span class="px-2 py-0.5 bg-amber-200 text-amber-900 rounded-full font-black text-[10px]">矢量纯黑</span>
+              </div>
+              <div class="text-amber-800/80 mt-0.5">
+                自动提取 PDF 内的条码、二维码、标题与 SKU 文本，在可视画布上自由拖拽排版，以 100% 激光纯黑矢量打印，绝不模糊！
+              </div>
+            </div>
+          </div>
+
+          <button 
+            @click="$emit('switch-tab', 'extractor')"
+            class="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-1.5 flex-shrink-0"
+          >
+            <span>立即体验提取排版 ➔</span>
+          </button>
+        </div>
+
         <!-- Dropzone -->
         <div 
           @dragover.prevent="isDragging = true"
@@ -1590,6 +1615,8 @@ import {
   getAllProjects, getProject, saveProject, deleteProject, 
   exportProjectJson, importProjectJson 
 } from '@/utils/projectStorage';
+
+const emit = defineEmits(['switch-tab']);
 
 const currentStep = ref(1);
 const isDragging = ref(false);

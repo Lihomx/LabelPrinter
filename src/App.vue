@@ -21,7 +21,7 @@
         <nav class="flex items-center bg-slate-100 p-1 rounded-xl">
           <button 
             @click="currentTab = 'splitter'"
-            class="px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2"
+            class="px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
             :class="currentTab === 'splitter' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
           >
             <Scissors class="w-3.5 h-3.5" />
@@ -29,8 +29,18 @@
           </button>
 
           <button 
+            @click="currentTab = 'extractor'"
+            class="px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
+            :class="currentTab === 'extractor' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+          >
+            <Sparkles class="w-3.5 h-3.5 text-amber-500" />
+            <span class="font-bold">PDF 提取排版</span>
+            <span class="px-1.5 py-0.2 bg-amber-100 text-amber-800 text-[9px] rounded-full font-black">矢量超清</span>
+          </button>
+
+          <button 
             @click="currentTab = 'template'"
-            class="px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2"
+            class="px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
             :class="currentTab === 'template' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
           >
             <FileSpreadsheet class="w-3.5 h-3.5" />
@@ -39,7 +49,7 @@
 
           <button 
             @click="currentTab = 'designer'"
-            class="px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2"
+            class="px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
             :class="currentTab === 'designer' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
           >
             <Palette class="w-3.5 h-3.5" />
@@ -70,7 +80,8 @@
     <!-- Main Dynamic Content -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <transition name="fade" mode="out-in">
-        <PdfSplitter v-if="currentTab === 'splitter'" />
+        <PdfSplitter v-if="currentTab === 'splitter'" @switch-tab="t => currentTab = t" />
+        <PdfExtractorDesigner v-else-if="currentTab === 'extractor'" @switch-tab="t => currentTab = t" />
         <TemplateGenerator v-else-if="currentTab === 'template'" />
         <LabelDesigner v-else-if="currentTab === 'designer'" />
       </transition>
@@ -85,9 +96,10 @@
 
 <script setup>
 import { ref } from 'vue';
-import { Printer, Scissors, FileSpreadsheet, Palette, Languages } from 'lucide-vue-next';
+import { Printer, Scissors, Sparkles, FileSpreadsheet, Palette, Languages } from 'lucide-vue-next';
 import { t, toggleLang } from '@/i18n';
 import PdfSplitter from '@/components/PdfSplitter.vue';
+import PdfExtractorDesigner from '@/components/PdfExtractorDesigner.vue';
 import TemplateGenerator from '@/components/TemplateGenerator.vue';
 import LabelDesigner from '@/components/LabelDesigner.vue';
 

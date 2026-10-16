@@ -119,6 +119,8 @@ ipcMain.handle('print-silent', async (event, params) => {
     img {
       image-rendering: -webkit-optimize-contrast;
       image-rendering: crisp-edges;
+      image-rendering: pixelated;
+      filter: contrast(135%);
     }
   </style>
 </head>

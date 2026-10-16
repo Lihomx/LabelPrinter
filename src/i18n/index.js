@@ -16,7 +16,8 @@ export const messages = {
       switchLang: 'Español',
     },
     nav: {
-      pdfSplitter: 'PDF 智能拆分打印',
+      pdfSplitter: 'PDF 智能拆分裁切',
+      pdfExtractor: 'PDF 智能提取与排版',
       templates: '合规模板快捷制作',
       designer: '可视化自由设计器',
       sampleFiles: '载入实测样本',
@@ -135,6 +136,7 @@ export const messages = {
     },
     nav: {
       pdfSplitter: 'Separador Inteligente PDF',
+      pdfExtractor: 'Extractor y Maquetador PDF',
       templates: 'Plantillas Rápidas de Cumplimiento',
       designer: 'Diseñador Visual Libre',
       sampleFiles: 'Cargar Muestras Reales',
