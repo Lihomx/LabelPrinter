@@ -142,12 +142,24 @@ export async function saveProject(projectData) {
       // Guarantee 100% plain object with zero Proxies, zero DOM nodes, zero exotic prototypes
       const serializablePayload = JSON.parse(JSON.stringify(cleanProject));
 
+      const getFormattedError = (err) => {
+        if (!err) return new Error('保存项目失败');
+        if (err.name === 'QuotaExceededError' || (err.message && err.message.toLowerCase().includes('quota'))) {
+          return new Error('本地存储配额已满 (QuotaExceededError)。请先清理或删除部分历史标签项目后重试。');
+        }
+        return err;
+      };
+
       const request = store.put(serializablePayload);
       request.onsuccess = () => resolve(serializablePayload);
-      request.onerror = (e) => reject(e.target?.error || request.error);
-      tx.onabort = (e) => reject(e.target?.error || tx.error);
+      request.onerror = (e) => reject(getFormattedError(e.target?.error || request.error));
+      tx.onabort = (e) => reject(getFormattedError(e.target?.error || tx.error));
     } catch (err) {
-      reject(err);
+      if (err.name === 'QuotaExceededError' || (err.message && err.message.toLowerCase().includes('quota'))) {
+        reject(new Error('本地存储配额已满 (QuotaExceededError)。请先清理或删除部分历史标签项目后重试。'));
+      } else {
+        reject(err);
+      }
     }
   });
 }

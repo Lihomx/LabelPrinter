@@ -35,13 +35,29 @@ function isRegionBlank(ctx, x, y, width, height, threshold = 0.985) {
  * Find bounding box of content inside a canvas region (trim white borders)
  */
 export function trimWhiteBorder(canvas) {
-  const ctx = canvas.getContext('2d');
+  if (!canvas || !canvas.width || !canvas.height) return canvas;
   const w = canvas.width;
   const h = canvas.height;
-  const imgData = ctx.getImageData(0, 0, w, h);
+  if (w < 10 || h < 10) return canvas;
+
+  let ctx;
+  try {
+    ctx = canvas.getContext('2d', { willReadFrequently: true });
+  } catch (e) {
+    return canvas;
+  }
+  if (!ctx) return canvas;
+
+  let imgData;
+  try {
+    imgData = ctx.getImageData(0, 0, w, h);
+  } catch (e) {
+    return canvas;
+  }
   const data = imgData.data;
 
   let top = 0, bottom = h - 1, left = 0, right = w - 1;
+  let hasContent = false;
 
   // Find top
   topLoop: for (let y = 0; y < h; y++) {
@@ -49,13 +65,17 @@ export function trimWhiteBorder(canvas) {
       const idx = (y * w + x) * 4;
       if (data[idx] < 235 || data[idx+1] < 235 || data[idx+2] < 235) {
         top = Math.max(0, y - 4);
+        hasContent = true;
         break topLoop;
       }
     }
   }
 
+  // If page is completely blank white, return original safely
+  if (!hasContent) return canvas;
+
   // Find bottom
-  bottomLoop: for (let y = h - 1; y >= 0; y--) {
+  bottomLoop: for (let y = h - 1; y >= top; y--) {
     for (let x = 0; x < w; x++) {
       const idx = (y * w + x) * 4;
       if (data[idx] < 235 || data[idx+1] < 235 || data[idx+2] < 235) {
@@ -77,7 +97,7 @@ export function trimWhiteBorder(canvas) {
   }
 
   // Find right
-  rightLoop: for (let x = w - 1; x >= 0; x--) {
+  rightLoop: for (let x = w - 1; x >= left; x--) {
     for (let y = top; y <= bottom; y++) {
       const idx = (y * w + x) * 4;
       if (data[idx] < 235 || data[idx+1] < 235 || data[idx+2] < 235) {
@@ -90,13 +110,16 @@ export function trimWhiteBorder(canvas) {
   const cropW = Math.max(10, right - left);
   const cropH = Math.max(10, bottom - top);
 
-  const croppedCanvas = document.createElement('canvas');
-  croppedCanvas.width = cropW;
-  croppedCanvas.height = cropH;
-  const croppedCtx = croppedCanvas.getContext('2d');
-  croppedCtx.drawImage(canvas, left, top, cropW, cropH, 0, 0, cropW, cropH);
-
-  return croppedCanvas;
+  try {
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = cropW;
+    croppedCanvas.height = cropH;
+    const croppedCtx = croppedCanvas.getContext('2d');
+    croppedCtx.drawImage(canvas, left, top, cropW, cropH, 0, 0, cropW, cropH);
+    return croppedCanvas;
+  } catch (err) {
+    return canvas;
+  }
 }
 
 /**
@@ -176,9 +199,9 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
     const page = await pdfDoc.getPage(pageNum);
     const unscaledVp = page.getViewport({ scale: 1.0 });
     const maxDim = Math.max(unscaledVp.width, unscaledVp.height);
-    // Dynamic Ultra-HD sampling: target 300-400 DPI equivalent, minimum 2400px resolution
-    const minPixels = 2400;
-    const renderScale = Math.min(10.0, Math.max(4.0, minPixels / maxDim));
+    // Dynamic HD thermal sampling: target 203-300 DPI equivalent, balanced memory footprint
+    const minPixels = 1600;
+    const renderScale = Math.min(4.0, Math.max(2.0, minPixels / maxDim));
 
     const viewport = page.getViewport({ scale: renderScale });
     

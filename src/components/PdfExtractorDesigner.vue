@@ -9,13 +9,13 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <h2 class="text-lg font-black text-slate-800">PDF 智能提取与可视化拖拽排版</h2>
+              <h2 class="text-lg font-black text-slate-800">{{ t('extractor.title') }}</h2>
               <span class="px-2 py-0.5 text-[10px] font-black bg-amber-100 text-amber-800 rounded-full border border-amber-200">
-                矢量纯黑 · 彻底解决模糊
+                {{ t('extractor.vectorBadge') }}
               </span>
             </div>
             <p class="text-xs text-slate-500 mt-0.5">
-              导入 PDF 自动提取条码、二维码、标题与 SKU，在可视画布上自由拖拽排版，以 100% 纯黑矢量字体输出
+              {{ t('extractor.tagline') }}
             </p>
           </div>
         </div>
@@ -25,7 +25,7 @@
       <div class="flex flex-wrap items-center gap-2.5">
         <label class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-2 cursor-pointer transition-all active:scale-95">
           <Upload class="w-4 h-4" />
-          <span>导入 PDF 提取信息</span>
+          <span>{{ t('extractor.importPdf') }}</span>
           <input type="file" accept=".pdf" class="hidden" @change="handlePdfUpload" />
         </label>
 
@@ -34,7 +34,7 @@
           class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center gap-1.5"
         >
           <Sparkles class="w-3.5 h-3.5 text-amber-600" />
-          <span>载入实测样本数据</span>
+          <span>{{ t('extractor.loadDemo') }}</span>
         </button>
 
         <button 
@@ -42,7 +42,7 @@
           class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5"
         >
           <RotateCcw class="w-3.5 h-3.5" />
-          <span>重置默认排版</span>
+          <span>{{ t('extractor.resetLayout') }}</span>
         </button>
       </div>
     </div>
@@ -64,7 +64,7 @@
         <div class="flex flex-wrap items-center gap-2">
           <span class="text-xs font-bold text-slate-700 flex items-center gap-1">
             <Sliders class="w-4 h-4 text-brand-600" />
-            <span>目标卷纸规格:</span>
+            <span>{{ t('extractor.targetPaper') }}:</span>
           </span>
           <button 
             v-for="preset in sizePresets" 
@@ -81,7 +81,7 @@
 
         <!-- Custom Size Inputs -->
         <div class="flex items-center gap-2 text-xs bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-          <span class="text-slate-500 font-semibold">自定义 (mm):</span>
+          <span class="text-slate-500 font-semibold">{{ t('extractor.customMm') }}:</span>
           <input 
             v-model.number="canvasWidthMm" 
             type="number" 
@@ -101,30 +101,30 @@
 
         <!-- Add Element Toolbar -->
         <div class="flex flex-wrap items-center gap-1.5">
-          <span class="text-xs text-slate-400 font-medium mr-1">添加元素:</span>
+          <span class="text-xs text-slate-400 font-medium mr-1">{{ t('extractor.addElement') }}:</span>
           <button @click="addElement('barcode')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1">
             <Barcode class="w-3.5 h-3.5" />
-            <span>条形码</span>
+            <span>{{ t('extractor.barcode') }}</span>
           </button>
           <button @click="addElement('qrcode')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1">
             <QrCode class="w-3.5 h-3.5" />
-            <span>二维码</span>
+            <span>{{ t('extractor.qrcode') }}</span>
           </button>
           <button @click="addElement('title')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1">
             <Type class="w-3.5 h-3.5" />
-            <span>商品名</span>
+            <span>{{ t('extractor.titleText') }}</span>
           </button>
           <button @click="addElement('sku')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1">
             <Tag class="w-3.5 h-3.5" />
-            <span>SKU</span>
+            <span>{{ t('extractor.sku') }}</span>
           </button>
           <button @click="addElement('customText')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1">
             <Plus class="w-3.5 h-3.5" />
-            <span>自定义文本</span>
+            <span>{{ t('extractor.customText') }}</span>
           </button>
           <button @click="addElement('divider')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1">
             <Minus class="w-3.5 h-3.5" />
-            <span>分割线</span>
+            <span>{{ t('extractor.divider') }}</span>
           </button>
         </div>
       </div>
@@ -594,6 +594,41 @@
             </button>
           </div>
 
+          <!-- Position offset & hardware alignment toolbox -->
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="text-slate-300 font-bold flex items-center gap-1">
+                <span>🎯 打印居中微调:</span>
+              </span>
+
+              <div class="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700">
+                <span class="text-slate-400 text-[11px]">X 水平(左右):</span>
+                <button @click="printOffsetX = Math.max(-10, Number((printOffsetX - 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">-</button>
+                <span class="font-mono font-bold text-emerald-400 w-12 text-center text-[11px]">{{ printOffsetX > 0 ? '+' : '' }}{{ printOffsetX }} mm</span>
+                <button @click="printOffsetX = Math.min(10, Number((printOffsetX + 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">+</button>
+              </div>
+
+              <div class="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700">
+                <span class="text-slate-400 text-[11px]">Y 垂直(上下):</span>
+                <button @click="printOffsetY = Math.max(-10, Number((printOffsetY - 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">-</button>
+                <span class="font-mono font-bold text-emerald-400 w-12 text-center text-[11px]">{{ printOffsetY > 0 ? '+' : '' }}{{ printOffsetY }} mm</span>
+                <button @click="printOffsetY = Math.min(10, Number((printOffsetY + 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">+</button>
+              </div>
+
+              <button 
+                v-if="printOffsetX !== 0 || printOffsetY !== 0" 
+                @click="printOffsetX = 0; printOffsetY = 0"
+                class="text-[11px] text-slate-400 hover:text-white underline ml-1"
+              >
+                重置为 0
+              </button>
+            </div>
+
+            <div class="text-[11px] text-slate-400 flex items-center gap-1">
+              <span>💡 打印偏左请加大 X，偏上请加大 Y</span>
+            </div>
+          </div>
+
           <div v-if="printStatusMsg" class="p-3 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-300 text-xs font-bold flex items-center gap-2">
             <CheckCircle2 class="w-4 h-4 text-emerald-400" />
             <span>{{ printStatusMsg }}</span>
@@ -713,17 +748,23 @@ import {
 } from 'lucide-vue-next';
 import { extractLabelsFromPdf, getDefaultLayout } from '@/utils/pdfExtractor';
 import { generateBarcode, generateQRCode } from '@/utils/barcodeGenerator';
+import { t } from '@/i18n';
 
 // Canvas Size in mm
 const canvasWidthMm = ref(50);
 const canvasHeightMm = ref(25);
 const pxPerMm = ref(7.5); // Visual screen scale factor (1mm = 7.5px)
 
+// Print hardware centering offset (mm)
+const printOffsetX = ref(0);
+const printOffsetY = ref(0);
+
 // Preset sizes
 const sizePresets = [
-  { name: '50 × 25 mm (当前实测)', w: 50, h: 25 },
+  { name: '50 × 25 mm (单品标)', w: 50, h: 25 },
   { name: '50 × 30 mm', w: 50, h: 30 },
   { name: '70 × 30 mm', w: 70, h: 30 },
+  { name: '80 × 30 mm (汉印等高)', w: 80, h: 30 },
   { name: '80 × 50 mm', w: 80, h: 50 },
   { name: '100 × 100 mm', w: 100, h: 100 },
 ];
@@ -787,7 +828,16 @@ const selectedElem = computed(() => {
   return templateElements.value.find(e => e.id === selectedElemId.value) || null;
 });
 
-// Barcode and QR code caching to prevent lag during drag
+// Bounded LRU Cache to prevent memory leaks during dragging and long sessions
+const MAX_CACHE_SIZE = 150;
+const setBoundedCache = (map, key, val) => {
+  if (map.size >= MAX_CACHE_SIZE) {
+    const firstKey = map.keys().next().value;
+    map.delete(firstKey);
+  }
+  map.set(key, val);
+};
+
 const barcodeCache = new Map();
 const getBarcodeDataUrl = (code, el) => {
   const val = code || '12345678';
@@ -801,7 +851,7 @@ const getBarcodeDataUrl = (code, el) => {
     fontSize: el.fontSize || 10,
     margin: 1,
   });
-  barcodeCache.set(key, url);
+  setBoundedCache(barcodeCache, key, url);
   return url;
 };
 
@@ -813,7 +863,7 @@ const getQrCodeDataUrl = (val, el) => {
   if (qrCache.has(key)) return qrCache.get(key);
 
   generateQRCode(text, { size: Math.round(size * 7.5) }).then(res => {
-    qrCache.set(key, res);
+    setBoundedCache(qrCache, key, res);
   });
   return qrCache.get(key) || '';
 };
@@ -1076,9 +1126,15 @@ const generatePrintHtml = () => {
       `;
     }).join('');
 
+    const offsetX = Number(printOffsetX.value) || 0;
+    const offsetY = Number(printOffsetY.value) || 0;
+    const offsetCss = (offsetX !== 0 || offsetY !== 0) ? `transform: translate(${offsetX}mm, ${offsetY}mm);` : '';
+
     return `
       <div class="label-page" style="position:relative; width:${canvasWidthMm.value}mm; height:${canvasHeightMm.value}mm; overflow:hidden; page-break-after:always; break-after:page;">
-        ${elemsHtml}
+        <div style="position:relative; width:100%; height:100%; ${offsetCss}">
+          ${elemsHtml}
+        </div>
       </div>
     `;
   }).join('');

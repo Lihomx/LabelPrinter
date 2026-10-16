@@ -483,14 +483,24 @@ const printTemplateDirect = async () => {
   const canvas = previewCanvasRef.value;
   if (!canvas) return;
 
-  if (window.electronAPI && window.electronAPI.printThermal) {
-    await window.electronAPI.printThermal({
-      labels: [canvas.toDataURL('image/png')],
-      copies: printCopies.value,
-      widthMm: currentWidthMm.value,
-      heightMm: currentHeightMm.value,
+  const dataUrl = canvas.toDataURL('image/png');
+  const copies = parseInt(printCopies.value, 10) || 1;
+  const w = currentWidthMm.value;
+  const h = currentHeightMm.value;
+
+  if (window.electronAPI?.printSilent) {
+    const html = `<div class="label-page"><img src="${dataUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;" /></div>`;
+    const res = await window.electronAPI.printSilent({
+      widthMm: w,
+      heightMm: h,
+      htmlContent: html,
+      copies: copies,
     });
-    alert('已发送至打印机！');
+    if (res?.success) {
+      alert('✓ 模板标签已直接发送至打印机！');
+    } else {
+      alert('打印失败: ' + (res?.error || '请确认打印机连接正常'));
+    }
     return;
   }
 

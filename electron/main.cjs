@@ -16,7 +16,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
-      webSecurity: false // 允许本地与内联图片/Blob 加载
+      webSecurity: true
     }
   });
 
@@ -57,6 +57,105 @@ ipcMain.handle('open-printer-preferences', async (event, printerName) => {
       if (err) resolve({ success: false, error: err.message });
       else resolve({ success: true });
     });
+  });
+});
+
+ipcMain.handle('print-to-pdf', async (event, params = {}) => {
+  const { widthMm = 50, heightMm = 30, htmlContent = '' } = params;
+
+  return new Promise((resolve) => {
+    try {
+      const pdfWin = new BrowserWindow({
+        show: false,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true
+        }
+      });
+
+      const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Export PDF</title>
+  <style>
+    @page {
+      size: ${widthMm}mm ${heightMm}mm;
+      margin: 0 !important;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      margin: 0; padding: 0;
+      width: ${widthMm}mm; height: ${heightMm}mm;
+      background: white; overflow: hidden;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .label-page {
+      width: ${widthMm}mm; height: ${heightMm}mm;
+      page-break-after: always;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .label-page:last-child { page-break-after: auto; }
+    img {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      image-rendering: pixelated;
+    }
+  </style>
+</head>
+<body>
+  ${htmlContent}
+</body>
+</html>`;
+
+      const tempFile = path.join(app.getPath('temp'), `label_pdf_${Date.now()}_${Math.random().toString(36).slice(2)}.html`);
+      fs.writeFileSync(tempFile, fullHtml, 'utf8');
+
+      const cleanup = () => {
+        try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (e) {}
+        try { if (!pdfWin.isDestroyed()) pdfWin.close(); } catch (e) {}
+      };
+
+      pdfWin.loadFile(tempFile);
+
+      pdfWin.webContents.on('did-finish-load', async () => {
+        try {
+          await pdfWin.webContents.executeJavaScript(`
+            new Promise((res) => {
+              const check = () => {
+                const imgs = Array.from(document.images);
+                if (imgs.every(img => img.complete)) res(true);
+                else setTimeout(check, 30);
+              };
+              if (document.readyState === 'complete') check();
+              else window.addEventListener('load', check);
+            });
+          `).catch(() => {});
+
+          const pdfBuffer = await pdfWin.webContents.printToPDF({
+            pageSize: {
+              width: Math.round(widthMm * 1000),
+              height: Math.round(heightMm * 1000)
+            },
+            printBackground: true,
+            preferCSSPageSize: true
+          });
+          cleanup();
+          resolve({ success: true, base64: pdfBuffer.toString('base64') });
+        } catch (err) {
+          cleanup();
+          resolve({ success: false, error: err.message });
+        }
+      });
+
+      pdfWin.webContents.on('did-fail-load', (e, code, desc) => {
+        cleanup();
+        resolve({ success: false, error: desc });
+      });
+    } catch (err) {
+      resolve({ success: false, error: err.message });
+    }
   });
 });
 
@@ -144,34 +243,45 @@ ipcMain.handle('print-silent', async (event, params) => {
 
       printWin.loadFile(tempFile);
 
-      printWin.webContents.on('did-finish-load', () => {
-        // 渲染延迟等待图片/Canvas充分加载
-        setTimeout(() => {
-          const printOptions = {
-            silent: true,
-            printBackground: true,
-            preferCSSPageSize: true,
-            margins: { marginType: 'none' },
-            pageSize: {
-              width: Math.round(widthMm * 1000), // 微米 microns (1mm = 1000 microns)
-              height: Math.round(heightMm * 1000)
-            },
-            copies: parseInt(copies, 10) || 1
-          };
+      printWin.webContents.on('did-finish-load', async () => {
+        try {
+          await printWin.webContents.executeJavaScript(`
+            new Promise((res) => {
+              const check = () => {
+                const imgs = Array.from(document.images);
+                if (imgs.every(img => img.complete)) res(true);
+                else setTimeout(check, 30);
+              };
+              if (document.readyState === 'complete') check();
+              else window.addEventListener('load', check);
+            });
+          `).catch(() => {});
+        } catch (e) {}
 
-          if (printerName && printerName.trim() !== '') {
-            printOptions.deviceName = printerName.trim();
+        const printOptions = {
+          silent: true,
+          printBackground: true,
+          preferCSSPageSize: true,
+          margins: { marginType: 'none' },
+          pageSize: {
+            width: Math.round(widthMm * 1000), // 微米 microns (1mm = 1000 microns)
+            height: Math.round(heightMm * 1000)
+          },
+          copies: parseInt(copies, 10) || 1
+        };
+
+        if (printerName && printerName.trim() !== '') {
+          printOptions.deviceName = printerName.trim();
+        }
+
+        printWin.webContents.print(printOptions, (success, failureReason) => {
+          cleanup();
+          if (!success) {
+            resolve({ success: false, error: failureReason });
+          } else {
+            resolve({ success: true });
           }
-
-          printWin.webContents.print(printOptions, (success, failureReason) => {
-            cleanup();
-            if (!success) {
-              resolve({ success: false, error: failureReason });
-            } else {
-              resolve({ success: true });
-            }
-          });
-        }, 350);
+        });
       });
 
       printWin.webContents.on('did-fail-load', (e, code, desc) => {

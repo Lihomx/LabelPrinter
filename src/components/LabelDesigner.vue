@@ -33,11 +33,21 @@
           <Save class="w-3.5 h-3.5" />
           <span>{{ t('designer.exportJson') }}</span>
         </button>
-        <button @click="printDesignerLabel" class="px-4 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5">
+        <button 
+          @click="printDesignerLabel" 
+          :disabled="isPrinting"
+          class="px-4 py-1.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all"
+        >
           <Printer class="w-3.5 h-3.5" />
-          <span>打印此设计</span>
+          <span>{{ isPrinting ? t('designer.printing') : t('designer.printLabel') }}</span>
         </button>
       </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div v-if="printSuccessMsg" class="p-3 bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 rounded-xl text-xs font-bold flex items-center gap-2">
+      <CheckCircle2 class="w-4 h-4 text-emerald-600" />
+      <span>{{ printSuccessMsg }}</span>
     </div>
 
     <!-- Designer Workspace -->
@@ -98,24 +108,24 @@
       <!-- Properties Panel on Right -->
       <div class="lg:col-span-4 bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-4">
         <h3 class="font-bold text-sm text-slate-800 pb-2 border-b border-slate-100 flex items-center justify-between">
-          <span>元素属性设置</span>
+          <span>{{ t('designer.elementProps') }}</span>
           <button 
             v-if="selectedElem" 
             @click="deleteSelectedElement" 
             class="text-xs text-rose-500 hover:underline flex items-center gap-1"
           >
             <Trash2 class="w-3.5 h-3.5" />
-            删除元素
+            {{ t('designer.deleteElement') }}
           </button>
         </h3>
 
         <div v-if="selectedElem" class="space-y-3 text-xs">
           <div>
-            <label class="text-slate-500 font-semibold block mb-1">元素类型: <span class="text-brand-600 uppercase">{{ selectedElem.type }}</span></label>
+            <label class="text-slate-500 font-semibold block mb-1">{{ t('designer.elemType') }}: <span class="text-brand-600 uppercase">{{ selectedElem.type }}</span></label>
           </div>
 
           <div>
-            <label class="text-slate-500 font-semibold block mb-1">内容数值 / 文本</label>
+            <label class="text-slate-500 font-semibold block mb-1">{{ t('designer.contentValue') }}</label>
             <textarea v-model="selectedElem.value" rows="2" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs"></textarea>
           </div>
 
@@ -143,7 +153,7 @@
         </div>
 
         <div v-else class="text-center py-12 text-slate-400 text-xs">
-          点击画布上的元素以编辑属性或拖拽位置
+          {{ t('designer.selectHint') }}
         </div>
       </div>
     </div>
@@ -152,13 +162,15 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { Barcode, QrCode, Type, Save, Printer, Trash2 } from 'lucide-vue-next';
+import { Barcode, QrCode, Type, Save, Printer, Trash2, CheckCircle2 } from 'lucide-vue-next';
 import { t } from '@/i18n';
-import { generateBarcode } from '@/utils/barcodeGenerator';
+import { generateBarcode, generateQRCode } from '@/utils/barcodeGenerator';
 
 const canvasWidthMm = ref(70);
 const canvasHeightMm = ref(30);
 const selectedElemIndex = ref(0);
+const isPrinting = ref(false);
+const printSuccessMsg = ref('');
 
 const elements = ref([
   { id: 1, type: 'barcode', value: 'UITQ48802', x: 10, y: 3 },
@@ -172,7 +184,17 @@ const selectedElem = computed(() => {
 });
 
 const getBarcodeUrl = (val) => generateBarcode(val || '123456', { width: 1.8, height: 45, fontSize: 13 });
-const getQrUrl = (val) => `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(val || 'QR')}`;
+
+// 100% Offline Local QR Code Generator Cache
+const qrCache = ref(new Map());
+const getQrUrl = (val) => {
+  const text = val || 'QR';
+  if (qrCache.value.has(text)) return qrCache.value.get(text);
+  generateQRCode(text, { size: 160 }).then(url => {
+    qrCache.value.set(text, url);
+  });
+  return qrCache.value.get(text) || '';
+};
 
 const addElement = (type) => {
   const newEl = {
@@ -243,7 +265,99 @@ const exportJsonTemplate = () => {
   URL.revokeObjectURL(url);
 };
 
-const printDesignerLabel = () => {
-  alert('设计器标签已准备好输出，支持导出矢量 PDF 或直接静默出纸！');
+const generatePrintHtml = async () => {
+  const w = canvasWidthMm.value;
+  const h = canvasHeightMm.value;
+
+  const itemHtmlPromises = elements.value.map(async (el) => {
+    if (el.type === 'barcode') {
+      const bUrl = getBarcodeUrl(el.value);
+      return `<div style="position: absolute; left: ${el.x}mm; top: ${el.y}mm; background: white;">
+        <img src="${bUrl}" style="display: block; max-height: 14mm;" />
+      </div>`;
+    } else if (el.type === 'qrcode') {
+      const qUrl = await generateQRCode(el.value || 'QR', { size: 160 });
+      return `<div style="position: absolute; left: ${el.x}mm; top: ${el.y}mm; background: white;">
+        <img src="${qUrl}" style="display: block; width: 16mm; height: 16mm;" />
+      </div>`;
+    } else if (el.type === 'text') {
+      return `<div style="position: absolute; left: ${el.x}mm; top: ${el.y}mm; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: ${el.fontSize || 13}px; font-weight: ${el.bold ? 'bold' : 'normal'}; max-width: ${el.width ? el.width : 50}mm; line-height: 1.2; color: #000000; word-break: break-all;">
+        ${el.value}
+      </div>`;
+    }
+    return '';
+  });
+
+  const renderedItems = (await Promise.all(itemHtmlPromises)).join('');
+
+  return `<div class="label-page" style="width: ${w}mm; height: ${h}mm; position: relative; overflow: hidden; background: #ffffff;">
+    ${renderedItems}
+  </div>`;
+};
+
+const printDesignerLabel = async () => {
+  if (elements.value.length === 0) {
+    alert('画布中暂无元素，请先添加元素。');
+    return;
+  }
+  isPrinting.value = true;
+  try {
+    const htmlContent = await generatePrintHtml();
+
+    if (typeof window !== 'undefined' && window.electronAPI?.printSilent) {
+      const res = await window.electronAPI.printSilent({
+        widthMm: canvasWidthMm.value,
+        heightMm: canvasHeightMm.value,
+        htmlContent: htmlContent,
+        copies: 1
+      });
+      if (res?.success) {
+        printSuccessMsg.value = '✓ 设计器标签已成功发送至打印机！';
+        setTimeout(() => printSuccessMsg.value = '', 4000);
+      } else {
+        alert('打印失败: ' + (res?.error || '请确认打印机连接正常'));
+      }
+    } else {
+      // Browser print fallback
+      const printIframe = document.createElement('iframe');
+      printIframe.style.position = 'fixed';
+      printIframe.style.right = '0';
+      printIframe.style.bottom = '0';
+      printIframe.style.width = '0';
+      printIframe.style.height = '0';
+      printIframe.style.border = '0';
+      document.body.appendChild(printIframe);
+
+      const iframeDoc = printIframe.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(`<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    @page { size: ${canvasWidthMm.value}mm ${canvasHeightMm.value}mm; margin: 0 !important; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: ${canvasWidthMm.value}mm; height: ${canvasHeightMm.value}mm; margin: 0; padding: 0; background: #fff; overflow: hidden; }
+    .label-page { width: ${canvasWidthMm.value}mm; height: ${canvasHeightMm.value}mm; position: relative; overflow: hidden; }
+  </style>
+</head>
+<body>${htmlContent}</body>
+</html>`);
+      iframeDoc.close();
+
+      setTimeout(() => {
+        printIframe.contentWindow.focus();
+        printIframe.contentWindow.print();
+        setTimeout(() => {
+          if (document.body.contains(printIframe)) {
+            document.body.removeChild(printIframe);
+          }
+        }, 30000);
+      }, 350);
+    }
+  } catch (err) {
+    alert('打印调用异常: ' + err.message);
+  } finally {
+    isPrinting.value = false;
+  }
 };
 </script>

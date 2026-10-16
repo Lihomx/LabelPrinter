@@ -16,4 +16,30 @@ export default defineConfig({
     port: 3000,
     host: true,
   },
+  build: {
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('pdfjs-dist') || id.includes('pdf-lib')) {
+              return 'pdf-engine';
+            }
+            if (id.includes('xlsx')) {
+              return 'sheet-engine';
+            }
+            if (id.includes('jsbarcode') || id.includes('qrcode')) {
+              return 'code-generators';
+            }
+            if (id.includes('lucide-vue-next')) {
+              return 'ui-icons';
+            }
+            if (id.includes('vue')) {
+              return 'vue-core';
+            }
+          }
+        }
+      }
+    }
+  }
 });
