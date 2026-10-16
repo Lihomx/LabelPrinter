@@ -1148,13 +1148,7 @@ const generatePrintHtml = () => {
     const offsetY = Number(printOffsetY.value) || 0;
     const offsetCss = (offsetX !== 0 || offsetY !== 0) ? `transform: translate(${offsetX}mm, ${offsetY}mm);` : '';
 
-    return `
-      <div class="label-page" style="position:relative; width:${canvasWidthMm.value}mm; height:${canvasHeightMm.value}mm; overflow:hidden; page-break-after:always; break-after:page;">
-        <div style="position:relative; width:100%; height:100%; ${offsetCss}">
-          ${elemsHtml}
-        </div>
-      </div>
-    `;
+    return `<div class="label-page" style="position:relative; width:${canvasWidthMm.value}mm; height:${canvasHeightMm.value}mm; overflow:hidden;"><div style="position:relative; width:100%; height:100%; ${offsetCss}">${elemsHtml}</div></div>`;
   }).join('');
 
   return pages;

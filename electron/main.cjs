@@ -83,20 +83,25 @@ ipcMain.handle('print-to-pdf', async (event, params = {}) => {
       size: ${widthMm}mm ${heightMm}mm;
       margin: 0 !important;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
-      margin: 0; padding: 0;
-      width: ${widthMm}mm; height: ${heightMm}mm;
+      margin: 0 !important; padding: 0 !important;
+      width: ${widthMm}mm;
       background: white; overflow: hidden;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+      font-size: 0 !important;
+      line-height: 0 !important;
     }
     .label-page {
       width: ${widthMm}mm; height: ${heightMm}mm;
       page-break-after: always;
+      break-after: page;
       display: flex; align-items: center; justify-content: center;
+      margin: 0 !important; padding: 0 !important; box-sizing: border-box;
+      font-size: 0 !important; line-height: 0 !important;
     }
-    .label-page:last-child { page-break-after: auto; }
+    .label-page:first-child { page-break-before: avoid !important; break-before: avoid !important; }
+    .label-page:last-child { page-break-after: avoid !important; break-after: avoid !important; }
     img {
       image-rendering: -webkit-optimize-contrast;
       image-rendering: crisp-edges;
@@ -104,9 +109,7 @@ ipcMain.handle('print-to-pdf', async (event, params = {}) => {
     }
   </style>
 </head>
-<body>
-  ${htmlContent}
-</body>
+<body>${(htmlContent || '').trim()}</body>
 </html>`;
 
       const tempFile = path.join(app.getPath('temp'), `label_pdf_${Date.now()}_${Math.random().toString(36).slice(2)}.html`);
@@ -188,14 +191,15 @@ ipcMain.handle('print-silent', async (event, params) => {
       padding: 0;
     }
     html, body {
-      margin: 0;
-      padding: 0;
+      margin: 0 !important;
+      padding: 0 !important;
       width: ${widthMm}mm;
-      height: ${heightMm}mm;
       background: white;
       overflow: hidden;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+      font-size: 0 !important;
+      line-height: 0 !important;
     }
     .label-page {
       width: ${widthMm}mm;
@@ -210,10 +214,19 @@ ipcMain.handle('print-silent', async (event, params) => {
       align-items: center;
       justify-content: center;
       position: relative;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-sizing: border-box;
+      font-size: 0 !important;
+      line-height: 0 !important;
+    }
+    .label-page:first-child {
+      page-break-before: avoid !important;
+      break-before: avoid !important;
     }
     .label-page:last-child {
-      page-break-after: auto;
-      break-after: auto;
+      page-break-after: avoid !important;
+      break-after: avoid !important;
     }
     img {
       image-rendering: -webkit-optimize-contrast;
@@ -223,9 +236,7 @@ ipcMain.handle('print-silent', async (event, params) => {
     }
   </style>
 </head>
-<body>
-  ${htmlContent}
-</body>
+<body>${(htmlContent || '').trim()}</body>
 </html>`;
 
       // 使用系统临时目录保存 HTML 文件，彻底避免 data: URL 长度上限限制
@@ -257,6 +268,9 @@ ipcMain.handle('print-silent', async (event, params) => {
             });
           `).catch(() => {});
         } catch (e) {}
+
+        // Small safety buffer for layout/fonts and Chromium paint to settle completely
+        await new Promise(resolve => setTimeout(resolve, 200));
 
         const printOptions = {
           silent: true,

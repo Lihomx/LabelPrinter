@@ -488,6 +488,22 @@
           </button>
 
           <button 
+            @click="selectOddPages" 
+            class="px-2.5 py-1.5 bg-white hover:bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 transition-all cursor-pointer shadow-2xs"
+            title="选择所有奇数页码 (第 1, 3, 5, 7... 页)"
+          >
+            奇数页
+          </button>
+
+          <button 
+            @click="selectEvenPages" 
+            class="px-2.5 py-1.5 bg-white hover:bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 transition-all cursor-pointer shadow-2xs"
+            title="选择所有偶数页码 (第 2, 4, 6, 8... 页)"
+          >
+            偶数页
+          </button>
+
+          <button 
             @click="selectAllPages" 
             class="px-2.5 py-1.5 bg-white hover:bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 transition-all cursor-pointer"
           >
@@ -2492,6 +2508,34 @@ const selectOnlyFirstPage = () => {
   }
 };
 
+const selectOddPages = () => {
+  pageRangeInput.value = '奇数页';
+  for (const item of rawLabels.value) {
+    const pageNum = Number(item.page) || 1;
+    if (pageNum % 2 !== 0) {
+      item.selected = true;
+      if (!item.quantity || Number(item.quantity) < 1) item.quantity = 1;
+    } else {
+      item.selected = false;
+      item.quantity = 0;
+    }
+  }
+};
+
+const selectEvenPages = () => {
+  pageRangeInput.value = '偶数页';
+  for (const item of rawLabels.value) {
+    const pageNum = Number(item.page) || 1;
+    if (pageNum % 2 === 0) {
+      item.selected = true;
+      if (!item.quantity || Number(item.quantity) < 1) item.quantity = 1;
+    } else {
+      item.selected = false;
+      item.quantity = 0;
+    }
+  }
+};
+
 const selectAllPages = () => {
   pageRangeInput.value = '';
   for (const item of rawLabels.value) {
@@ -2511,6 +2555,15 @@ const invertPageSelection = () => {
 const parsePageRange = (str, max) => {
   const result = new Set();
   if (!str || !str.trim()) return result;
+  const rawStr = str.trim().toLowerCase();
+  if (rawStr === '奇数' || rawStr === '奇数页' || rawStr === 'odd') {
+    for (let p = 1; p <= max; p += 2) result.add(p);
+    return result;
+  }
+  if (rawStr === '偶数' || rawStr === '偶数页' || rawStr === 'even') {
+    for (let p = 2; p <= max; p += 2) result.add(p);
+    return result;
+  }
   const parts = str.split(/[,，\s]+/);
   for (const part of parts) {
     const rangeMatch = part.match(/^(\d+)-(\d+)$/);
@@ -2823,17 +2876,9 @@ const triggerElectronSilentPrint = async () => {
       const transformCss = transforms.length > 0 ? `transform: ${transforms.join(' ')};` : '';
 
       if (shouldRotate) {
-        return `
-          <div class="label-page">
-            <img src="${item.dataUrl}" style="max-width: ${targetHeightMm.value}mm; max-height: ${targetWidthMm.value}mm; ${transformCss} object-fit: ${isStretch ? 'fill' : 'contain'}; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
-          </div>
-        `;
+        return `<div class="label-page"><img src="${item.dataUrl}" style="max-width:${targetHeightMm.value}mm;max-height:${targetWidthMm.value}mm;${transformCss}object-fit:${isStretch ? 'fill' : 'contain'};image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;"/></div>`;
       } else {
-        return `
-          <div class="label-page">
-            <img src="${item.dataUrl}" style="max-width: 100%; max-height: 100%; ${transformCss} object-fit: ${isStretch ? 'fill' : 'contain'}; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
-          </div>
-        `;
+        return `<div class="label-page"><img src="${item.dataUrl}" style="max-width:100%;max-height:100%;${transformCss}object-fit:${isStretch ? 'fill' : 'contain'};image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;"/></div>`;
       }
     }).join('');
 
