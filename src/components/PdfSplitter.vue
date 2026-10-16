@@ -419,6 +419,38 @@
           </button>
         </div>
 
+        <!-- Sharpen Mode Quick Selector in Step 2 -->
+        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-xs">
+          <span class="text-slate-500 font-bold px-1.5 flex items-center gap-1">
+            <span>🖤</span>
+            <span>锐化:</span>
+          </span>
+          <button 
+            @click="setSharpenMode('standard')" 
+            title="消除抗锯齿灰色网点，推荐模式"
+            class="px-2 py-0.5 rounded font-bold text-xs transition-all"
+            :class="sharpenMode === 'standard' ? 'bg-white text-emerald-700 shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'"
+          >
+            标准纯黑
+          </button>
+          <button 
+            @click="setSharpenMode('heavy')" 
+            title="加重黑度，强化浅灰与细笔画"
+            class="px-2 py-0.5 rounded font-bold text-xs transition-all"
+            :class="sharpenMode === 'heavy' ? 'bg-white text-amber-700 shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'"
+          >
+            加重黑度
+          </button>
+          <button 
+            @click="setSharpenMode('none')" 
+            title="原图灰度，关闭纯黑锐化"
+            class="px-2 py-0.5 rounded font-bold text-xs transition-all"
+            :class="sharpenMode === 'none' ? 'bg-white text-slate-700 shadow-2xs font-black' : 'text-slate-500 hover:text-slate-900'"
+          >
+            原图灰度
+          </button>
+        </div>
+
         <!-- Stats & Next Step Button -->
         <div class="flex items-center gap-4">
           <div class="text-right">
@@ -709,6 +741,58 @@
           </div>
         </div>
 
+        <!-- Smart Pure Black Sharpening Section -->
+        <div class="p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl border-2 border-indigo-500/40 text-white shadow-lg space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-400/30 flex items-center justify-center font-bold text-base flex-shrink-0">
+                🖤
+              </div>
+              <div>
+                <div class="font-bold text-sm text-white flex items-center gap-2">
+                  <span>智能热敏纯黑锐化算法</span>
+                  <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-black">解决打印模糊/网点发虚</span>
+                </div>
+                <div class="text-xs text-slate-300 mt-0.5">
+                  203 DPI 热敏机无灰度能力，PDF抗锯齿灰色边缘会被驱动打成稀疏网点。开启后去除灰边，纯黑物理直打！
+                </div>
+              </div>
+            </div>
+
+            <!-- Mode Selector Pills -->
+            <div class="flex items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-xl border border-slate-700">
+              <button 
+                @click="setSharpenMode('standard')" 
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
+                :class="sharpenMode === 'standard' ? 'bg-emerald-500 text-slate-950 shadow-md font-black' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
+              >
+                <span>🔥 标准纯黑 (推荐)</span>
+              </button>
+              <button 
+                @click="setSharpenMode('heavy')" 
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
+                :class="sharpenMode === 'heavy' ? 'bg-amber-400 text-slate-950 shadow-md font-black' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
+              >
+                <span>⚡ 加重黑度 (细字加粗)</span>
+              </button>
+              <button 
+                @click="setSharpenMode('none')" 
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
+                :class="sharpenMode === 'none' ? 'bg-slate-700 text-white shadow-md font-black' : 'text-slate-400 hover:text-white hover:bg-slate-800'"
+              >
+                <span>📷 原图灰度 (未处理)</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="text-[11px] text-slate-400 flex items-center gap-2 pt-2 border-t border-slate-800/80">
+            <span class="text-indigo-400 font-bold flex-shrink-0">💡 模式说明：</span>
+            <span v-if="sharpenMode === 'standard'">【标准纯黑】：阈值 190，保留原版字形笔锋同时彻底清除抗锯齿灰色网点，字母与数字边缘整齐无毛刺。</span>
+            <span v-else-if="sharpenMode === 'heavy'">【加重黑度】：阈值 215，强化细笔画与浅灰字体，适合 Spanish 西语品名小字（如 7pt~9pt）让文字更粗黑易读。</span>
+            <span v-else>【原图灰度】：保留原始渲染抗锯齿（热敏驱动通常会以半色调网点模拟灰色，可能产生微细颗粒感）。</span>
+          </div>
+        </div>
+
         <!-- Action Button to Step 4 -->
         <div class="flex justify-end pt-4">
           <button 
@@ -760,6 +844,40 @@
                 :class="printCopies === q ? 'bg-brand-600 text-white border-brand-600 font-bold' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'"
               >
                 {{ q }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Sharpening Quick Switcher in Step 4 Top Bar -->
+          <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs shadow-2xs">
+            <span class="text-slate-600 font-bold flex items-center gap-1">
+              <span>🖤</span>
+              <span>纯黑锐化:</span>
+            </span>
+            <div class="flex items-center gap-1">
+              <button 
+                @click="setSharpenMode('standard')" 
+                title="消除抗锯齿网点，推荐模式"
+                class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all" 
+                :class="sharpenMode === 'standard' ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-2xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'"
+              >
+                标准纯黑
+              </button>
+              <button 
+                @click="setSharpenMode('heavy')" 
+                title="加重笔画黑度，适合浅细文字"
+                class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all" 
+                :class="sharpenMode === 'heavy' ? 'bg-amber-500 text-white border-amber-500 font-bold shadow-2xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'"
+              >
+                加重黑度
+              </button>
+              <button 
+                @click="setSharpenMode('none')" 
+                title="原图灰度渲染"
+                class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all" 
+                :class="sharpenMode === 'none' ? 'bg-slate-700 text-white border-slate-700 font-bold shadow-2xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'"
+              >
+                原图灰度
               </button>
             </div>
           </div>
@@ -955,6 +1073,34 @@
               class="text-[11px] text-slate-400 hover:text-slate-200 underline"
             >
               归零
+            </button>
+          </div>
+
+          <!-- Sharpen Mode Quick Switch in Client Station -->
+          <div class="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700">
+            <span class="text-slate-300 font-bold text-xs flex items-center gap-1">
+              <span>🖤 纯黑锐化:</span>
+            </span>
+            <button 
+              @click="setSharpenMode('standard')" 
+              class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all"
+              :class="sharpenMode === 'standard' ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-black shadow-xs' : 'text-slate-400 border-transparent hover:text-white'"
+            >
+              标准 (推荐)
+            </button>
+            <button 
+              @click="setSharpenMode('heavy')" 
+              class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all"
+              :class="sharpenMode === 'heavy' ? 'bg-amber-400 text-slate-950 border-amber-300 font-black shadow-xs' : 'text-slate-400 border-transparent hover:text-white'"
+            >
+              加重黑度
+            </button>
+            <button 
+              @click="setSharpenMode('none')" 
+              class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all"
+              :class="sharpenMode === 'none' ? 'bg-slate-700 text-white border-slate-600 font-black shadow-xs' : 'text-slate-400 border-transparent hover:text-white'"
+            >
+              原图灰度
             </button>
           </div>
 
@@ -1689,7 +1835,7 @@
 </template>
 
 <script setup>
-import { ref, shallowRef, markRaw, computed, nextTick, onMounted } from 'vue';
+import { ref, shallowRef, markRaw, computed, nextTick, onMounted, watch } from 'vue';
 import { 
   UploadCloud, FileUp, Layers, LayoutGrid, Search, ArrowRight, 
   CheckCircle2, Download, Printer, Scroll, FlaskConical, Crop, Check, RotateCcw, X,
@@ -1699,7 +1845,7 @@ import {
 import { t } from '@/i18n';
 import { 
   loadPdfDocument, detectSuggestedLayout, slicePdfLabels, 
-  groupLabelsByBarcode, exportThermalPdf, trimWhiteBorder
+  groupLabelsByBarcode, exportThermalPdf, trimWhiteBorder, binarizeCanvas
 } from '@/utils/pdfProcessor';
 import { 
   getAllProjects, getProject, saveProject, deleteProject, 
@@ -1718,6 +1864,41 @@ const rawLabels = ref([]);
 const searchQuery = ref('');
 const isGeneratingPdf = ref(false);
 
+// Sharpening mode state: 'standard' (190) | 'heavy' (215) | 'none'
+const sharpenMode = ref('standard');
+
+const setSharpenMode = async (mode) => {
+  sharpenMode.value = mode;
+  if (!rawLabels.value || rawLabels.value.length === 0) return;
+
+  for (const item of rawLabels.value) {
+    if (!item.rawCanvas) {
+      if (item.canvas) {
+        item.rawCanvas = item.canvas;
+      } else if (item.dataUrl) {
+        try {
+          const img = new Image();
+          img.src = item.dataUrl;
+          await img.decode();
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth || img.width;
+          c.height = img.naturalHeight || img.height;
+          c.getContext('2d').drawImage(img, 0, 0);
+          item.rawCanvas = c;
+        } catch (e) {
+          console.warn('Reconstructing canvas failed:', e);
+        }
+      }
+    }
+    if (item.rawCanvas) {
+      const targetCanvas = mode === 'none' ? item.rawCanvas : binarizeCanvas(item.rawCanvas, mode);
+      item.canvas = targetCanvas;
+      item.dataUrl = targetCanvas.toDataURL('image/png');
+    }
+  }
+  rawLabels.value = [...rawLabels.value];
+};
+
 // Project management state
 const currentProjectId = ref(null);
 const currentProjectName = ref('');
@@ -1734,10 +1915,23 @@ const activeHelpTab = ref('desktopApp'); // 'desktopApp' | 'customSize' | 'borro
 // Electron Desktop Client native integration state
 const isElectron = ref(false);
 const electronPrinters = ref([]);
-const selectedElectronPrinter = ref('');
+const selectedElectronPrinter = ref(
+  (typeof window !== 'undefined' && localStorage.getItem('labelmaster_selected_printer')) || ''
+);
 const isElectronPrinting = ref(false);
 const electronPrintSuccess = ref(false);
 const electronPrintStatusMsg = ref('');
+
+// Auto remember printer selection across sessions
+watch(selectedElectronPrinter, (newVal) => {
+  if (newVal && typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('labelmaster_selected_printer', newVal);
+    } catch (e) {
+      console.warn('Failed to save printer to localStorage:', e);
+    }
+  }
+});
 
 // Print alignment offset fine-tuning (mm)
 const printOffsetX = ref(0);
@@ -1866,7 +2060,8 @@ const processImageFile = async (file) => {
 
       originalImageCanvas.value = canvas;
       const trimmed = trimWhiteBorder(canvas);
-      const dataUrl = trimmed.toDataURL('image/png');
+      const activeCanvas = sharpenMode.value !== 'none' ? binarizeCanvas(trimmed, sharpenMode.value) : trimmed;
+      const dataUrl = activeCanvas.toDataURL('image/png');
 
       const fileName = file.name ? file.name.replace(/\.[^/.]+$/, "") : 'IMAGE-LABEL';
       currentSourceFileName.value = file.name || '图片标签';
@@ -1879,15 +2074,16 @@ const processImageFile = async (file) => {
         page: 1,
         col: 1,
         row: 1,
-        canvas: trimmed,
+        rawCanvas: trimmed,
+        canvas: activeCanvas,
         dataUrl: dataUrl,
         barcode: fileName,
         title: fileName,
         sku: '',
         quantity: 1,
         selected: true,
-        width: trimmed.width,
-        height: trimmed.height,
+        width: activeCanvas.width,
+        height: activeCanvas.height,
       }];
 
       if (trimmed.width > trimmed.height * 1.5) {
@@ -2160,7 +2356,8 @@ const reprocessPdf = async () => {
       currentPdfDoc.value, 
       selectedLayoutMode.value, 
       null, 
-      freeCropBox.value
+      freeCropBox.value,
+      sharpenMode.value
     );
   } else if (originalImageCanvas.value && freeCropBox.value) {
     const orig = originalImageCanvas.value;
@@ -2176,20 +2373,23 @@ const reprocessPdf = async () => {
     const cellCtx = cellCanvas.getContext('2d');
     cellCtx.drawImage(orig, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
 
+    const activeCanvas = sharpenMode.value !== 'none' ? binarizeCanvas(cellCanvas, sharpenMode.value) : cellCanvas;
+
     rawLabels.value = [{
       id: `img_${Date.now()}`,
       page: 1,
       col: 1,
       row: 1,
-      canvas: cellCanvas,
-      dataUrl: cellCanvas.toDataURL('image/png'),
+      rawCanvas: cellCanvas,
+      canvas: activeCanvas,
+      dataUrl: activeCanvas.toDataURL('image/png'),
       barcode: 'IMAGE-LABEL',
       title: '图片自定义裁切标',
       sku: '',
       quantity: 1,
       selected: true,
-      width: cellCanvas.width,
-      height: cellCanvas.height,
+      width: activeCanvas.width,
+      height: activeCanvas.height,
     }];
   }
 };
@@ -2579,9 +2779,14 @@ const loadElectronPrinters = async () => {
       const res = await window.electronAPI.getPrinters();
       if (res && res.success && Array.isArray(res.printers)) {
         electronPrinters.value = res.printers;
-        if (!selectedElectronPrinter.value && res.printers.length > 0) {
+        const saved = localStorage.getItem('labelmaster_selected_printer');
+        const match = saved && res.printers.some(p => p.name === saved);
+        if (match) {
+          selectedElectronPrinter.value = saved;
+        } else if (!selectedElectronPrinter.value && res.printers.length > 0) {
           const def = res.printers.find(p => p.isDefault);
           selectedElectronPrinter.value = def ? def.name : res.printers[0].name;
+          localStorage.setItem('labelmaster_selected_printer', selectedElectronPrinter.value);
         }
       }
     } catch (e) {
@@ -2620,13 +2825,13 @@ const triggerElectronSilentPrint = async () => {
       if (shouldRotate) {
         return `
           <div class="label-page">
-            <img src="${item.dataUrl}" style="max-width: ${targetHeightMm.value}mm; max-height: ${targetWidthMm.value}mm; ${transformCss} object-fit: ${isStretch ? 'fill' : 'contain'};" />
+            <img src="${item.dataUrl}" style="max-width: ${targetHeightMm.value}mm; max-height: ${targetWidthMm.value}mm; ${transformCss} object-fit: ${isStretch ? 'fill' : 'contain'}; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
           </div>
         `;
       } else {
         return `
           <div class="label-page">
-            <img src="${item.dataUrl}" style="max-width: 100%; max-height: 100%; ${transformCss} object-fit: ${isStretch ? 'fill' : 'contain'};" />
+            <img src="${item.dataUrl}" style="max-width: 100%; max-height: 100%; ${transformCss} object-fit: ${isStretch ? 'fill' : 'contain'}; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />
           </div>
         `;
       }
@@ -2692,6 +2897,7 @@ const handleSaveCurrentProject = async () => {
     autoRotate: autoRotate.value,
     fitMode: fitMode.value,
     viewMode: viewMode.value,
+    sharpenMode: sharpenMode.value,
     rawLabels: rawLabels.value,
   };
 
@@ -2725,7 +2931,9 @@ const handleOpenProject = async (projectItem) => {
     autoRotate.value = full.autoRotate !== false;
     fitMode.value = full.fitMode || 'proportional';
     viewMode.value = full.viewMode || 'grouped';
+    sharpenMode.value = full.sharpenMode || 'standard';
     rawLabels.value = full.rawLabels || [];
+    await setSharpenMode(sharpenMode.value);
 
     currentPdfDoc.value = null; // Stored project is standalone
     originalImageCanvas.value = null;

@@ -123,6 +123,68 @@ export function trimWhiteBorder(canvas) {
 }
 
 /**
+ * Smart Pure Black Binarization & Sharpening for Thermal Printing
+ * Converts anti-aliased gray pixels along letter and barcode edges into 100% solid pure black (#000000)
+ * or pure white background (#FFFFFF). Completely eliminates halftone dithering (网点抖动), making printed
+ * thermal letters, numbers, and barcodes solid, bold, and razor-sharp.
+ * 
+ * @param {HTMLCanvasElement} canvas
+ * @param {string|number} mode - 'standard' (190), 'heavy' (215), 'light' (165), 'none'
+ * @returns {HTMLCanvasElement}
+ */
+export function binarizeCanvas(canvas, mode = 'standard') {
+  if (!canvas || !canvas.width || !canvas.height) return canvas;
+  if (mode === 'none') return canvas;
+
+  let threshold = 190;
+  if (mode === 'heavy') {
+    threshold = 215; // Thickens fine text, captures thin strokes
+  } else if (mode === 'light') {
+    threshold = 165; // Thinner strokes, prevents bleeding
+  } else if (typeof mode === 'number') {
+    threshold = Math.max(50, Math.min(245, mode));
+  }
+
+  const outCanvas = document.createElement('canvas');
+  outCanvas.width = canvas.width;
+  outCanvas.height = canvas.height;
+  const ctx = outCanvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return canvas;
+
+  ctx.drawImage(canvas, 0, 0);
+
+  try {
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imgData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const a = data[i + 3];
+      if (a < 50) {
+        data[i] = 255;
+        data[i + 1] = 255;
+        data[i + 2] = 255;
+        data[i + 3] = 255;
+        continue;
+      }
+
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      const val = lum < threshold ? 0 : 255;
+
+      data[i] = val;
+      data[i + 1] = val;
+      data[i + 2] = val;
+      data[i + 3] = 255;
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+    return outCanvas;
+  } catch (err) {
+    console.warn('binarizeCanvas error:', err);
+    return canvas;
+  }
+}
+
+/**
  * Load PDF file and parse page-by-page using strict Uint8Array
  */
 export async function loadPdfDocument(fileOrUrl) {
@@ -189,7 +251,7 @@ export async function detectSuggestedLayout(pdfDoc) {
 /**
  * Slice PDF into individual label objects based on grid/mode
  */
-export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = null, customBox = null) {
+export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = null, customBox = null, sharpenMode = 'standard') {
   const labels = [];
   const numPages = pdfDoc.numPages;
 
@@ -199,9 +261,9 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
     const page = await pdfDoc.getPage(pageNum);
     const unscaledVp = page.getViewport({ scale: 1.0 });
     const maxDim = Math.max(unscaledVp.width, unscaledVp.height);
-    // Dynamic HD thermal sampling: target 203-300 DPI equivalent, balanced memory footprint
-    const minPixels = 1600;
-    const renderScale = Math.min(4.0, Math.max(2.0, minPixels / maxDim));
+    // Dynamic HD thermal sampling: ensure small cropped labels achieve 250-350 DPI clarity
+    const minPixels = 2400;
+    const renderScale = Math.min(5.0, Math.max(3.0, minPixels / maxDim));
 
     const viewport = page.getViewport({ scale: renderScale });
     
@@ -233,20 +295,22 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
         const cellCtx = cellCanvas.getContext('2d');
         cellCtx.drawImage(canvas, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
 
+        const activeCanvas = sharpenMode !== 'none' ? binarizeCanvas(cellCanvas, sharpenMode) : cellCanvas;
         const cellText = extractCellText(textContent.items, box, viewport, renderScale);
 
         labels.push({
           id: `p${pageNum}_free_${labels.length}`,
           page: pageNum,
-          canvas: cellCanvas,
-          dataUrl: cellCanvas.toDataURL('image/png'),
+          rawCanvas: cellCanvas,
+          canvas: activeCanvas,
+          dataUrl: activeCanvas.toDataURL('image/png'),
           barcode: cellText.barcode || `ITEM-${labels.length + 1}`,
           title: cellText.title || '',
           sku: cellText.sku || '',
           quantity: 1,
           selected: true,
-          width: cellCanvas.width,
-          height: cellCanvas.height,
+          width: activeCanvas.width,
+          height: activeCanvas.height,
         });
       }
       continue;
@@ -287,20 +351,22 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
         cellCtx.drawImage(canvas, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
         
         const trimmed = trimWhiteBorder(cellCanvas);
+        const activeCanvas = sharpenMode !== 'none' ? binarizeCanvas(trimmed, sharpenMode) : trimmed;
         const cellText = extractCellText(textContent.items, box, viewport, renderScale);
         
         labels.push({
           id: `p${pageNum}_custom_${labels.length}`,
           page: pageNum,
-          canvas: trimmed,
-          dataUrl: trimmed.toDataURL('image/png'),
+          rawCanvas: trimmed,
+          canvas: activeCanvas,
+          dataUrl: activeCanvas.toDataURL('image/png'),
           barcode: cellText.barcode || `ITEM-${labels.length + 1}`,
           title: cellText.title || '',
           sku: cellText.sku || '',
           quantity: 1,
           selected: true,
-          width: trimmed.width,
-          height: trimmed.height,
+          width: activeCanvas.width,
+          height: activeCanvas.height,
         });
       }
       continue;
@@ -325,6 +391,7 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
         cellCtx.drawImage(canvas, x, y, cellW, cellH, 0, 0, cellW, cellH);
 
         const trimmed = trimWhiteBorder(cellCanvas);
+        const activeCanvas = sharpenMode !== 'none' ? binarizeCanvas(trimmed, sharpenMode) : trimmed;
         const cellBox = { x, y, w: cellW, h: cellH };
         const cellText = extractCellText(textContent.items, cellBox, viewport, renderScale);
 
@@ -333,15 +400,16 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
           page: pageNum,
           col: c + 1,
           row: r + 1,
-          canvas: trimmed,
-          dataUrl: trimmed.toDataURL('image/png'),
+          rawCanvas: trimmed,
+          canvas: activeCanvas,
+          dataUrl: activeCanvas.toDataURL('image/png'),
           barcode: cellText.barcode || `ITEM-${labels.length + 1}`,
           title: cellText.title || '',
           sku: cellText.sku || '',
           quantity: 1,
           selected: true,
-          width: trimmed.width,
-          height: trimmed.height,
+          width: activeCanvas.width,
+          height: activeCanvas.height,
         });
       }
     }

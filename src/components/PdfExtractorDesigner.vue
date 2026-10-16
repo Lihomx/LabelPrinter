@@ -741,7 +741,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { 
   Sparkles, Upload, RotateCcw, Sliders, Barcode, QrCode, Type, Tag, Plus, Minus, 
   Trash2, AlignCenter, Settings2, Layers, Zap, Printer, Download, Scroll, RefreshCw, CheckCircle2 
@@ -1077,9 +1077,22 @@ const rolledPreviewList = computed(() => {
 // Printing Engine (Electron + Browser)
 const isElectron = ref(false);
 const electronPrinters = ref([]);
-const selectedElectronPrinter = ref('');
+const selectedElectronPrinter = ref(
+  (typeof window !== 'undefined' && localStorage.getItem('labelmaster_selected_printer')) || ''
+);
 const isPrinting = ref(false);
 const printStatusMsg = ref('');
+
+// Auto remember printer selection across sessions
+watch(selectedElectronPrinter, (val) => {
+  if (val && typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('labelmaster_selected_printer', val);
+    } catch (e) {
+      console.warn('Failed to save printer:', e);
+    }
+  }
+});
 
 const loadElectronPrinters = async () => {
   if (typeof window !== 'undefined' && window.electronAPI?.getPrinters) {
@@ -1087,9 +1100,14 @@ const loadElectronPrinters = async () => {
       const res = await window.electronAPI.getPrinters();
       if (res && res.success && Array.isArray(res.printers)) {
         electronPrinters.value = res.printers;
-        if (!selectedElectronPrinter.value && res.printers.length > 0) {
+        const saved = localStorage.getItem('labelmaster_selected_printer');
+        const match = saved && res.printers.some(p => p.name === saved);
+        if (match) {
+          selectedElectronPrinter.value = saved;
+        } else if (!selectedElectronPrinter.value && res.printers.length > 0) {
           const def = res.printers.find(p => p.isDefault);
           selectedElectronPrinter.value = def ? def.name : res.printers[0].name;
+          localStorage.setItem('labelmaster_selected_printer', selectedElectronPrinter.value);
         }
       }
     } catch (e) {
