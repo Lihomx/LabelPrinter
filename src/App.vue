@@ -39,6 +39,15 @@
           </button>
 
           <button 
+            @click="currentTab = 'tools'"
+            class="px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
+            :class="currentTab === 'tools' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+          >
+            <Layers class="w-3.5 h-3.5" />
+            <span>{{ t('nav.pdfTools') }}</span>
+          </button>
+
+          <button 
             @click="currentTab = 'template'"
             class="px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
             :class="currentTab === 'template' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
@@ -82,6 +91,7 @@
       <transition name="fade" mode="out-in">
         <PdfSplitter v-if="currentTab === 'splitter'" @switch-tab="t => currentTab = t" />
         <PdfExtractorDesigner v-else-if="currentTab === 'extractor'" @switch-tab="t => currentTab = t" />
+        <PdfMergeSplit v-else-if="currentTab === 'tools'" />
         <TemplateGenerator v-else-if="currentTab === 'template'" />
         <LabelDesigner v-else-if="currentTab === 'designer'" />
       </transition>
@@ -96,10 +106,11 @@
 
 <script setup>
 import { ref } from 'vue';
-import { Printer, Scissors, Sparkles, FileSpreadsheet, Palette, Languages } from 'lucide-vue-next';
+import { Printer, Scissors, Sparkles, Layers, FileSpreadsheet, Palette, Languages } from 'lucide-vue-next';
 import { t, toggleLang } from '@/i18n';
 import PdfSplitter from '@/components/PdfSplitter.vue';
 import PdfExtractorDesigner from '@/components/PdfExtractorDesigner.vue';
+import PdfMergeSplit from '@/components/PdfMergeSplit.vue';
 import TemplateGenerator from '@/components/TemplateGenerator.vue';
 import LabelDesigner from '@/components/LabelDesigner.vue';
 
