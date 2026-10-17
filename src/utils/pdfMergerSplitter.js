@@ -80,8 +80,18 @@ export function formatPageRange(indices) {
  */
 export async function renderPageThumbnail(pdfBytes, pageNumber = 1, targetWidth = 260) {
   try {
+    // Clone buffer so pdfjs worker transfer never detaches the original buffer
+    let rawData;
+    if (pdfBytes instanceof ArrayBuffer) {
+      rawData = pdfBytes.slice(0);
+    } else if (pdfBytes && pdfBytes.buffer instanceof ArrayBuffer) {
+      rawData = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength);
+    } else {
+      rawData = new Uint8Array(pdfBytes).buffer.slice(0);
+    }
+
     const loadingTask = pdfjsLib.getDocument({
-      data: new Uint8Array(pdfBytes),
+      data: new Uint8Array(rawData),
       cMapPacked: true
     });
     const pdfDoc = await loadingTask.promise;
@@ -115,7 +125,8 @@ export async function renderPageThumbnail(pdfBytes, pageNumber = 1, targetWidth 
  */
 export async function inspectPdfFile(file) {
   const arrayBuffer = await file.arrayBuffer();
-  const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+  // Pass a cloned buffer to PDFDocument so arrayBuffer is never detached
+  const pdfDoc = await PDFDocument.load(arrayBuffer.slice(0), { ignoreEncryption: true });
   const pageCount = pdfDoc.getPageCount();
 
   let firstPageInfo = null;
@@ -130,10 +141,10 @@ export async function inspectPdfFile(file) {
     };
   }
 
-  // Generate thumbnail
+  // Generate thumbnail with cloned buffer
   let thumbnail = null;
   try {
-    const thumbRes = await renderPageThumbnail(arrayBuffer, 1, 240);
+    const thumbRes = await renderPageThumbnail(arrayBuffer.slice(0), 1, 240);
     if (thumbRes) thumbnail = thumbRes.thumbnail;
   } catch (e) {
     // optional thumbnail fallback
@@ -147,7 +158,7 @@ export async function inspectPdfFile(file) {
     pageCount,
     firstPageInfo,
     thumbnail,
-    arrayBuffer,
+    arrayBuffer: arrayBuffer.slice(0),
     pageRange: 'all',
     selectedPages: Array.from({ length: pageCount }, (_, i) => i)
   };
@@ -155,7 +166,7 @@ export async function inspectPdfFile(file) {
 
 /**
  * Merge multiple PDF documents into a single PDF
- * @param {Array<{ arrayBuffer: ArrayBuffer, selectedPages?: number[], pageRange?: string, pageCount: number }>} items 
+ * @param {Array<{ file?: File, arrayBuffer?: ArrayBuffer, selectedPages?: number[], pageRange?: string, pageCount: number }>} items 
  * @param {Function} onProgress (percent, statusText) => void
  * @returns {Promise<Uint8Array>}
  */
@@ -173,7 +184,16 @@ export async function mergePdfDocuments(items, onProgress = () => {}) {
     const itemProgressStart = 10 + Math.round((i / totalItems) * 80);
     onProgress(itemProgressStart, `Processing file ${i + 1}/${totalItems}: ${item.name || ''}...`);
 
-    const srcDoc = await PDFDocument.load(item.arrayBuffer, { ignoreEncryption: true });
+    let rawBuffer;
+    if (item.file && typeof item.file.arrayBuffer === 'function') {
+      rawBuffer = await item.file.arrayBuffer();
+    } else if (item.arrayBuffer) {
+      rawBuffer = item.arrayBuffer.slice(0);
+    } else {
+      throw new Error(`File buffer not available for item ${i + 1}`);
+    }
+
+    const srcDoc = await PDFDocument.load(rawBuffer, { ignoreEncryption: true });
     const totalPages = srcDoc.getPageCount();
 
     // Determine which pages to copy
@@ -194,9 +214,20 @@ export async function mergePdfDocuments(items, onProgress = () => {}) {
   return mergedBytes;
 }
 
+function getSafeBuffer(src) {
+  if (!src) throw new Error('PDF buffer is empty');
+  if (src instanceof ArrayBuffer) {
+    return src.slice(0);
+  }
+  if (src && src.buffer instanceof ArrayBuffer) {
+    return src.buffer.slice(src.byteOffset, src.byteOffset + src.byteLength);
+  }
+  return new Uint8Array(src).buffer.slice(0);
+}
+
 /**
  * Split PDF: Extract specific pages into a single new PDF
- * @param {ArrayBuffer} srcBuffer 
+ * @param {ArrayBuffer|Uint8Array} srcBuffer 
  * @param {number[]} pageIndices 0-indexed page numbers
  * @returns {Promise<Uint8Array>}
  */
@@ -204,7 +235,8 @@ export async function splitPdfExtractPages(srcBuffer, pageIndices) {
   if (!pageIndices || pageIndices.length === 0) {
     throw new Error('No pages selected to extract');
   }
-  const srcDoc = await PDFDocument.load(srcBuffer, { ignoreEncryption: true });
+  const safeBuffer = getSafeBuffer(srcBuffer);
+  const srcDoc = await PDFDocument.load(safeBuffer, { ignoreEncryption: true });
   const newDoc = await PDFDocument.create();
   const copiedPages = await newDoc.copyPages(srcDoc, pageIndices);
   copiedPages.forEach(page => newDoc.addPage(page));
@@ -213,14 +245,15 @@ export async function splitPdfExtractPages(srcBuffer, pageIndices) {
 
 /**
  * Split PDF: Split each selected page into its own individual single-page PDF and bundle into ZIP
- * @param {ArrayBuffer} srcBuffer 
+ * @param {ArrayBuffer|Uint8Array} srcBuffer 
  * @param {number[]} pageIndices 0-indexed
  * @param {string} baseName 
  * @param {Function} onProgress 
  * @returns {Promise<Blob>}
  */
 export async function splitPdfToSinglePagesZip(srcBuffer, pageIndices, baseName = 'document', onProgress = () => {}) {
-  const srcDoc = await PDFDocument.load(srcBuffer, { ignoreEncryption: true });
+  const safeBuffer = getSafeBuffer(srcBuffer);
+  const srcDoc = await PDFDocument.load(safeBuffer, { ignoreEncryption: true });
   const zip = new JSZip();
   const cleanBaseName = baseName.replace(/\.pdf$/i, '');
   const total = pageIndices.length;
@@ -256,7 +289,8 @@ export async function splitPdfToSinglePagesZip(srcBuffer, pageIndices, baseName 
  * @returns {Promise<{ zipBlob: Blob, partCount: number }>}
  */
 export async function splitPdfByIntervalZip(srcBuffer, intervalSize, baseName = 'document', onProgress = () => {}) {
-  const srcDoc = await PDFDocument.load(srcBuffer, { ignoreEncryption: true });
+  const safeBuffer = getSafeBuffer(srcBuffer);
+  const srcDoc = await PDFDocument.load(safeBuffer, { ignoreEncryption: true });
   const totalPages = srcDoc.getPageCount();
   const cleanBaseName = baseName.replace(/\.pdf$/i, '');
   const zip = new JSZip();
@@ -289,12 +323,13 @@ export async function splitPdfByIntervalZip(srcBuffer, intervalSize, baseName = 
 
 /**
  * Split PDF: Separate into Odd and Even pages
- * @param {ArrayBuffer} srcBuffer 
+ * @param {ArrayBuffer|Uint8Array} srcBuffer 
  * @param {string} baseName 
  * @returns {Promise<{ oddBytes: Uint8Array, evenBytes: Uint8Array, oddCount: number, evenCount: number, zipBlob: Blob }>}
  */
 export async function splitPdfOddEven(srcBuffer, baseName = 'document') {
-  const srcDoc = await PDFDocument.load(srcBuffer, { ignoreEncryption: true });
+  const safeBuffer = getSafeBuffer(srcBuffer);
+  const srcDoc = await PDFDocument.load(safeBuffer, { ignoreEncryption: true });
   const totalPages = srcDoc.getPageCount();
   const cleanBaseName = baseName.replace(/\.pdf$/i, '');
 

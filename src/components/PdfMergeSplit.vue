@@ -840,16 +840,17 @@ const loadSplitFile = async (file) => {
     }));
 
     // Lazy render thumbnails in background
-    renderSplitPageThumbnails(info.arrayBuffer, info.pageCount);
+    renderSplitPageThumbnails(info.file, info.pageCount);
   } catch (err) {
     console.error('Load split file error:', err);
     alert(`${t('tools.error')}${err.message}`);
   }
 };
 
-const renderSplitPageThumbnails = async (arrayBuffer, pageCount) => {
+const renderSplitPageThumbnails = async (file, pageCount) => {
   try {
-    const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+    const rawBuffer = await file.arrayBuffer();
+    const pdfDoc = await PDFDocument.load(rawBuffer.slice(0), { ignoreEncryption: true });
     for (let i = 0; i < pageCount; i++) {
       if (!splitDoc.value) break; // if file changed
       const page = pdfDoc.getPage(i);
@@ -860,8 +861,8 @@ const renderSplitPageThumbnails = async (arrayBuffer, pageCount) => {
       splitDocPages.value[i].widthMm = wMm;
       splitDocPages.value[i].heightMm = hMm;
 
-      // Render thumbnail
-      const thumb = await renderPageThumbnail(arrayBuffer, i + 1, 200);
+      // Render thumbnail with cloned buffer
+      const thumb = await renderPageThumbnail(rawBuffer.slice(0), i + 1, 200);
       if (thumb && splitDocPages.value[i]) {
         splitDocPages.value[i].thumbnail = thumb.thumbnail;
       }
@@ -921,6 +922,9 @@ const executeSplit = async () => {
     splitStatusText.value = t('tools.processing');
 
     const cleanBaseName = splitDoc.value.name.replace(/\.pdf$/i, '');
+    const srcBuffer = splitDoc.value.file && typeof splitDoc.value.file.arrayBuffer === 'function'
+      ? await splitDoc.value.file.arrayBuffer()
+      : splitDoc.value.arrayBuffer.slice(0);
 
     if (splitMode.value === 'extract') {
       if (selectedSplitPages.value.length === 0) {
@@ -928,7 +932,7 @@ const executeSplit = async () => {
         isSplitting.value = false;
         return;
       }
-      const outBytes = await splitPdfExtractPages(splitDoc.value.arrayBuffer, selectedSplitPages.value);
+      const outBytes = await splitPdfExtractPages(srcBuffer, selectedSplitPages.value);
       downloadFile(outBytes, `${cleanBaseName}_extracted.pdf`);
     } else if (splitMode.value === 'single') {
       const pagesToExport = selectedSplitPages.value.length > 0
@@ -936,7 +940,7 @@ const executeSplit = async () => {
         : Array.from({ length: splitDoc.value.pageCount }, (_, i) => i);
 
       const zipBlob = await splitPdfToSinglePagesZip(
-        splitDoc.value.arrayBuffer,
+        srcBuffer,
         pagesToExport,
         cleanBaseName,
         (pct, status) => {
@@ -948,7 +952,7 @@ const executeSplit = async () => {
     } else if (splitMode.value === 'interval') {
       const interval = Math.max(1, parseInt(intervalPageSize.value, 10) || 1);
       const { zipBlob } = await splitPdfByIntervalZip(
-        splitDoc.value.arrayBuffer,
+        srcBuffer,
         interval,
         cleanBaseName,
         (pct, status) => {
@@ -958,7 +962,7 @@ const executeSplit = async () => {
       );
       downloadFile(zipBlob, `${cleanBaseName}_interval_${interval}pages.zip`, 'application/zip');
     } else if (splitMode.value === 'oddeven') {
-      const { zipBlob } = await splitPdfOddEven(splitDoc.value.arrayBuffer, cleanBaseName);
+      const { zipBlob } = await splitPdfOddEven(srcBuffer, cleanBaseName);
       downloadFile(zipBlob, `${cleanBaseName}_odd_even.zip`, 'application/zip');
     }
 
