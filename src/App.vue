@@ -44,7 +44,8 @@
             :class="currentTab === 'tools' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
           >
             <Layers class="w-3.5 h-3.5" />
-            <span>{{ t('nav.pdfTools') }}</span>
+            <span class="font-bold">{{ t('nav.pdfTools') }}</span>
+            <span class="px-1.5 py-0.2 bg-indigo-100 text-indigo-800 text-[9px] rounded-full font-black">{{ t('nav.newBadge') }}</span>
           </button>
 
           <button 

@@ -111,6 +111,31 @@
           </button>
         </div>
 
+        <!-- New PDF Merger & Splitter Tool Banner -->
+        <div class="bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 border-2 border-indigo-200 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 text-xs shadow-xs">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-700 flex items-center justify-center font-bold text-base flex-shrink-0">
+              📑
+            </div>
+            <div>
+              <div class="font-bold text-indigo-950 flex items-center gap-2">
+                <span class="text-xs sm:text-sm">{{ t('pdf.toolsBannerTitle') }}</span>
+                <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full font-black text-[10px]">{{ t('nav.newBadge') }}</span>
+              </div>
+              <div class="text-indigo-800/80 mt-0.5">
+                {{ t('pdf.toolsBannerDesc') }}
+              </div>
+            </div>
+          </div>
+
+          <button 
+            @click="$emit('switch-tab', 'tools')"
+            class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-1.5 flex-shrink-0"
+          >
+            <span>{{ t('pdf.tryTools') }}</span>
+          </button>
+        </div>
+
         <!-- Dropzone -->
         <div 
           @dragover.prevent="isDragging = true"
