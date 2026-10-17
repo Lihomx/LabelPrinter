@@ -51,8 +51,8 @@
     <div v-if="isExtracting" class="bg-white rounded-2xl p-12 text-center shadow-sm border border-slate-200 space-y-4">
       <div class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
       <div class="space-y-1">
-        <div class="text-sm font-bold text-slate-800">正在智能解析 PDF 页面并提取文字与条码信息...</div>
-        <div class="text-xs text-slate-400">正在分析页码：{{ extractProgress.current }} / {{ extractProgress.total }}</div>
+        <div class="text-sm font-bold text-slate-800">{{ t('extractor.analyzing') }}</div>
+        <div class="text-xs text-slate-400">{{ t('extractor.analyzingPage', { curr: extractProgress.current, total: extractProgress.total }) }}</div>
       </div>
     </div>
 
@@ -139,10 +139,10 @@
             <div class="w-full flex items-center justify-between text-xs text-slate-400 pb-3 border-b border-slate-800 mb-4">
               <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span class="text-slate-200 font-bold">1:1 可视化拖拽排版画布 (当前: {{ canvasWidthMm }} × {{ canvasHeightMm }} mm)</span>
+                <span class="text-slate-200 font-bold">{{ t('extractor.canvasTitle', { w: canvasWidthMm, h: canvasHeightMm }) }}</span>
               </div>
               <div class="text-[11px] text-slate-400">
-                🖱️ 鼠标按住元素可自由拖拽位置 · 坐标微米级锁定
+                {{ t('extractor.dragGuide') }}
               </div>
             </div>
 
@@ -215,7 +215,7 @@
                     overflow: 'hidden',
                   }"
                 >
-                  {{ activePreviewItem.title || '（示例商品标题名称）' }}
+                  {{ activePreviewItem.title || t('extractor.sampleProductTitle') }}
                 </div>
 
                 <!-- 4. SKU Element -->
@@ -241,7 +241,7 @@
                     textAlign: el.align || 'center',
                   }"
                 >
-                  {{ el.text || '自定义文本' }}
+                  {{ el.text || t('extractor.customText') }}
                 </div>
 
                 <!-- 6. Divider Line Element -->
@@ -258,13 +258,13 @@
 
             <!-- Active Item Pager Switcher under Canvas -->
             <div class="mt-4 flex items-center gap-3 bg-slate-800/90 px-4 py-2 rounded-xl text-xs text-slate-300 border border-slate-700">
-              <span class="text-slate-400">当前画布预览数据:</span>
+              <span class="text-slate-400">{{ t('extractor.currentPreviewData') }}</span>
               <button 
                 @click="switchPreviewItem(-1)" 
                 :disabled="activeItemIndex <= 0"
                 class="px-2 py-0.5 bg-slate-700 hover:bg-slate-600 rounded disabled:opacity-30"
               >
-                ◀ 上一款
+                {{ t('extractor.prevItem') }}
               </button>
               <span class="font-bold font-mono text-emerald-400">
                 #{{ activeItemIndex + 1 }} / {{ extractedItems.length }}
@@ -274,7 +274,7 @@
                 :disabled="activeItemIndex >= extractedItems.length - 1"
                 class="px-2 py-0.5 bg-slate-700 hover:bg-slate-600 rounded disabled:opacity-30"
               >
-                下一款 ▶
+                {{ t('extractor.nextItem') }}
               </button>
               <span class="text-slate-400 border-l border-slate-700 pl-2">
                 {{ activePreviewItem.barcode }}
@@ -287,7 +287,7 @@
             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
               <div class="font-bold text-slate-800 flex items-center gap-2">
                 <Settings2 class="w-4 h-4 text-brand-600" />
-                <span>选中元素属性: <span class="text-brand-600 font-mono uppercase">{{ selectedElem.type }}</span></span>
+                <span>{{ t('extractor.selectedElemProps') }} <span class="text-brand-600 font-mono uppercase">{{ selectedElem.type }}</span></span>
               </div>
               <div class="flex items-center gap-2">
                 <button 
@@ -295,14 +295,14 @@
                   class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg flex items-center gap-1"
                 >
                   <AlignCenter class="w-3.5 h-3.5" />
-                  <span>水平居中</span>
+                  <span>{{ t('extractor.centerHoriz') }}</span>
                 </button>
                 <button 
                   @click="deleteSelectedElement" 
                   class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-lg flex items-center gap-1"
                 >
                   <Trash2 class="w-3.5 h-3.5" />
-                  <span>删除</span>
+                  <span>{{ t('extractor.delete') }}</span>
                 </button>
               </div>
             </div>
@@ -310,19 +310,19 @@
             <!-- Coordinate & Dimensions -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
-                <label class="text-slate-500 font-medium block mb-1">X 坐标 (mm)</label>
+                <label class="text-slate-500 font-medium block mb-1">{{ t('extractor.coordX') }}</label>
                 <input v-model.number="selectedElem.x" type="number" step="0.5" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded font-mono font-bold" />
               </div>
               <div>
-                <label class="text-slate-500 font-medium block mb-1">Y 坐标 (mm)</label>
+                <label class="text-slate-500 font-medium block mb-1">{{ t('extractor.coordY') }}</label>
                 <input v-model.number="selectedElem.y" type="number" step="0.5" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded font-mono font-bold" />
               </div>
               <div>
-                <label class="text-slate-500 font-medium block mb-1">宽度 (mm)</label>
+                <label class="text-slate-500 font-medium block mb-1">{{ t('extractor.widthMm') }}</label>
                 <input v-model.number="selectedElem.width" type="number" step="1" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded font-mono font-bold" />
               </div>
               <div v-if="selectedElem.type === 'barcode'">
-                <label class="text-slate-500 font-medium block mb-1">条码高度 (mm)</label>
+                <label class="text-slate-500 font-medium block mb-1">{{ t('extractor.barcodeHeightMm') }}</label>
                 <input v-model.number="selectedElem.height" type="number" step="1" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded font-mono font-bold" />
               </div>
             </div>
@@ -330,34 +330,34 @@
             <!-- Typography & Specific Settings -->
             <div v-if="['title', 'sku', 'customText'].includes(selectedElem.type)" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
               <div>
-                <label class="text-slate-500 font-medium block mb-1">字号 (px)</label>
+                <label class="text-slate-500 font-medium block mb-1">{{ t('extractor.fontSize') }}</label>
                 <input v-model.number="selectedElem.fontSize" type="number" min="6" max="24" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded font-mono font-bold" />
               </div>
               <div>
-                <label class="text-slate-500 font-medium block mb-1">对齐方式</label>
+                <label class="text-slate-500 font-medium block mb-1">{{ t('extractor.alignment') }}</label>
                 <select v-model="selectedElem.align" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded font-semibold">
-                  <option value="center">居中对齐</option>
-                  <option value="left">左对齐</option>
-                  <option value="right">右对齐</option>
+                  <option value="center">{{ t('extractor.alignCenter') }}</option>
+                  <option value="left">{{ t('extractor.alignLeft') }}</option>
+                  <option value="right">{{ t('extractor.alignRight') }}</option>
                 </select>
               </div>
               <div class="flex items-center gap-3 pt-4">
                 <label class="flex items-center gap-1.5 font-bold text-slate-700 cursor-pointer">
                   <input v-model="selectedElem.bold" type="checkbox" class="rounded text-brand-600" />
-                  <span>粗体 (Bold)</span>
+                  <span>{{ t('extractor.boldText') }}</span>
                 </label>
               </div>
             </div>
 
             <!-- Custom text input -->
             <div v-if="selectedElem.type === 'customText'" class="pt-2">
-              <label class="text-slate-500 font-medium block mb-1">自定义文本内容</label>
+              <label class="text-slate-500 font-medium block mb-1">{{ t('extractor.customContent') }}</label>
               <input v-model="selectedElem.text" type="text" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg" />
             </div>
 
             <!-- SKU prefix -->
             <div v-if="selectedElem.type === 'sku'" class="pt-2">
-              <label class="text-slate-500 font-medium block mb-1">前缀文本 (例如 "SKU: ")</label>
+              <label class="text-slate-500 font-medium block mb-1">{{ t('extractor.prefixText') }}</label>
               <input v-model="selectedElem.prefix" type="text" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg" />
             </div>
           </div>
@@ -370,10 +370,10 @@
               <div>
                 <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
                   <Layers class="w-4 h-4 text-brand-600" />
-                  <span>已提取标签数据列表</span>
+                  <span>{{ t('extractor.extractedList') }}</span>
                 </div>
                 <div class="text-[11px] text-slate-500 mt-0.5">
-                  共计识别到 {{ extractedItems.length }} 款独立标签
+                  {{ t('extractor.totalRecognized', { count: extractedItems.length }) }}
                 </div>
               </div>
 
@@ -383,7 +383,7 @@
                 class="px-2.5 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold rounded-lg flex items-center gap-1"
               >
                 <Plus class="w-3.5 h-3.5" />
-                <span>手动加一款</span>
+                <span>{{ t('extractor.addManualItem') }}</span>
               </button>
             </div>
 
@@ -391,13 +391,13 @@
             <div class="bg-indigo-50/80 border border-indigo-200 rounded-xl p-3 space-y-2 text-xs">
               <div class="flex items-center justify-between">
                 <span class="font-bold text-indigo-950 flex items-center gap-1">
-                  <span>🔢 批量设置每款打印张数:</span>
+                  <span>{{ t('extractor.batchSetQty') }}</span>
                 </span>
                 <button 
                   @click="applyBatchQuantity(batchQuantityVal)" 
                   class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-2xs active:scale-95 transition-all"
                 >
-                  应用到全部
+                  {{ t('extractor.applyToAll') }}
                 </button>
               </div>
 
@@ -408,7 +408,7 @@
                   min="1" 
                   class="w-16 px-2 py-1 bg-white border border-indigo-300 rounded font-mono font-bold text-center text-indigo-900" 
                 />
-                <span class="text-slate-500 mr-2">张</span>
+                <span class="text-slate-500 mr-2">{{ t('pdf.piecesUnit') }}</span>
                 <button 
                   v-for="q in [1, 5, 10, 20, 30, 50, 100]" 
                   :key="q"
@@ -439,7 +439,7 @@
                     <input 
                       v-model="item.barcode" 
                       class="font-mono font-bold text-xs text-slate-900 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-brand-500" 
-                      placeholder="条形码"
+                      :placeholder="t('extractor.barcodePlaceholder')"
                     />
                   </div>
 
@@ -478,17 +478,17 @@
                     v-model="item.title" 
                     rows="2" 
                     class="w-full p-1.5 bg-white border border-slate-200 rounded text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
-                    placeholder="商品标题"
+                    :placeholder="t('extractor.titlePlaceholder')"
                   ></textarea>
                 </div>
 
                 <div class="mt-1 flex items-center justify-between text-[10px] text-slate-400">
-                  <span>点击设为当前画布预览</span>
+                  <span>{{ t('extractor.setAsCurrentPreview') }}</span>
                   <button 
                     @click.stop="deleteItem(idx)" 
                     class="text-rose-500 hover:text-rose-700 hover:underline"
                   >
-                    删除此款
+                    {{ t('extractor.deleteThisItem') }}
                   </button>
                 </div>
               </div>
@@ -505,13 +505,13 @@
             <div class="flex items-center gap-2.5">
               <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-xs">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                ⚡ 硬件级纯黑矢量直打通道已就绪
+                {{ t('extractor.channelReady') }}
               </span>
-              <span class="text-xs text-slate-300 font-medium hidden sm:inline">100% 矢量字体与条码 · 绝无点阵灰度模糊</span>
+              <span class="text-xs text-slate-300 font-medium hidden sm:inline">{{ t('extractor.vectorSub') }}</span>
             </div>
 
             <div class="text-xs text-slate-400">
-              当前目标卷纸: <strong class="text-emerald-400 font-mono">{{ canvasWidthMm }} × {{ canvasHeightMm }} mm</strong>
+              {{ t('extractor.currentTargetPaper') }} <strong class="text-emerald-400 font-mono">{{ canvasWidthMm }} × {{ canvasHeightMm }} mm</strong>
             </div>
           </div>
 
@@ -520,18 +520,18 @@
               <!-- Printer Selector -->
               <div class="flex items-center gap-2 bg-slate-800/90 px-3.5 py-2.5 rounded-xl border border-slate-600 shadow-inner">
                 <Printer class="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <div class="text-xs text-slate-300 font-medium">目标热敏机:</div>
+                <div class="text-xs text-slate-300 font-medium">{{ t('station.targetPrinter') }}</div>
                 <select 
                   v-model="selectedElectronPrinter"
                   class="bg-transparent text-white text-xs font-bold focus:outline-none cursor-pointer max-w-[200px] sm:max-w-[240px] truncate"
                 >
                   <option v-for="p in electronPrinters" :key="p.name" :value="p.name" class="bg-slate-800 text-white">
-                    {{ p.displayName || p.name }} {{ p.isDefault ? ' (默认)' : '' }}
+                    {{ p.displayName || p.name }} {{ p.isDefault ? ` ${t('station.default')}` : '' }}
                   </option>
                 </select>
                 <button 
                   @click="loadElectronPrinters" 
-                  title="重新扫描电脑连接的打印机"
+                  :title="t('station.rescan')"
                   class="p-1 text-slate-400 hover:text-emerald-400 hover:bg-slate-700 rounded transition-all"
                 >
                   <RefreshCw class="w-3.5 h-3.5" />
@@ -542,13 +542,13 @@
               <div class="flex flex-wrap items-center gap-2.5 bg-slate-800/95 px-3.5 py-2 rounded-xl border-2 border-emerald-500/50 shadow-md">
                 <span class="text-xs text-slate-100 font-bold flex items-center gap-1.5">
                   <span class="text-emerald-400 text-sm">🔢</span>
-                  <span>自定义打印张数:</span>
+                  <span>{{ t('station.customPrintQty') }}</span>
                 </span>
                 
                 <div class="flex items-center bg-slate-950 rounded-lg border border-slate-700 overflow-hidden shadow-inner">
                   <button 
                     @click="adjustCopies(-1)" 
-                    title="减少 1 张"
+                    :title="t('station.decQty')"
                     class="w-7 h-7 text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-sm transition-colors flex items-center justify-center"
                   >-</button>
                   <input 
@@ -557,16 +557,16 @@
                     type="number" 
                     min="1" 
                     max="9999" 
-                    placeholder="张数"
+                    :placeholder="t('station.qtyPlaceholder')"
                     class="w-16 sm:w-20 text-center text-sm font-mono font-black text-emerald-400 bg-transparent focus:outline-none" 
                   />
                   <button 
                     @click="adjustCopies(1)" 
-                    title="增加 1 张"
+                    :title="t('station.incQty')"
                     class="w-7 h-7 text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-sm transition-colors flex items-center justify-center"
                   >+</button>
                 </div>
-                <span class="text-xs text-slate-300 font-semibold">张</span>
+                <span class="text-xs text-slate-300 font-semibold">{{ t('pdf.piecesUnit') }}</span>
 
                 <!-- Quick Increment / Presets -->
                 <div class="flex items-center gap-1 pl-1.5 border-l border-slate-700">
@@ -590,7 +590,7 @@
               class="px-6 sm:px-8 py-3 bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black text-sm sm:text-base rounded-xl shadow-xl shadow-emerald-500/30 flex items-center justify-center gap-2.5 transition-all active:scale-95 disabled:opacity-50 flex-shrink-0"
             >
               <Zap class="w-5 h-5 fill-current text-slate-950" />
-              <span>{{ isPrinting ? '正在发送打印数据...' : `⚡ 一键极速静默打印 (${totalPrintQuantity} 张)` }}</span>
+              <span>{{ isPrinting ? t('station.printing') : t('station.silentPrintBtn', { count: totalPrintQuantity }) }}</span>
             </button>
           </div>
 
@@ -598,18 +598,18 @@
           <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/80 flex flex-wrap items-center justify-between gap-3 text-xs">
             <div class="flex flex-wrap items-center gap-3">
               <span class="text-slate-300 font-bold flex items-center gap-1">
-                <span>🎯 打印居中微调:</span>
+                <span>{{ t('station.centering') }}</span>
               </span>
 
               <div class="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700">
-                <span class="text-slate-400 text-[11px]">X 水平(左右):</span>
+                <span class="text-slate-400 text-[11px]">{{ t('station.offsetX') }}</span>
                 <button @click="printOffsetX = Math.max(-10, Number((printOffsetX - 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">-</button>
                 <span class="font-mono font-bold text-emerald-400 w-12 text-center text-[11px]">{{ printOffsetX > 0 ? '+' : '' }}{{ printOffsetX }} mm</span>
                 <button @click="printOffsetX = Math.min(10, Number((printOffsetX + 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">+</button>
               </div>
 
               <div class="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700">
-                <span class="text-slate-400 text-[11px]">Y 垂直(上下):</span>
+                <span class="text-slate-400 text-[11px]">{{ t('station.offsetY') }}</span>
                 <button @click="printOffsetY = Math.max(-10, Number((printOffsetY - 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">-</button>
                 <span class="font-mono font-bold text-emerald-400 w-12 text-center text-[11px]">{{ printOffsetY > 0 ? '+' : '' }}{{ printOffsetY }} mm</span>
                 <button @click="printOffsetY = Math.min(10, Number((printOffsetY + 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">+</button>
@@ -620,12 +620,12 @@
                 @click="printOffsetX = 0; printOffsetY = 0"
                 class="text-[11px] text-slate-400 hover:text-white underline ml-1"
               >
-                重置为 0
+                {{ t('extractor.resetZero') }}
               </button>
             </div>
 
             <div class="text-[11px] text-slate-400 flex items-center gap-1">
-              <span>💡 打印偏左请加大 X，偏上请加大 Y</span>
+              <span>{{ t('extractor.offsetHint') }}</span>
             </div>
           </div>
 
@@ -638,18 +638,18 @@
         <!-- Web Browser Print & PDF Export Toolbar -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-wrap items-center justify-between gap-4">
           <div class="space-y-1">
-            <div class="text-sm font-bold text-slate-800">标准打印与导出</div>
+            <div class="text-sm font-bold text-slate-800">{{ t('extractor.standardPrintExport') }}</div>
             <div class="text-xs text-slate-500">
-              当前排版将自动套用到所有 {{ extractedItems.length }} 款商品 · 总计计划打印 <strong class="text-brand-600 font-bold">{{ totalPrintQuantity }}</strong> 张
+              {{ t('extractor.applyLayoutToAll', { count: extractedItems.length, qty: totalPrintQuantity }) }}
             </div>
           </div>
 
           <div class="flex flex-wrap items-center gap-3">
             <!-- Web copies input if not electron -->
             <div v-if="!isElectron" class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-xs">
-              <span class="text-slate-600 font-bold">打印份数:</span>
+              <span class="text-slate-600 font-bold">{{ t('extractor.printCopiesCount') }}</span>
               <input v-model.number="printCopies" @blur="normalizePrintCopies" type="number" min="1" max="9999" class="w-14 text-center font-mono font-bold text-xs bg-white border border-slate-300 rounded" />
-              <span class="text-slate-400">份</span>
+              <span class="text-slate-400">{{ t('extractor.copiesUnit') }}</span>
             </div>
 
             <button 
@@ -657,7 +657,7 @@
               class="px-4 py-2 border border-slate-300 hover:border-slate-400 text-slate-700 text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all bg-white"
             >
               <Download class="w-4 h-4 text-slate-600" />
-              <span>下载矢量高保真热敏 PDF</span>
+              <span>{{ t('extractor.downloadPdf') }}</span>
             </button>
 
             <button 
@@ -665,7 +665,7 @@
               class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5 transition-all"
             >
               <Printer class="w-4 h-4" />
-              <span>浏览器高精打印 (全部 {{ totalPrintQuantity }} 张)</span>
+              <span>{{ t('extractor.browserPrintCount', { qty: totalPrintQuantity }) }}</span>
             </button>
           </div>
         </div>
@@ -674,7 +674,7 @@
         <div class="bg-slate-100 rounded-2xl p-6 flex flex-col items-center justify-center border border-slate-200 overflow-x-auto">
           <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
             <Scroll class="w-4 h-4 text-brand-600" />
-            <span>热敏卷纸连续出纸排版预览 (100% 真实比例模拟) · 计划输出 <strong class="text-brand-600 font-bold font-mono">{{ totalPrintQuantity }}</strong> 张</span>
+            <span>{{ t('extractor.rollPreviewSubtitle', { qty: totalPrintQuantity }) }}</span>
           </div>
 
           <!-- Roll strip items -->
@@ -731,7 +731,7 @@
             </div>
 
             <div v-if="rolledPreviewList.length > 10" class="flex items-center justify-center px-4 text-xs text-slate-400 font-medium">
-              + 更多 {{ rolledPreviewList.length - 10 }} 张连续标签...
+              {{ t('extractor.moreLabelsCount', { count: rolledPreviewList.length - 10 }) }}
             </div>
           </div>
         </div>
@@ -760,14 +760,14 @@ const printOffsetX = ref(0);
 const printOffsetY = ref(0);
 
 // Preset sizes
-const sizePresets = [
-  { name: '50 × 25 mm (单品标)', w: 50, h: 25 },
+const sizePresets = computed(() => [
+  { name: `50 × 25 mm (${t('extractor.presetSingle')})`, w: 50, h: 25 },
   { name: '50 × 30 mm', w: 50, h: 30 },
   { name: '70 × 30 mm', w: 70, h: 30 },
-  { name: '80 × 30 mm (汉印等高)', w: 80, h: 30 },
+  { name: `80 × 30 mm (${t('extractor.presetHprt')})`, w: 80, h: 30 },
   { name: '80 × 50 mm', w: 80, h: 50 },
   { name: '100 × 100 mm', w: 100, h: 100 },
-];
+]);
 
 const applySizePreset = (preset) => {
   canvasWidthMm.value = preset.w;
@@ -807,7 +807,7 @@ const extractedItems = ref([
 const activeItemIndex = ref(0);
 const activePreviewItem = computed(() => {
   if (extractedItems.value.length === 0) {
-    return { barcode: '12345678', sku: 'SKU-001', title: '示例商品' };
+    return { barcode: '12345678', sku: 'SKU-001', title: t('extractor.sampleProduct') };
   }
   return extractedItems.value[activeItemIndex.value] || extractedItems.value[0];
 });
@@ -965,7 +965,7 @@ const addManualItem = () => {
     id: `custom_${Date.now()}`,
     barcode: `NEW${Date.now().toString().slice(-6)}`,
     sku: 'NEW-SKU-01',
-    title: '新增款式商品名称',
+    title: t('extractor.newProductDefaultTitle'),
     quantity: 1,
   });
   activeItemIndex.value = extractedItems.value.length - 1;
@@ -995,11 +995,11 @@ const handlePdfUpload = async (e) => {
       extractedItems.value = res.items;
       activeItemIndex.value = 0;
     } else {
-      alert('未能在 PDF 中自动解析到标签文本，已为您载入编辑模版');
+      alert(t('extractor.extractFailed'));
     }
   } catch (err) {
     console.error('Extraction error:', err);
-    alert('PDF 提取失败: ' + err.message);
+    alert(t('extractor.extractError') + err.message);
   } finally {
     isExtracting.value = false;
     e.target.value = '';
@@ -1158,12 +1158,12 @@ const generatePrintHtml = () => {
 const triggerSilentPrint = async () => {
   if (!isElectron.value || !window.electronAPI?.printSilent) return;
   if (rolledPreviewList.value.length === 0) {
-    alert('暂无可打印标签');
+    alert(t('extractor.noLabels'));
     return;
   }
 
   isPrinting.value = true;
-  printStatusMsg.value = '正在下发矢量纯黑打印指令...';
+  printStatusMsg.value = t('extractor.sendingVector');
 
   try {
     const pagesHtml = generatePrintHtml();
@@ -1176,15 +1176,18 @@ const triggerSilentPrint = async () => {
     });
 
     if (res && res.success) {
-      printStatusMsg.value = `✓ 任务已成功直达【${selectedElectronPrinter.value || '默认热敏机'}】，正以 100% 矢量清晰度输出 ${totalPrintQuantity.value} 张标签！`;
+      printStatusMsg.value = t('extractor.printSuccess', {
+        printer: selectedElectronPrinter.value || t('station.defaultPrinter'),
+        count: totalPrintQuantity.value,
+      });
       setTimeout(() => {
         printStatusMsg.value = '';
       }, 6000);
     } else {
-      alert('静默打印失败: ' + (res?.error || '请确认打印机已开机就绪'));
+      alert(t('extractor.silentFail') + (res?.error || ''));
     }
   } catch (err) {
-    alert('打印调用异常: ' + err.message);
+    alert(t('extractor.printException') + err.message);
   } finally {
     isPrinting.value = false;
   }

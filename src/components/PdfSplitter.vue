@@ -36,17 +36,17 @@
             class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-2xs"
           >
             <Laptop class="w-3.5 h-3.5 text-emerald-600" />
-            <span>电脑客户端版</span>
+            <span>{{ t('pdf.electronBadge') }}</span>
           </span>
 
           <!-- Help Guide Button -->
           <button 
             @click="showPrintHelpModal = true"
-            title="查看打印机尺寸设置、连吐纸解决方案及桌面客户端说明"
+            :title="t('pdf.helpModalSubtitle')"
             class="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all shadow-2xs flex-shrink-0"
           >
             <HelpCircle class="w-4 h-4 text-blue-600" />
-            <span>打印帮助说明</span>
+            <span>{{ t('pdf.printHelp') }}</span>
           </button>
         </div>
       </div>
@@ -63,7 +63,7 @@
             :class="step1Tab === 'new' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'"
           >
             <Plus class="w-4 h-4" />
-            <span>{{ t('pdf.newProject') }} (上传本地文件)</span>
+            <span>{{ t('pdf.newProject') }}</span>
           </button>
           <button 
             @click="step1Tab = 'saved'"
@@ -78,7 +78,7 @@
         <div v-if="step1Tab === 'saved'" class="flex items-center gap-2">
           <label class="px-3.5 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg cursor-pointer flex items-center gap-1.5 transition-all">
             <FileUp class="w-3.5 h-3.5 text-brand-600" />
-            <span>{{ t('pdf.importProject') }} (.json)</span>
+            <span>{{ t('pdf.importJson') }}</span>
             <input type="file" accept=".json" class="hidden" @change="onImportJsonFile" />
           </label>
         </div>
@@ -94,11 +94,11 @@
             </div>
             <div>
               <div class="font-bold text-amber-950 flex items-center gap-2">
-                <span class="text-xs sm:text-sm">觉得裁切切图文字有点模糊？试试全新【PDF 智能提取与排版】工具！</span>
-                <span class="px-2 py-0.5 bg-amber-200 text-amber-900 rounded-full font-black text-[10px]">矢量纯黑</span>
+                <span class="text-xs sm:text-sm">{{ t('pdf.extractorBannerTitle') }}</span>
+                <span class="px-2 py-0.5 bg-amber-200 text-amber-900 rounded-full font-black text-[10px]">{{ t('pdf.vectorBlack') }}</span>
               </div>
               <div class="text-amber-800/80 mt-0.5">
-                自动提取 PDF 内的条码、二维码、标题与 SKU 文本，在可视画布上自由拖拽排版，以 100% 激光纯黑矢量打印，绝不模糊！
+                {{ t('pdf.extractorBannerDesc') }}
               </div>
             </div>
           </div>
@@ -107,7 +107,7 @@
             @click="$emit('switch-tab', 'extractor')"
             class="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-1.5 flex-shrink-0"
           >
-            <span>立即体验提取排版 ➔</span>
+            <span>{{ t('pdf.tryExtractor') }}</span>
           </button>
         </div>
 
@@ -149,39 +149,39 @@
         <div class="border-t border-slate-100 pt-6">
           <div class="flex items-center gap-2 mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
             <FlaskConical class="w-4 h-4 text-brand-500" />
-            快速载入工作区真实客户实测文件：
+            {{ t('pdf.sampleTitle') }}
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <button 
               @click="loadLocalSample('samples/labels_152.pdf', 'presetA4_30')"
               class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
             >
-              <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">① 152件 A4 30拼标</span>
-              <span class="text-[11px] text-slate-500 mt-0.5">3列×10行 · 手机屏幕配件</span>
+              <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">{{ t('pdf.sample1Title') }}</span>
+              <span class="text-[11px] text-slate-500 mt-0.5">{{ t('pdf.sample1Desc') }}</span>
             </button>
 
             <button 
               @click="loadLocalSample('samples/mercadolibre_2up.pdf', 'presetML_2')"
               class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
             >
-              <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">② 美客多 FULL 左右拼</span>
-              <span class="text-[11px] text-slate-500 mt-0.5">1行×2列 · 墨西哥仓箱唛</span>
+              <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">{{ t('pdf.sample2Title') }}</span>
+              <span class="text-[11px] text-slate-500 mt-0.5">{{ t('pdf.sample2Desc') }}</span>
             </button>
 
             <button 
               @click="loadLocalSample('samples/carton_vertical_3.pdf', 'presetVertical_2')"
               class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
             >
-              <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">③ 上下双拼箱唛 (末页单标)</span>
-              <span class="text-[11px] text-slate-500 mt-0.5">2行×1列 · 自动过滤白边</span>
+              <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">{{ t('pdf.sample3Title') }}</span>
+              <span class="text-[11px] text-slate-500 mt-0.5">{{ t('pdf.sample3Desc') }}</span>
             </button>
 
             <button 
               @click="loadLocalSample('samples/perfume_single.pdf', 'presetSingleTL')"
               class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
             >
-              <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">④ 左上角单标 (香水标)</span>
-              <span class="text-[11px] text-slate-500 mt-0.5">整页A4自动抓取左上角</span>
+              <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">{{ t('pdf.sample4Title') }}</span>
+              <span class="text-[11px] text-slate-500 mt-0.5">{{ t('pdf.sample4Desc') }}</span>
             </button>
           </div>
         </div>
@@ -191,13 +191,13 @@
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
               <Clock class="w-4 h-4 text-brand-500" />
-              <span>最近保存的项目：</span>
+              <span>{{ t('pdf.recentProjects') }}</span>
             </div>
             <button 
               @click="step1Tab = 'saved'"
               class="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1"
             >
-              <span>查看全部 ({{ savedProjectsList.length }})</span>
+              <span>{{ t('pdf.viewAll') }} ({{ savedProjectsList.length }})</span>
               <ArrowRight class="w-3.5 h-3.5" />
             </button>
           </div>
@@ -214,14 +214,14 @@
                 </div>
                 <div class="min-w-0">
                   <div class="text-xs font-bold text-slate-800 truncate group-hover:text-brand-600">{{ p.name }}</div>
-                  <div class="text-[10px] text-slate-400">{{ p.labelCount }} 款 · 计划 {{ p.totalQuantity }} 张</div>
+                  <div class="text-[10px] text-slate-400">{{ p.labelCount }} {{ t('pdf.labelsCount') }} · {{ p.totalQuantity }} {{ t('pdf.piecesUnit') }}</div>
                 </div>
               </div>
               <button 
                 @click="handleOpenProject(p)"
                 class="px-2.5 py-1.5 bg-white hover:bg-brand-50 text-brand-600 border border-slate-200 hover:border-brand-300 text-xs font-bold rounded-lg transition-all flex-shrink-0"
               >
-                打开
+                {{ t('pdf.open') }}
               </button>
             </div>
           </div>
@@ -236,14 +236,14 @@
           </div>
           <h4 class="text-base font-bold text-slate-800">{{ t('pdf.emptySaved') }}</h4>
           <p class="text-xs text-slate-400 max-w-sm mx-auto">
-            在第2步中可随时自定义项目名称并点击【保存项目】，保存后即可在此一键重新打开或导出备份。
+            {{ t('pdf.saveProjectTip') }}
           </p>
           <button 
             @click="step1Tab = 'new'"
             class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm inline-flex items-center gap-2"
           >
             <Plus class="w-4 h-4" />
-            <span>立即新建上传项目</span>
+            <span>{{ t('pdf.createNewUpload') }}</span>
           </button>
         </div>
 
@@ -278,12 +278,12 @@
                 <img v-if="p.thumbnail" :src="p.thumbnail" class="max-w-full max-h-full object-contain" />
                 <div v-else class="text-slate-300 text-xs flex flex-col items-center gap-1">
                   <FileText class="w-6 h-6" />
-                  <span>无缩略图</span>
+                  <span>{{ t('pdf.noThumbnail') }}</span>
                 </div>
 
                 <!-- Floating Count Tag -->
                 <div class="absolute bottom-2 right-2 px-2 py-0.5 bg-slate-900/80 text-white text-[10px] font-mono rounded">
-                  {{ p.labelCount }} 款 · 共 {{ p.totalQuantity }} 张
+                  {{ p.labelCount }} {{ t('pdf.labelsCount') }} · {{ p.totalQuantity }} {{ t('pdf.piecesUnit') }}
                 </div>
               </div>
             </div>
@@ -295,20 +295,20 @@
                 class="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1.5 transition-all"
               >
                 <FolderOpen class="w-3.5 h-3.5" />
-                <span>打开项目</span>
+                <span>{{ t('pdf.openProjectBtn') }}</span>
               </button>
 
               <div class="flex items-center gap-1">
                 <button 
                   @click="handleExportProject(p)"
-                  title="导出为 JSON 备份文件"
+                  :title="t('pdf.exportBackup')"
                   class="p-1.5 hover:bg-white text-slate-500 hover:text-slate-800 border border-transparent hover:border-slate-200 rounded-md transition-all text-xs"
                 >
                   <Download class="w-3.5 h-3.5" />
                 </button>
                 <button 
                   @click="handleDeleteProject(p.id, p.name)"
-                  title="删除此项目"
+                  :title="t('pdf.deleteProject')"
                   class="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-md transition-all text-xs"
                 >
                   <Trash2 class="w-3.5 h-3.5" />
@@ -330,13 +330,13 @@
           </div>
           <div class="flex-1">
             <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
-              <span>{{ t('pdf.projectName') }} (可自定义命名)</span>
-              <span v-if="currentProjectId" class="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded font-mono">已保存到本地</span>
+              <span>{{ t('pdf.projectName') }}</span>
+              <span v-if="currentProjectId" class="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded font-mono">{{ t('pdf.savedLocally') }}</span>
             </div>
             <input 
               v-model="currentProjectName"
               type="text"
-              placeholder="输入项目自定义名称 (例如：美客多大号外箱标_批次A)..."
+              :placeholder="t('pdf.projectNamePlaceholder')"
               class="w-full text-sm font-bold text-slate-800 bg-transparent border-b border-dashed border-slate-300 hover:border-brand-500 focus:border-brand-500 focus:outline-none transition-colors py-0.5"
             />
           </div>
@@ -358,7 +358,7 @@
             class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all"
           >
             <FolderOpen class="w-3.5 h-3.5 text-slate-500" />
-            <span>历史项目 ({{ savedProjectsList.length }})</span>
+            <span>{{ t('pdf.historyProjects') }} ({{ savedProjectsList.length }})</span>
           </button>
 
           <!-- Create New Project -->
@@ -395,7 +395,7 @@
             class="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold rounded-lg border border-brand-200 flex items-center gap-1.5 transition-all shadow-xs"
           >
             <Crop class="w-3.5 h-3.5" />
-            <span>重新拉框裁切</span>
+            <span>{{ t('pdf.recrop') }}</span>
           </button>
         </div>
 
@@ -423,31 +423,31 @@
         <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-xs">
           <span class="text-slate-500 font-bold px-1.5 flex items-center gap-1">
             <span>🖤</span>
-            <span>锐化:</span>
+            <span>{{ t('sharpen.label') }}</span>
           </span>
           <button 
             @click="setSharpenMode('standard')" 
-            title="消除抗锯齿灰色网点，推荐模式"
+            :title="t('sharpen.standardDesc')"
             class="px-2 py-0.5 rounded font-bold text-xs transition-all"
             :class="sharpenMode === 'standard' ? 'bg-white text-emerald-700 shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'"
           >
-            标准纯黑
+            {{ t('sharpen.standard') }}
           </button>
           <button 
             @click="setSharpenMode('heavy')" 
-            title="加重黑度，强化浅灰与细笔画"
+            :title="t('sharpen.heavyDesc')"
             class="px-2 py-0.5 rounded font-bold text-xs transition-all"
             :class="sharpenMode === 'heavy' ? 'bg-white text-amber-700 shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'"
           >
-            加重黑度
+            {{ t('sharpen.heavy') }}
           </button>
           <button 
             @click="setSharpenMode('none')" 
-            title="原图灰度，关闭纯黑锐化"
+            :title="t('sharpen.noneDesc')"
             class="px-2 py-0.5 rounded font-bold text-xs transition-all"
             :class="sharpenMode === 'none' ? 'bg-white text-slate-700 shadow-2xs font-black' : 'text-slate-500 hover:text-slate-900'"
           >
-            原图灰度
+            {{ t('sharpen.none') }}
           </button>
         </div>
 
@@ -455,13 +455,13 @@
         <div class="flex items-center gap-4">
           <div class="text-right">
             <span class="text-xs text-slate-400 block">{{ t('pdf.totalPrintCount') }}</span>
-            <span class="text-lg font-bold text-brand-600 leading-none">{{ totalPrintQuantity }} 张</span>
+            <span class="text-lg font-bold text-brand-600 leading-none">{{ totalPrintQuantity }} {{ t('pdf.piecesUnit') }}</span>
           </div>
           <button 
             @click="currentStep = 3"
             class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-all"
           >
-            <span>下一步: 设置纸张</span>
+            <span>{{ t('pdf.nextStepPaper') }}</span>
             <ArrowRight class="w-4 h-4" />
           </button>
         </div>
@@ -471,9 +471,9 @@
       <div class="bg-blue-50/90 border border-blue-200 rounded-xl p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 text-xs shadow-2xs">
         <div class="flex items-center gap-2 text-blue-950 font-bold">
           <FileText class="w-4 h-4 text-blue-600 flex-shrink-0" />
-          <span class="text-xs sm:text-sm">选择打印页码 / 标签:</span>
+          <span class="text-xs sm:text-sm">{{ t('pdf.pageSelectTitle') }}</span>
           <span class="text-slate-600 font-normal">
-            共 {{ maxPdfPages }} 页 · 已勾选 <strong class="text-blue-700 font-bold font-mono">{{ selectedPagesCount }}</strong> 页 (计划输出 {{ totalPrintQuantity }} 张)
+            {{ t('pdf.pageSelectStatus', { max: maxPdfPages, count: selectedPagesCount, qty: totalPrintQuantity }) }}
           </span>
         </div>
 
@@ -482,55 +482,55 @@
           <button 
             @click="selectOnlyFirstPage" 
             class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-2xs transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
-            title="物流退货标/面单通常第1页为面单，第2页为说明/凭证"
+            :title="t('pdf.onlyFirstPageTip')"
           >
-            <span>⚡ 仅打第 1 页</span>
+            <span>{{ t('pdf.onlyFirstPage') }}</span>
           </button>
 
           <button 
             @click="selectOddPages" 
             class="px-2.5 py-1.5 bg-white hover:bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 transition-all cursor-pointer shadow-2xs"
-            title="选择所有奇数页码 (第 1, 3, 5, 7... 页)"
+            :title="t('pdf.oddPagesTip')"
           >
-            奇数页
+            {{ t('pdf.oddPages') }}
           </button>
 
           <button 
             @click="selectEvenPages" 
             class="px-2.5 py-1.5 bg-white hover:bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 transition-all cursor-pointer shadow-2xs"
-            title="选择所有偶数页码 (第 2, 4, 6, 8... 页)"
+            :title="t('pdf.evenPagesTip')"
           >
-            偶数页
+            {{ t('pdf.evenPages') }}
           </button>
 
           <button 
             @click="selectAllPages" 
             class="px-2.5 py-1.5 bg-white hover:bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 transition-all cursor-pointer"
           >
-            全选 (全部页码)
+            {{ t('pdf.selectAll') }}
           </button>
 
           <button 
             @click="invertPageSelection" 
             class="px-2.5 py-1.5 bg-white hover:bg-blue-100 text-slate-700 font-semibold rounded-lg border border-slate-200 transition-all cursor-pointer"
           >
-            反选
+            {{ t('pdf.invertSelection') }}
           </button>
 
           <!-- Custom Page Range Input -->
           <div class="flex items-center bg-white rounded-lg border border-blue-300 overflow-hidden shadow-2xs pl-2">
-            <span class="text-slate-400 text-[11px] mr-1">指定页:</span>
+            <span class="text-slate-400 text-[11px] mr-1">{{ t('pdf.specifiedPage') }}</span>
             <input 
               v-model="pageRangeInput" 
               @keyup.enter="applyPageRange"
-              placeholder="如: 1 或 1-3" 
+              :placeholder="t('pdf.pageRangePlaceholder')" 
               class="w-20 sm:w-24 text-center text-xs font-mono font-bold text-blue-900 focus:outline-none py-1.5" 
             />
             <button 
               @click="applyPageRange" 
               class="px-2.5 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs transition-colors border-l border-blue-200 cursor-pointer"
             >
-              应用
+              {{ t('pdf.apply') }}
             </button>
           </div>
         </div>
@@ -540,34 +540,34 @@
       <div class="bg-indigo-50/80 border border-indigo-200 rounded-xl p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-2 text-indigo-950 font-bold">
           <Layers class="w-4 h-4 text-indigo-600 flex-shrink-0" />
-          <span class="text-xs sm:text-sm">批量设置已选每款张数:</span>
-          <span class="text-slate-500 font-normal hidden md:inline">统一设置所有已选款式的打印张数</span>
+          <span class="text-xs sm:text-sm">{{ t('pdf.batchSetQty') }}</span>
+          <span class="text-slate-500 font-normal hidden md:inline">{{ t('pdf.batchSetQtyDesc') }}</span>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
           <div class="flex items-center bg-white rounded-lg border border-indigo-300 overflow-hidden shadow-2xs">
-            <button @click="batchQuantity = Math.max(1, (Number(batchQuantity) || 1) - 1)" title="减 1" class="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold text-sm transition-colors">-</button>
+            <button @click="batchQuantity = Math.max(1, (Number(batchQuantity) || 1) - 1)" title="-" class="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold text-sm transition-colors">-</button>
             <input 
               v-model.number="batchQuantity" 
               @blur="normalizeBatchQuantity" 
               type="number" 
               min="1" 
               max="9999" 
-              placeholder="张数" 
+              :placeholder="t('pdf.quantity')" 
               class="w-16 text-center text-xs sm:text-sm font-bold font-mono text-indigo-900 focus:outline-none" 
             />
-            <button @click="batchQuantity = (Number(batchQuantity) || 0) + 1" title="加 1" class="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold text-sm transition-colors">+</button>
+            <button @click="batchQuantity = (Number(batchQuantity) || 0) + 1" title="+" class="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold text-sm transition-colors">+</button>
           </div>
 
           <button 
             @click="applyBatchQuantity(batchQuantity)" 
             class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-2xs transition-all active:scale-95 flex items-center gap-1.5"
           >
-            一键应用到全部已选
+            {{ t('pdf.applyToSelected') }}
           </button>
 
           <div class="flex items-center gap-1 pl-2 border-l border-indigo-200">
-            <button v-for="q in [1, 5, 10, 20, 30, 50, 100]" :key="q" @click="applyBatchQuantity(q)" class="px-2 py-1 bg-white hover:bg-indigo-100 text-indigo-700 rounded border border-indigo-200 text-[11px] font-semibold transition-all">{{ q }}张</button>
+            <button v-for="q in [1, 5, 10, 20, 30, 50, 100]" :key="q" @click="applyBatchQuantity(q)" class="px-2 py-1 bg-white hover:bg-indigo-100 text-indigo-700 rounded border border-indigo-200 text-[11px] font-semibold transition-all">{{ q }}{{ t('pdf.piecesUnit') }}</button>
           </div>
         </div>
       </div>
@@ -606,11 +606,11 @@
               :class="item.selected !== false && item.quantity > 0 
                 ? 'bg-brand-600 hover:bg-brand-700 text-white' 
                 : 'bg-slate-700 hover:bg-slate-800 text-white'"
-              title="点击勾选或取消此页"
+              :title="t('pdf.dontPrintPage')"
             >
               <CheckCircle2 v-if="item.selected !== false && item.quantity > 0" class="w-3.5 h-3.5 text-white" />
               <div v-else class="w-3 h-3 rounded border border-white/60"></div>
-              <span>第 {{ item.page }} 页</span>
+              <span>{{ t('pdf.pageLabel', { page: item.page }) }}</span>
             </button>
 
             <!-- Quantity badge for Grouped View (Top-Right) -->
@@ -627,7 +627,7 @@
               class="absolute inset-0 bg-slate-900/20 backdrop-blur-[0.5px] flex items-center justify-center pointer-events-none"
             >
               <span class="px-2.5 py-1 bg-slate-900/80 text-white text-[11px] font-bold rounded-lg shadow-sm">
-                🚫 不打印此页
+                {{ t('pdf.dontPrintPage') }}
               </span>
             </div>
           </div>
@@ -642,7 +642,7 @@
                   class="text-[11px] font-semibold transition-colors ml-1 flex-shrink-0 cursor-pointer"
                   :class="item.selected !== false && item.quantity > 0 ? 'text-slate-400 hover:text-rose-500' : 'text-emerald-600 hover:text-emerald-700 font-bold'"
                 >
-                  {{ item.selected !== false && item.quantity > 0 ? '排除' : '恢复' }}
+                  {{ item.selected !== false && item.quantity > 0 ? t('pdf.exclude') : t('pdf.restore') }}
                 </button>
               </div>
               <div v-if="item.sku" class="text-[11px] text-brand-600 font-mono truncate" :title="item.sku">
@@ -682,20 +682,20 @@
         <div class="w-16 h-16 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center">
           <Crop class="w-8 h-8" />
         </div>
-        <h4 class="text-base font-bold text-slate-800">当前已启用：自由鼠标框选裁切模式</h4>
+        <h4 class="text-base font-bold text-slate-800">{{ t('pdf.freeCropActiveTitle') }}</h4>
         <p class="text-xs text-slate-500 max-w-md leading-relaxed">
-          点击下方按钮打开框选画布，按住鼠标拖拽即可框选任意标签区域，支持拖动平移及8个手柄微调，确认后将自动应用至全部页面。
+          {{ t('pdf.freeCropActiveDesc') }}
         </p>
         <button 
           @click="openFreeCropModal"
           class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-brand-500/25 flex items-center gap-2 transition-all hover:scale-105"
         >
           <Crop class="w-4 h-4" />
-          <span>🖱️ 立即打开鼠标框选画布</span>
+          <span>{{ t('pdf.openFreeCropBtn') }}</span>
         </button>
       </div>
       <div v-else class="text-center py-16 bg-white rounded-xl border border-slate-200 text-slate-400">
-        没有匹配的标签项目
+        {{ t('pdf.noMatchingItems') }}
       </div>
     </div>
 
@@ -726,11 +726,11 @@
         <!-- Custom Dimensions if chosen -->
         <div v-if="selectedPaperId === 'custom'" class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
           <div class="flex-1">
-            <label class="text-xs text-slate-500 font-medium block mb-1">纸张宽度 (mm)</label>
+            <label class="text-xs text-slate-500 font-medium block mb-1">{{ t('pdf.paperWidth') }}</label>
             <input v-model.number="targetWidthMm" type="number" class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm" />
           </div>
           <div class="flex-1">
-            <label class="text-xs text-slate-500 font-medium block mb-1">纸张高度 (mm)</label>
+            <label class="text-xs text-slate-500 font-medium block mb-1">{{ t('pdf.paperHeight') }}</label>
             <input v-model.number="targetHeightMm" type="number" class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm" />
           </div>
         </div>
@@ -751,8 +751,8 @@
               <div class="text-xs text-slate-500">{{ t('pdf.fitProportional') }}</div>
             </div>
             <select v-model="fitMode" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium">
-              <option value="proportional">智能等比例居中 (保证条码)</option>
-              <option value="stretch">强制拉伸填满</option>
+              <option value="proportional">{{ t('pdf.fitProportional') }}</option>
+              <option value="stretch">{{ t('pdf.fitStretch') }}</option>
             </select>
           </div>
         </div>
@@ -766,11 +766,11 @@
               </div>
               <div>
                 <div class="font-bold text-sm text-white flex items-center gap-2">
-                  <span>智能热敏纯黑锐化算法</span>
-                  <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-black">解决打印模糊/网点发虚</span>
+                  <span>{{ t('sharpen.title') }}</span>
+                  <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-black">{{ t('sharpen.badge') }}</span>
                 </div>
                 <div class="text-xs text-slate-300 mt-0.5">
-                  203 DPI 热敏机无灰度能力，PDF抗锯齿灰色边缘会被驱动打成稀疏网点。开启后去除灰边，纯黑物理直打！
+                  {{ t('sharpen.desc') }}
                 </div>
               </div>
             </div>
@@ -782,30 +782,30 @@
                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
                 :class="sharpenMode === 'standard' ? 'bg-emerald-500 text-slate-950 shadow-md font-black' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
               >
-                <span>🔥 标准纯黑 (推荐)</span>
+                <span>🔥 {{ t('sharpen.standard') }}</span>
               </button>
               <button 
                 @click="setSharpenMode('heavy')" 
                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
                 :class="sharpenMode === 'heavy' ? 'bg-amber-400 text-slate-950 shadow-md font-black' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
               >
-                <span>⚡ 加重黑度 (细字加粗)</span>
+                <span>⚡ {{ t('sharpen.heavy') }}</span>
               </button>
               <button 
                 @click="setSharpenMode('none')" 
                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
                 :class="sharpenMode === 'none' ? 'bg-slate-700 text-white shadow-md font-black' : 'text-slate-400 hover:text-white hover:bg-slate-800'"
               >
-                <span>📷 原图灰度 (未处理)</span>
+                <span>📷 {{ t('sharpen.none') }}</span>
               </button>
             </div>
           </div>
 
           <div class="text-[11px] text-slate-400 flex items-center gap-2 pt-2 border-t border-slate-800/80">
-            <span class="text-indigo-400 font-bold flex-shrink-0">💡 模式说明：</span>
-            <span v-if="sharpenMode === 'standard'">【标准纯黑】：阈值 190，保留原版字形笔锋同时彻底清除抗锯齿灰色网点，字母与数字边缘整齐无毛刺。</span>
-            <span v-else-if="sharpenMode === 'heavy'">【加重黑度】：阈值 215，强化细笔画与浅灰字体，适合 Spanish 西语品名小字（如 7pt~9pt）让文字更粗黑易读。</span>
-            <span v-else>【原图灰度】：保留原始渲染抗锯齿（热敏驱动通常会以半色调网点模拟灰色，可能产生微细颗粒感）。</span>
+            <span class="text-indigo-400 font-bold flex-shrink-0">{{ t('sharpen.modeLabel') }}</span>
+            <span v-if="sharpenMode === 'standard'">{{ t('sharpen.standardDesc') }}</span>
+            <span v-else-if="sharpenMode === 'heavy'">{{ t('sharpen.heavyDesc') }}</span>
+            <span v-else>{{ t('sharpen.noneDesc') }}</span>
           </div>
         </div>
 
@@ -815,7 +815,7 @@
             @click="currentStep = 4"
             class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg shadow-sm flex items-center gap-2"
           >
-            <span>进入实时卷纸预览与打印</span>
+            <span>{{ t('pdf.enterPreviewAndPrint') }}</span>
             <ArrowRight class="w-4 h-4" />
           </button>
         </div>
@@ -827,7 +827,7 @@
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h3 class="text-lg font-bold text-slate-800">{{ t('pdf.previewTitle') }}</h3>
-          <p class="text-xs text-slate-500 mt-0.5">目标热敏卷纸尺寸: {{ targetWidthMm }} × {{ targetHeightMm }} mm · 计划输出 {{ totalPrintQuantity }} 张</p>
+          <p class="text-xs text-slate-500 mt-0.5">{{ t('pdf.targetRollSize') }} {{ targetWidthMm }} × {{ targetHeightMm }} mm · {{ t('pdf.plannedOutput') }} {{ totalPrintQuantity }} {{ t('pdf.piecesUnit') }}</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
@@ -835,22 +835,22 @@
           <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-xs shadow-2xs">
             <span class="text-slate-600 font-bold flex items-center gap-1">
               <span>🔢</span>
-              <span>自定义打印份数:</span>
+              <span>{{ t('pdf.customCopies') }}</span>
             </span>
             <div class="flex items-center bg-white rounded border border-slate-300 overflow-hidden shadow-2xs">
-              <button @click="adjustCopies(-1)" title="减 1 份" class="w-6 h-6 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center transition-colors">-</button>
+              <button @click="adjustCopies(-1)" title="-" class="w-6 h-6 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center transition-colors">-</button>
               <input 
                 v-model.number="printCopies" 
                 @blur="normalizePrintCopies" 
                 type="number" 
                 min="1" 
                 max="9999" 
-                placeholder="份数" 
+                :placeholder="t('pdf.copiesUnit')" 
                 class="w-14 text-center text-xs font-mono font-bold text-brand-600 focus:outline-none" 
               />
-              <button @click="adjustCopies(1)" title="加 1 份" class="w-6 h-6 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center transition-colors">+</button>
+              <button @click="adjustCopies(1)" title="+" class="w-6 h-6 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center transition-colors">+</button>
             </div>
-            <span class="text-slate-400">份</span>
+            <span class="text-slate-400">{{ t('pdf.copiesUnit') }}</span>
             <div class="flex items-center gap-1 pl-1 border-l border-slate-200">
               <button 
                 v-for="q in [1, 5, 10, 20, 30, 50, 100]" 
@@ -868,32 +868,32 @@
           <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs shadow-2xs">
             <span class="text-slate-600 font-bold flex items-center gap-1">
               <span>🖤</span>
-              <span>纯黑锐化:</span>
+              <span>{{ t('sharpen.label') }}</span>
             </span>
             <div class="flex items-center gap-1">
               <button 
                 @click="setSharpenMode('standard')" 
-                title="消除抗锯齿网点，推荐模式"
+                :title="t('sharpen.standardDesc')"
                 class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all" 
                 :class="sharpenMode === 'standard' ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-2xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'"
               >
-                标准纯黑
+                {{ t('sharpen.standard') }}
               </button>
               <button 
                 @click="setSharpenMode('heavy')" 
-                title="加重笔画黑度，适合浅细文字"
+                :title="t('sharpen.heavyDesc')"
                 class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all" 
                 :class="sharpenMode === 'heavy' ? 'bg-amber-500 text-white border-amber-500 font-bold shadow-2xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'"
               >
-                加重黑度
+                {{ t('sharpen.heavy') }}
               </button>
               <button 
                 @click="setSharpenMode('none')" 
-                title="原图灰度渲染"
+                :title="t('sharpen.noneDesc')"
                 class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all" 
                 :class="sharpenMode === 'none' ? 'bg-slate-700 text-white border-slate-700 font-bold shadow-2xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'"
               >
-                原图灰度
+                {{ t('sharpen.none') }}
               </button>
             </div>
           </div>
@@ -903,7 +903,7 @@
             class="px-3.5 py-2 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-bold rounded-lg shadow-2xs flex items-center gap-1.5 transition-all"
           >
             <HelpCircle class="w-4 h-4 text-blue-600" />
-            <span>打印帮助说明</span>
+            <span>{{ t('pdf.printHelp') }}</span>
           </button>
 
           <button 
@@ -912,7 +912,7 @@
             class="px-4 py-2 border border-slate-300 hover:border-slate-400 text-slate-700 text-sm font-semibold rounded-lg shadow-xs flex items-center gap-2 transition-all bg-white"
           >
             <Download class="w-4 h-4 text-slate-600" />
-            <span>{{ isGeneratingPdf ? t('pdf.generatingPdf') : `下载热敏PDF (${totalPrintQuantity} 张)` }}</span>
+            <span>{{ isGeneratingPdf ? t('pdf.generatingPdf') : t('pdf.downloadPdfCount', { count: totalPrintQuantity }) }}</span>
           </button>
 
           <button 
@@ -920,7 +920,7 @@
             class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg shadow-md flex items-center gap-2 transition-all"
           >
             <Printer class="w-4 h-4" />
-            <span>{{ `打印全部 (${totalPrintQuantity} 张)` }}</span>
+            <span>{{ t('pdf.printAllCount', { count: totalPrintQuantity }) }}</span>
           </button>
         </div>
       </div>
@@ -931,13 +931,13 @@
           <div class="flex items-center gap-2.5">
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-xs">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              ⚡ 桌面客户端极速直连通道已激活
+              {{ t('station.activated') }}
             </span>
-            <span class="text-xs text-slate-300 font-medium hidden sm:inline">硬件微米级走纸 · 免设 Windows 驱动尺寸 · 零弹窗出纸</span>
+            <span class="text-xs text-slate-300 font-medium hidden sm:inline">{{ t('station.sub') }}</span>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs text-slate-300 font-medium">当前卷纸:</span>
+            <span class="text-xs text-slate-300 font-medium">{{ t('station.currentPaper') }}</span>
             <button 
               @click="setQuickSize(50, 25)"
               class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all border"
@@ -973,13 +973,13 @@
         <div class="text-[11px] bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 flex flex-wrap items-center justify-between gap-3 text-slate-300">
           <div class="flex items-center gap-1.5">
             <Info class="w-4 h-4 text-amber-400 flex-shrink-0" />
-            <span>走纸定位规则：实际装纸是 <strong>50 × 25 mm</strong> 必须选 <strong>50 × 25 mm</strong>。若选 30mm 或驱动默认 100mm 会因高度超长连吐空白标签！</span>
+            <span>{{ t('station.rule') }}</span>
           </div>
           <button 
             @click="showPrintHelpModal = true; activeHelpTab = 'calibration'"
             class="text-amber-400 hover:text-amber-300 underline font-semibold flex-shrink-0"
           >
-            汉印FEED校准教程 ➔
+            {{ t('station.feedTutorial') }}
           </button>
         </div>
 
@@ -988,18 +988,18 @@
             <!-- Printer Selector -->
             <div class="flex items-center gap-2 bg-slate-800/90 px-3.5 py-2 rounded-xl border border-slate-600 shadow-inner">
               <Printer class="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              <div class="text-xs text-slate-300 font-medium">目标热敏机:</div>
+              <div class="text-xs text-slate-300 font-medium">{{ t('station.targetPrinter') }}</div>
               <select 
                 v-model="selectedElectronPrinter"
                 class="bg-transparent text-white text-xs font-bold focus:outline-none cursor-pointer max-w-[200px] sm:max-w-[240px] truncate"
               >
                 <option v-for="p in electronPrinters" :key="p.name" :value="p.name" class="bg-slate-800 text-white">
-                  {{ p.displayName || p.name }} {{ p.isDefault ? ' (默认)' : '' }}
+                  {{ p.displayName || p.name }} {{ p.isDefault ? t('station.default') : '' }}
                 </option>
               </select>
               <button 
                 @click="loadElectronPrinters" 
-                title="重新扫描电脑连接的打印机"
+                :title="t('station.rescan')"
                 class="p-1 text-slate-400 hover:text-emerald-400 hover:bg-slate-700 rounded transition-all"
               >
                 <RefreshCw class="w-3.5 h-3.5" />
@@ -1010,13 +1010,13 @@
             <div class="flex flex-wrap items-center gap-2 bg-slate-800/95 px-3.5 py-2 rounded-xl border-2 border-emerald-500/50 shadow-md">
               <span class="text-xs text-slate-100 font-bold flex items-center gap-1.5">
                 <span class="text-emerald-400 text-sm">🔢</span>
-                <span>自定义打印张数:</span>
+                <span>{{ t('station.customPrintQty') }}</span>
               </span>
               
               <div class="flex items-center bg-slate-950 rounded-lg border border-slate-700 overflow-hidden shadow-inner">
                 <button 
                   @click="adjustCopies(-1)" 
-                  title="减少 1 张"
+                  title="-"
                   class="w-7 h-7 text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-sm transition-colors flex items-center justify-center"
                 >-</button>
                 <input 
@@ -1025,16 +1025,16 @@
                   type="number" 
                   min="1" 
                   max="9999" 
-                  placeholder="张数"
+                  :placeholder="t('pdf.piecesUnit')"
                   class="w-16 sm:w-20 text-center text-sm font-mono font-black text-emerald-400 bg-transparent focus:outline-none" 
                 />
                 <button 
                   @click="adjustCopies(1)" 
-                  title="增加 1 张"
+                  title="+"
                   class="w-7 h-7 text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-sm transition-colors flex items-center justify-center"
                 >+</button>
               </div>
-              <span class="text-xs text-slate-300 font-semibold">张</span>
+              <span class="text-xs text-slate-300 font-semibold">{{ t('pdf.piecesUnit') }}</span>
 
               <!-- Quick Increment / Presets -->
               <div class="flex items-center gap-1 pl-1.5 border-l border-slate-700">
@@ -1058,7 +1058,7 @@
             class="px-6 sm:px-8 py-3 bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black text-sm sm:text-base rounded-xl shadow-xl shadow-emerald-500/30 flex items-center justify-center gap-2.5 transition-all active:scale-95 disabled:opacity-50 flex-shrink-0"
           >
             <Zap class="w-5 h-5 fill-current text-slate-950" />
-            <span>{{ isElectronPrinting ? '正在发送打印数据...' : `⚡ 一键极速静默打印 (${totalPrintQuantity} 张)` }}</span>
+            <span>{{ isElectronPrinting ? t('station.printing') : t('station.silentPrintBtn', { count: totalPrintQuantity }) }}</span>
           </button>
         </div>
 
@@ -1066,18 +1066,18 @@
         <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/80 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div class="flex flex-wrap items-center gap-3">
             <span class="text-slate-300 font-bold flex items-center gap-1">
-              <span>🎯 打印居中微调:</span>
+              <span>{{ t('station.centering') }}</span>
             </span>
 
             <div class="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700">
-              <span class="text-slate-400 text-[11px]">X 水平(左右):</span>
+              <span class="text-slate-400 text-[11px]">{{ t('station.offsetX') }}</span>
               <button @click="printOffsetX = Math.max(-10, Number((printOffsetX - 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">-</button>
               <span class="w-12 text-center font-mono font-bold text-emerald-400">{{ printOffsetX > 0 ? '+' + printOffsetX : printOffsetX }} mm</span>
               <button @click="printOffsetX = Math.min(10, Number((printOffsetX + 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">+</button>
             </div>
 
             <div class="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700">
-              <span class="text-slate-400 text-[11px]">Y 垂直(上下):</span>
+              <span class="text-slate-400 text-[11px]">{{ t('station.offsetY') }}</span>
               <button @click="printOffsetY = Math.max(-10, Number((printOffsetY - 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">-</button>
               <span class="w-12 text-center font-mono font-bold text-emerald-400">{{ printOffsetY > 0 ? '+' + printOffsetY : printOffsetY }} mm</span>
               <button @click="printOffsetY = Math.min(10, Number((printOffsetY + 0.5).toFixed(1)))" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-white rounded flex items-center justify-center font-bold text-xs">+</button>
@@ -1088,45 +1088,45 @@
               @click="printOffsetX = 0; printOffsetY = 0;"
               class="text-[11px] text-slate-400 hover:text-slate-200 underline"
             >
-              归零
+              {{ t('station.resetZero') }}
             </button>
           </div>
 
           <!-- Sharpen Mode Quick Switch in Client Station -->
           <div class="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700">
             <span class="text-slate-300 font-bold text-xs flex items-center gap-1">
-              <span>🖤 纯黑锐化:</span>
+              <span>🖤 {{ t('sharpen.label') }}</span>
             </span>
             <button 
               @click="setSharpenMode('standard')" 
               class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all"
               :class="sharpenMode === 'standard' ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-black shadow-xs' : 'text-slate-400 border-transparent hover:text-white'"
             >
-              标准 (推荐)
+              {{ t('sharpen.standard') }}
             </button>
             <button 
               @click="setSharpenMode('heavy')" 
               class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all"
               :class="sharpenMode === 'heavy' ? 'bg-amber-400 text-slate-950 border-amber-300 font-black shadow-xs' : 'text-slate-400 border-transparent hover:text-white'"
             >
-              加重黑度
+              {{ t('sharpen.heavy') }}
             </button>
             <button 
               @click="setSharpenMode('none')" 
               class="px-2 py-0.5 rounded text-[11px] font-semibold border transition-all"
               :class="sharpenMode === 'none' ? 'bg-slate-700 text-white border-slate-600 font-black shadow-xs' : 'text-slate-400 border-transparent hover:text-white'"
             >
-              原图灰度
+              {{ t('sharpen.none') }}
             </button>
           </div>
 
           <button 
             @click="handleOpenPreferences"
-            title="一键直接打开该打印机的 Windows 打印首选项设置"
+            :title="t('station.openPrefs')"
             class="px-3.5 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-400/40 text-indigo-200 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
           >
             <Settings class="w-3.5 h-3.5 text-indigo-300" />
-            <span>🛠️ 唤起汉印驱动首选项</span>
+            <span>{{ t('station.openPrefs') }}</span>
           </button>
         </div>
 
@@ -1141,25 +1141,24 @@
         <AlertTriangle class="w-6 h-6 text-rose-600 flex-shrink-0 mt-0.5" />
         <div class="space-y-2 text-xs flex-1">
           <div class="text-sm sm:text-base font-black text-rose-700 flex items-center gap-2">
-            <span>🚨 打印设置特别提醒：弹出的打印窗口中，必须正确选择「纸张尺寸」！</span>
+            <span>{{ t('pdf.alertSizeTitle') }}</span>
           </div>
           <p class="leading-relaxed text-rose-900 font-medium text-xs sm:text-sm">
-            点击打印后，系统弹窗默认通常是 <span class="bg-rose-200/90 text-rose-950 px-1.5 py-0.5 rounded font-black underline decoration-rose-600">「E邮宝长 100mm * 150mm」</span>，<strong class="text-rose-700 font-black">绝对不能使用该默认尺寸！</strong>
-            如果选了 100×150mm，打印机会按 15 厘米大面单走纸，直接导致<strong class="text-rose-700 font-black">连吐 4~5 张标签纸，并且条码会被旋转打断</strong>！
+            {{ t('pdf.alertSizeDesc') }}
           </p>
           <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
             <div class="flex flex-wrap items-center gap-2 sm:gap-3 font-bold text-rose-900">
               <span class="bg-white px-3 py-1.5 rounded-lg border border-rose-300 shadow-2xs flex items-center gap-1.5">
                 <span class="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">1</span>
-                <span>纸张尺寸：选与实际装纸一致（当前: {{ targetWidthMm }} × {{ targetHeightMm }} mm）</span>
+                <span>{{ t('pdf.alertStep1', { w: targetWidthMm, h: targetHeightMm }) }}</span>
               </span>
               <span class="bg-white px-3 py-1.5 rounded-lg border border-rose-300 shadow-2xs flex items-center gap-1.5">
                 <span class="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">2</span>
-                <span>缩放：实际大小 / 100%（勿选适合可打印区域）</span>
+                <span>{{ t('pdf.alertStep2') }}</span>
               </span>
               <span class="bg-white px-3 py-1.5 rounded-lg border border-rose-300 shadow-2xs flex items-center gap-1.5">
                 <span class="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]">3</span>
-                <span>边距：无</span>
+                <span>{{ t('pdf.alertStep3') }}</span>
               </span>
             </div>
 
@@ -1168,7 +1167,7 @@
               class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 flex-shrink-0"
             >
               <HelpCircle class="w-4 h-4" />
-              <span>查看图文解决教程 ➔</span>
+              <span>{{ t('pdf.viewHelpTutorial') }}</span>
             </button>
           </div>
         </div>
@@ -1178,7 +1177,7 @@
       <div class="bg-slate-100 rounded-2xl p-8 flex flex-col items-center justify-center min-h-[400px] border border-slate-200 overflow-x-auto">
         <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
           <Scroll class="w-4 h-4 text-brand-600" />
-          <span>热敏卷纸仿真连续出纸预览 (按真实比例展示) · 计划输出 <strong class="text-brand-600 font-bold font-mono">{{ totalPrintQuantity }}</strong> 张</span>
+          <span>{{ t('pdf.thermalRollSim') }} · {{ t('pdf.plannedOutput') }} <strong class="text-brand-600 font-bold font-mono">{{ totalPrintQuantity }}</strong> {{ t('pdf.piecesUnit') }}</span>
         </div>
 
         <!-- Rendered Roll Strip -->
@@ -1203,7 +1202,7 @@
             </div>
           </div>
           <div v-if="previewList.length > 10" class="flex items-center justify-center px-4 text-xs text-slate-400 font-medium">
-            + 更多 {{ previewList.length - 10 }} 张连续标签...
+            {{ t('pdf.moreLabels', { count: previewList.length - 10 }) }}
           </div>
         </div>
       </div>
@@ -1213,7 +1212,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2 font-bold text-blue-950 text-sm">
             <Info class="w-5 h-5 text-blue-600 flex-shrink-0" />
-            <span>问：打印机下拉列表中没有 {{ targetWidthMm }}×{{ targetHeightMm }} mm（或其它打印机尺寸不同）怎么办？</span>
+            <span>{{ isZh ? `问：打印机下拉列表中没有 ${targetWidthMm}×${targetHeightMm} mm（或其它打印机尺寸不同）怎么办？` : `Pregunta: ¿Qué hacer si ${targetWidthMm}×${targetHeightMm} mm no aparece en la lista de la impresora?` }}</span>
           </div>
         </div>
 
@@ -1222,21 +1221,21 @@
           <div class="p-3.5 bg-white rounded-xl border border-blue-200 shadow-2xs space-y-2 flex flex-col justify-between">
             <div class="space-y-1.5">
               <div class="font-bold text-blue-900 flex items-center gap-1.5">
-                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">方案 1</span>
-                <span>在电脑驱动新建尺寸（强烈推荐·30秒一劳永逸）</span>
+                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">{{ isZh ? '方案 1' : 'Opción 1' }}</span>
+                <span>{{ isZh ? '在电脑驱动新建尺寸（强烈推荐·30秒一劳永逸）' : 'Crear tamaño en el driver (Recomendado · 30 seg.)' }}</span>
               </div>
               <p class="text-slate-600 text-[11px] leading-relaxed">
-                不同品牌打印机出厂预装尺寸各不相同。您可以轻松在电脑驱动里新建一次该规格：
+                {{ isZh ? '不同品牌打印机出厂预装尺寸各不相同。您可以轻松在电脑驱动里新建一次该规格：' : 'Cada fabricante preinstala tamaños distintos. Puede agregar fácilmente su medida en Windows:' }}
               </p>
               <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] space-y-1 font-mono text-slate-700">
-                <div>① 按键盘 <strong>Win + R</strong> 键，输入 <strong>control printers</strong> 打开设备和打印机；</div>
-                <div>② 右键您的打印机（如 <strong>HPRT N41BT</strong>），点击<strong>「打印首选项」</strong>；</div>
-                <div>③ 在【页面设置】标签页，点击<strong>「新建」</strong>按钮；</div>
-                <div>④ 输入名称如 <strong>{{ targetWidthMm }}x{{ targetHeightMm }}</strong>，输入宽度 <strong>{{ targetWidthMm }}mm</strong>、高度 <strong>{{ targetHeightMm }}mm</strong>，点击确定保存。</div>
+                <div>{{ isZh ? '① 按键盘 Win + R 键，输入 control printers 打开设备和打印机；' : '① Pulse Win + R, escriba control printers y pulse Enter;' }}</div>
+                <div>{{ isZh ? '② 右键您的打印机（如 HPRT N41BT），点击「打印首选项」；' : '② Clic derecho en su impresora (ej. HPRT N41BT) y elija «Preferencias de impresión»;' }}</div>
+                <div>{{ isZh ? '③ 在【页面设置】标签页，点击「新建」按钮；' : '③ En la pestaña «Configurar página», pulse el botón «Nueva...»;' }}</div>
+                <div>{{ isZh ? `④ 输入名称如 ${targetWidthMm}x${targetHeightMm}，输入宽度 ${targetWidthMm}mm、高度 ${targetHeightMm}mm，点击确定保存。` : `④ Escriba un nombre ej. ${targetWidthMm}x${targetHeightMm}, ancho ${targetWidthMm}mm, alto ${targetHeightMm}mm y guarde.` }}</div>
               </div>
             </div>
             <div class="text-[10px] text-emerald-600 font-semibold pt-1">
-              ✓ 保存后，浏览器打印弹窗就会永久出现该精确尺寸！
+              {{ isZh ? '✓ 保存后，浏览器打印弹窗就会永久出现该精确尺寸！' : '✓ ¡Guardado! El tamaño exacto aparecerá permanentemente al imprimir.' }}
             </div>
           </div>
 
@@ -1244,20 +1243,20 @@
           <div class="p-3.5 bg-white rounded-xl border border-blue-200 shadow-2xs space-y-2 flex flex-col justify-between">
             <div class="space-y-1.5">
               <div class="font-bold text-blue-900 flex items-center gap-1.5">
-                <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">方案 2</span>
-                <span>直接借用驱动自带的“等高”尺寸（免设电脑）</span>
+                <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">{{ isZh ? '方案 2' : 'Opción 2' }}</span>
+                <span>{{ isZh ? '直接借用驱动自带的“等高”尺寸（免设电脑）' : 'Usar tamaño preinstalado de igual altura (Sin configurar)' }}</span>
               </div>
               <p class="text-slate-600 text-[11px] leading-relaxed">
-                热敏条码打印机是由<strong>「标签高度」决定马达走纸长度</strong>的！
+                {{ isZh ? '热敏条码打印机是由「标签高度」决定马达走纸长度的！' : '¡En impresoras térmicas la «altura» determina el avance del motor!' }}
               </p>
               <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] space-y-1 text-slate-700">
-                <div>• 若您的实际卷纸是 <strong>70 × 30 mm</strong>，而汉印驱动下拉菜单里有 <strong>80mm * 30mm</strong>：</div>
-                <div>• 您可以直接在下拉菜单选择 <strong>80mm * 30mm</strong>！</div>
-                <div>• 因为高度同为 30mm，打印机传感器按 30mm 走纸，依然会精准卡在缝隙切口，每按一次吐一张，绝不会连吐多张！</div>
+                <div>{{ isZh ? '• 若您的实际卷纸是 70 × 30 mm，而汉印驱动下拉菜单里有 80mm * 30mm：' : '• Si su rollo mide 70 × 30 mm y en la lista de HPRT aparece 80mm * 30mm:' }}</div>
+                <div>{{ isZh ? '• 您可以直接在下拉菜单选择 80mm * 30mm！' : '• ¡Puede seleccionar directamente 80mm * 30mm en el menú!' }}</div>
+                <div>{{ isZh ? '• 因为高度同为 30mm，打印机传感器按 30mm 走纸，依然会精准卡在缝隙切口，每按一次吐一张，绝不会连吐多张！' : '• Al tener la misma altura de 30mm, avanzará exactamente 30mm deteniéndose en la marca de corte sin saltar hojas.' }}</div>
               </div>
             </div>
             <div class="text-[10px] text-amber-700 font-semibold pt-1">
-              💡 核心口诀：只要下拉菜单里的「高度 mm」与实际卷纸一致，就能正常单张定位！
+              {{ isZh ? '💡 核心口诀：只要下拉菜单里的「高度 mm」与实际卷纸一致，就能正常单张定位！' : '💡 Regla clave: Mientras la altura coincida con su rollo, el avance será 100% exacto.' }}
             </div>
           </div>
 
@@ -1265,21 +1264,21 @@
           <div class="p-3.5 bg-white rounded-xl border border-blue-200 shadow-2xs space-y-2 flex flex-col justify-between">
             <div class="space-y-1.5">
               <div class="font-bold text-blue-900 flex items-center gap-1.5">
-                <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">方案 3</span>
-                <span>导出标准热敏 PDF 自动识别尺寸</span>
+                <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">{{ isZh ? '方案 3' : 'Opción 3' }}</span>
+                <span>{{ isZh ? '导出标准热敏 PDF 自动识别尺寸' : 'Exportar PDF estándar con autodetección' }}</span>
               </div>
               <p class="text-slate-600 text-[11px] leading-relaxed">
-                不想在网页端选尺寸？直接使用 PDF 客户端全自动打印：
+                {{ isZh ? '不想在网页端选尺寸？直接使用 PDF 客户端全自动打印：' : '¿Prefiere evitar ajustes en el navegador? Use un lector de escritorio:' }}
               </p>
               <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] space-y-1 text-slate-700">
-                <div>① 点击上方<strong>「导出标准热敏 PDF」</strong>按钮下载文件；</div>
-                <div>② 用电脑上的 PDF 阅读器（如 Adobe Acrobat Reader 或极速PDF）打开；</div>
-                <div>③ 打印时勾选<strong>「根据 PDF 页面大小选择纸张来源」</strong>；</div>
-                <div>④ 阅读器会自动把 PDF 内嵌的精确毫米尺寸发给打印机，无需手动选择。</div>
+                <div>{{ isZh ? '① 点击上方「导出标准热敏 PDF」按钮下载文件；' : '① Haga clic en «Descargar PDF Térmico» arriba;' }}</div>
+                <div>{{ isZh ? '② 用电脑上的 PDF 阅读器（如 Adobe Acrobat Reader 或极速PDF）打开；' : '② Abra el archivo con Adobe Acrobat Reader o similar;' }}</div>
+                <div>{{ isZh ? '③ 打印时勾选「根据 PDF 页面大小选择纸张来源」；' : '③ Active «Elegir origen del papel según tamaño de página PDF»;' }}</div>
+                <div>{{ isZh ? '④ 阅读器会自动把 PDF 内嵌的精确毫米尺寸发给打印机，无需手动选择。' : '④ El lector enviará las dimensiones físicas exactas a la impresora automáticamente.' }}</div>
               </div>
             </div>
             <div class="text-[10px] text-indigo-600 font-semibold pt-1">
-              ✓ 最受跨境大卖家欢迎的稳定批量打印方案！
+              {{ isZh ? '✓ 最受跨境大卖家欢迎的稳定批量打印方案！' : '✓ ¡El método de impresión en lote más estable y recomendado!' }}
             </div>
           </div>
         </div>
@@ -1289,27 +1288,27 @@
       <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-5 text-amber-950 space-y-3">
         <div class="flex items-center gap-2 font-bold text-amber-900 text-sm">
           <AlertTriangle class="w-5 h-5 text-amber-600 flex-shrink-0" />
-          <span>热敏打印机缝隙校准与日常排查指南</span>
+          <span>{{ isZh ? '热敏打印机缝隙校准与日常排查指南' : 'Guía de Calibración de Sensor y Diagnóstico Térmico' }}</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1">
           <div class="p-3 bg-white/80 rounded-xl border border-amber-200/60 shadow-xs space-y-1.5">
             <div class="font-bold text-amber-900 flex items-center gap-1.5">
               <span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">!</span>
-              <span>汉印 (HPRT N41BT) 打印机缝隙自动校准（必做）</span>
+              <span>{{ isZh ? '汉印 (HPRT N41BT) 打印机缝隙自动校准（必做）' : 'Calibración de sensor de separación (FEED) HPRT' }}</span>
             </div>
             <p class="text-amber-800 leading-relaxed text-[11px]">
-              装好新卷纸并合紧机盖后，开机状态下<strong>长按打印机顶部的 FEED 走纸键约 2 秒</strong>，听到打印机“哔”一声松手，打印机会自动走纸 1~2 张学习标签缝隙定位并自动回吸，校准后每次打印均能精准卡在每张标签的切线处！
+              {{ isZh ? '装好新卷纸并合紧机盖后，开机状态下长按打印机顶部的 FEED 走纸键约 2 秒，听到打印机“哔”一声松手，打印机会自动走纸 1~2 张学习标签缝隙定位并自动回吸，校准后每次打印均能精准卡在每张标签的切线处！' : 'Con el nuevo rollo colocado y la tapa asegurada, mantenga presionado el botón FEED durante 2 segundos hasta oír un pitido. La máquina expulsará y recogerá 1-2 etiquetas calibrando el sensor de separación al milímetro.' }}
             </p>
           </div>
 
           <div class="p-3 bg-white/80 rounded-xl border border-amber-200/60 shadow-xs space-y-1.5">
             <div class="font-bold text-amber-900 flex items-center gap-1.5">
               <span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">!</span>
-              <span>打印出现白条/字迹断续排查</span>
+              <span>{{ isZh ? '打印出现白条/字迹断续排查' : 'Diagnóstico de rayas blancas o impresión tenue' }}</span>
             </div>
             <p class="text-amber-800 leading-relaxed text-[11px]">
-              若打印出来的条码颜色浅或发白，可用棉签蘸取少许酒精轻轻擦拭打印头陶瓷发热片；同时可在打印首选项里将“打印浓度 (Darkness)”调高 2~3 档，条码对比度会显著提升。
+              {{ isZh ? '若打印出来的条码颜色浅或发白，可用棉签蘸取少许酒精轻轻擦拭打印头陶瓷发热片；同时可在打印首选项里将“打印浓度 (Darkness)”调高 2~3 档，条码对比度会显著提升。' : 'Si el código sale tenue o con líneas blancas, limpie el cabezal cerámico con un hisopo humedecido en alcohol. También puede subir 2 a 3 niveles la «Densidad de impresión (Darkness)» en el driver.' }}
             </p>
           </div>
         </div>
@@ -1437,15 +1436,15 @@
                 <FolderOpen class="w-4 h-4" />
               </div>
               <div>
-                <h3 class="text-sm font-bold text-slate-800">已保存的历史标签项目 ({{ savedProjectsList.length }})</h3>
-                <p class="text-[11px] text-slate-500 mt-0.5">点击可直接打开项目；所有数据保存在您的浏览器本地，安全离线可用</p>
+                <h3 class="text-sm font-bold text-slate-800">{{ t('pdf.savedProjectsTitle') }} ({{ savedProjectsList.length }})</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">{{ t('pdf.savedProjectsSubtitle') }}</p>
               </div>
             </div>
 
             <div class="flex items-center gap-2">
               <label class="px-3 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg cursor-pointer flex items-center gap-1.5 transition-all">
                 <FileUp class="w-3.5 h-3.5 text-brand-600" />
-                <span>导入备份 (.json)</span>
+                <span>{{ t('pdf.importJson') }}</span>
                 <input type="file" accept=".json" class="hidden" @change="onImportJsonFile" />
               </label>
               <button 
@@ -1461,8 +1460,8 @@
           <div class="p-6 overflow-y-auto max-h-[65vh]">
             <div v-if="savedProjectsList.length === 0" class="text-center py-12 text-slate-400 space-y-3">
               <FolderOpen class="w-12 h-12 text-slate-300 mx-auto" />
-              <p class="text-sm font-medium">暂无已保存项目</p>
-              <p class="text-xs text-slate-400">在工作区给项目命名并点击【保存项目】，即可保存在此。</p>
+              <p class="text-sm font-medium">{{ t('pdf.emptySaved') }}</p>
+              <p class="text-xs text-slate-400">{{ t('pdf.saveProjectTip') }}</p>
             </div>
 
             <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1485,7 +1484,7 @@
                     <Clock class="w-3 h-3" />
                     <span>{{ formatTime(p.updatedAt) }}</span>
                     <span>·</span>
-                    <span>{{ p.labelCount }} 款 ({{ p.totalQuantity }}张)</span>
+                    <span>{{ p.labelCount }} {{ t('pdf.labelsCount') }} ({{ p.totalQuantity }}{{ t('pdf.piecesUnit') }})</span>
                   </div>
 
                   <!-- Thumbnail Box -->
@@ -1500,20 +1499,20 @@
                     @click="handleOpenProject(p)"
                     class="px-3 py-1 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-md shadow-xs flex items-center gap-1"
                   >
-                    <span>打开此项目</span>
+                    <span>{{ t('pdf.openProjectBtn') }}</span>
                   </button>
 
                   <div class="flex items-center gap-1">
                     <button 
                       @click="handleExportProject(p)"
-                      title="导出备份 JSON"
+                      :title="t('pdf.exportBackup')"
                       class="p-1 hover:bg-white text-slate-500 rounded text-xs"
                     >
                       <Download class="w-3.5 h-3.5" />
                     </button>
                     <button 
                       @click="handleDeleteProject(p.id, p.name)"
-                      title="删除项目"
+                      :title="t('pdf.deleteProject')"
                       class="p-1 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded text-xs"
                     >
                       <Trash2 class="w-3.5 h-3.5" />
@@ -1539,10 +1538,10 @@
               </div>
               <div>
                 <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                  <span>热敏标签打印机设置与避坑完全指引</span>
-                  <span class="text-[11px] font-normal px-2 py-0.5 bg-brand-100 text-brand-700 rounded-full">汉印 / 佳博 / 斑马 / 得力 / 快麦通用</span>
+                  <span>{{ t('pdf.helpModalTitle') }}</span>
+                  <span class="text-[11px] font-normal px-2 py-0.5 bg-brand-100 text-brand-700 rounded-full">{{ t('pdf.helpModalBadge') }}</span>
                 </h3>
-                <p class="text-xs text-slate-500 mt-0.5">解决连吐多张、无 70×30/50×30 纸张选项、条码旋转变形及缝隙错位问题</p>
+                <p class="text-xs text-slate-500 mt-0.5">{{ t('pdf.helpModalSubtitle') }}</p>
               </div>
             </div>
 
@@ -1562,7 +1561,7 @@
               :class="activeHelpTab === 'desktopApp' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
             >
               <Laptop class="w-3.5 h-3.5" />
-              <span>电脑客户端软件版（免驱动设置）</span>
+              <span>{{ t('pdf.helpModalTabClient') }}</span>
             </button>
             <button 
               @click="activeHelpTab = 'customSize'" 
@@ -1570,7 +1569,7 @@
               :class="activeHelpTab === 'customSize' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
             >
               <Settings class="w-3.5 h-3.5" />
-              <span>方案 1: 在电脑驱动添加纸张尺寸</span>
+              <span>{{ t('pdf.helpModalTab1') }}</span>
             </button>
             <button 
               @click="activeHelpTab = 'borrowSize'" 
@@ -1578,7 +1577,7 @@
               :class="activeHelpTab === 'borrowSize' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
             >
               <CheckCircle2 class="w-3.5 h-3.5" />
-              <span>方案 2: 免设电脑·借用等高规格</span>
+              <span>{{ t('pdf.helpModalTab2') }}</span>
             </button>
             <button 
               @click="activeHelpTab = 'pdfPrint'" 
@@ -1586,7 +1585,7 @@
               :class="activeHelpTab === 'pdfPrint' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
             >
               <FileText class="w-3.5 h-3.5" />
-              <span>方案 3: 导出 PDF 客户端全自动打印</span>
+              <span>{{ t('pdf.helpModalTab3') }}</span>
             </button>
             <button 
               @click="activeHelpTab = 'calibration'" 
@@ -1594,7 +1593,7 @@
               :class="activeHelpTab === 'calibration' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
             >
               <AlertTriangle class="w-3.5 h-3.5" />
-              <span>硬件: 汉印 (HPRT) 一键缝隙校准</span>
+              <span>{{ t('pdf.helpModalTabCalib') }}</span>
             </button>
           </div>
 
@@ -1605,35 +1604,35 @@
               <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2">
                 <div class="font-bold text-emerald-900 text-sm flex items-center gap-2">
                   <CheckCircle2 class="w-5 h-5 text-emerald-600" />
-                  <span>解答：如果用电脑软件版（桌面客户端），是不是就完全不用自己手动去 Windows 驱动添加尺寸了？</span>
+                  <span>{{ isZh ? '解答：如果用电脑软件版（桌面客户端），是不是就完全不用自己手动去 Windows 驱动添加尺寸了？' : 'Pregunta: Si uso el Cliente de Escritorio, ¿evito tener que configurar tamaños en Windows?' }}</span>
                 </div>
                 <div class="text-xs text-emerald-900 leading-relaxed font-semibold">
-                  👉 答案是：<strong class="text-emerald-700 text-sm">100% 确定！完全不需要手动设置任何纸张尺寸！</strong>
+                  {{ isZh ? '👉 答案是：100% 确定！完全不需要手动设置任何纸张尺寸！' : '👉 ¡100% confirmado! ¡No necesita configurar ningún tamaño manualmente!' }}
                 </div>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                   <div class="font-bold text-slate-800 flex items-center gap-1.5">
-                    <span class="w-5 h-5 rounded-full bg-slate-400 text-white flex items-center justify-center text-[10px]">旧</span>
-                    <span>为什么纯网页版（当前浏览器）需要选尺寸？</span>
+                    <span class="w-5 h-5 rounded-full bg-slate-400 text-white flex items-center justify-center text-[10px]">{{ isZh ? '旧' : 'Web' }}</span>
+                    <span>{{ isZh ? '为什么纯网页版（当前浏览器）需要选尺寸？' : '¿Por qué la versión web en navegador requiere seleccionar el tamaño?' }}</span>
                   </div>
                   <p class="text-slate-600 leading-relaxed text-[12px]">
-                    浏览器运行在<strong>“安全沙箱”</strong>中，出于安全限制，网页无法越过系统直接给 USB 打印机硬件发送私有毫米控制指令。网页打印时必须弹出操作系统的通用打印框，而通用打印框里的尺寸完全受限于打印机驱动出厂自带的预设列表。如果驱动没预装 70x30，浏览器就不知道该选什么。
+                    {{ isZh ? '浏览器运行在“安全沙箱”中，出于安全限制，网页无法越过系统直接给 USB 打印机硬件发送私有毫米控制指令。网页打印时必须弹出操作系统的通用打印框，而通用打印框里的尺寸完全受限于打印机驱动出厂自带的预设列表。如果驱动没预装 70x30，浏览器就不知道该选什么。' : 'El navegador opera en un entorno restringido ("sandbox") que impide enviar comandos de control milimétrico directo por USB. Debe abrir el diálogo de impresión del sistema operativo, el cual se limita a los tamaños predefinidos de fábrica en el driver.' }}
                   </p>
                 </div>
 
                 <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl space-y-2">
                   <div class="font-bold text-blue-900 flex items-center gap-1.5">
-                    <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">新</span>
-                    <span>电脑软件客户端版本（桌面版）如何彻底解决？</span>
+                    <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">{{ isZh ? '新' : 'App' }}</span>
+                    <span>{{ isZh ? '电脑软件客户端版本（桌面版）如何彻底解决？' : '¿Cómo lo soluciona definitivamente el Cliente de Escritorio?' }}</span>
                   </div>
                   <p class="text-blue-900 leading-relaxed text-[12px]">
-                    桌面客户端拥有本地系统的完全硬件访问权限：
+                    {{ isZh ? '桌面客户端拥有本地系统的完全硬件访问权限：' : 'El Cliente de Escritorio tiene acceso completo al hardware del sistema:' }}
                     <br />
-                    ① <strong>免驱动尺寸限制</strong>：软件直接通过底层打印 API 或 USB 端口向打印机发送原生的毫米坐标指令（如 <code class="bg-blue-100 text-blue-800 px-1 py-0.5 rounded font-mono">SIZE 70 mm, 30 mm</code>），即使驱动里根本没有 70x30，打印机也能按 30mm 走纸！
+                    {{ isZh ? '① 免驱动尺寸限制：软件直接通过底层打印 API 或 USB 端口向打印机发送原生的毫米坐标指令（如 SIZE 70 mm, 30 mm），即使驱动里根本没有 70x30，打印机也能按 30mm 走纸！' : '① Sin restricciones de driver: Envía coordenadas milimétricas nativas por el API o puerto USB (ej. SIZE 70 mm, 30 mm) sin importar los tamaños predefinidos.' }}
                     <br />
-                    ② <strong>真正零弹窗静默打印</strong>：点击打印瞬间出纸，省去每次选打印机、选尺寸的繁琐操作！
+                    {{ isZh ? '② 真正零弹窗静默打印：点击打印瞬间出纸，省去每次选打印机、选尺寸的繁琐操作！' : '② Impresión silenciosa inmediata: Salida instantánea sin diálogos molestos.' }}
                   </p>
                 </div>
               </div>
@@ -1641,10 +1640,10 @@
               <div class="p-4 bg-slate-900 text-slate-200 rounded-xl space-y-2 text-xs">
                 <div class="font-bold text-white flex items-center gap-1.5">
                   <Laptop class="w-4 h-4 text-brand-400" />
-                  <span>LabelMaster Pro 桌面客户端已原生内置支持</span>
+                  <span>{{ isZh ? 'LabelMaster Pro 桌面客户端已原生内置支持' : 'LabelMaster Pro incluye soporte nativo integrado' }}</span>
                 </div>
                 <p class="text-slate-300 leading-relaxed text-[11px]">
-                  本项目底层架构已预留了原生 Electron 静默热敏打印对接接口（<code class="text-brand-300 font-mono">window.electronAPI.printThermal</code>）。如果您需要运行免弹窗、免驱动预设尺寸的桌面软件版，可随时直接打包生成 Windows (.exe) 安装包！
+                  {{ isZh ? '本项目底层架构已预留了原生 Electron 静默热敏打印对接接口（window.electronAPI.printThermal）。如果您需要运行免弹窗、免驱动预设尺寸的桌面软件版，可随时直接打包生成 Windows (.exe) 安装包！' : 'El sistema cuenta con la arquitectura de impresión térmica directa de Electron. Puede generar y ejecutar el instalador de Windows (.exe) en cualquier momento.' }}
                 </p>
               </div>
             </div>
@@ -1652,51 +1651,51 @@
             <!-- TAB: customSize -->
             <div v-if="activeHelpTab === 'customSize'" class="space-y-4">
               <div class="p-3.5 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 space-y-1">
-                <div class="font-bold text-sm">💡 方案 1 原理：为什么强烈推荐在电脑驱动新建一次尺寸？</div>
+                <div class="font-bold text-sm">{{ isZh ? '💡 方案 1 原理：为什么强烈推荐在电脑驱动新建一次尺寸？' : '💡 Opción 1: ¿Por qué es altamente recomendable crear el tamaño en el driver?' }}</div>
                 <p class="leading-relaxed">
-                  市面上的标签卷纸有几百种规格，打印机出厂只会预装十几个常用尺寸。只要花 30 秒在电脑打印机首选项里新建一次您的规格（如 70x30 或 50x30），保存后<strong>不仅本网页，您电脑上的所有软件都能直接选中该尺寸</strong>！
+                  {{ isZh ? '市面上的标签卷纸有几百种规格，打印机出厂只会预装十几个常用尺寸。只要花 30 秒在电脑打印机首选项里新建一次您的规格（如 70x30 或 50x30），保存后不仅本网页，您电脑上的所有软件都能直接选中该尺寸！' : 'Existen cientos de medidas de etiquetas y los fabricantes solo preinstalan unas pocas. Al dedicar 30 segundos a registrar su tamaño exacto en las preferencias de Windows, estará disponible permanentemente para esta aplicación y cualquier otro programa.' }}
                 </p>
               </div>
 
               <div class="space-y-3">
-                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-400">Windows 10 / 11 详细操作步骤（以汉印 HPRT N41BT 为例）：</h4>
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-400">{{ isZh ? 'Windows 10 / 11 详细操作步骤（以汉印 HPRT N41BT 为例）：' : 'Pasos detallados para Windows 10 / 11 (Ejemplo con HPRT N41BT):' }}</h4>
                 <div class="space-y-2 text-xs">
                   <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
                     <span class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">1</span>
                     <div>
-                      <div class="font-bold text-slate-800">打开“设备和打印机”</div>
-                      <div class="text-slate-500 mt-0.5">按键盘 <strong>Win + R</strong> 键呼出运行框，输入 <strong>control printers</strong> 并回车（或在 Windows 设置中搜索“打印机”）。</div>
+                      <div class="font-bold text-slate-800">{{ isZh ? '打开“设备和打印机”' : 'Abrir Dispositivos e Impresoras' }}</div>
+                      <div class="text-slate-500 mt-0.5">{{ isZh ? '按键盘 Win + R 键呼出运行框，输入 control printers 并回车（或在 Windows 设置中搜索“打印机”）。' : 'Pulse Win + R en el teclado, escriba control printers y pulse Enter.' }}</div>
                     </div>
                   </div>
 
                   <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
                     <span class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">2</span>
                     <div>
-                      <div class="font-bold text-slate-800">进入打印机首选项</div>
-                      <div class="text-slate-500 mt-0.5">找到您的热敏打印机（如 <strong>HPRT N41BT</strong>），<strong>右键点击</strong>选择 <strong>【打印首选项 (Printing Preferences)】</strong>。</div>
+                      <div class="font-bold text-slate-800">{{ isZh ? '进入打印机首选项' : 'Abrir Preferencias de Impresión' }}</div>
+                      <div class="text-slate-500 mt-0.5">{{ isZh ? '找到您的热敏打印机（如 HPRT N41BT），右键点击选择 【打印首选项 (Printing Preferences)】。' : 'Haga clic derecho sobre su impresora térmica (ej. HPRT N41BT) y elija «Preferencias de impresión».' }}</div>
                     </div>
                   </div>
 
                   <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
                     <span class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">3</span>
                     <div>
-                      <div class="font-bold text-slate-800">点击“新建”纸张尺寸</div>
-                      <div class="text-slate-500 mt-0.5">在弹出的首选项窗口中，切换到<strong>【页面设置 (Page Setup)】</strong>标签页，点击右侧的<strong>【新建 (New...)】</strong>按钮。</div>
+                      <div class="font-bold text-slate-800">{{ isZh ? '点击“新建”纸张尺寸' : 'Crear nuevo tamaño de papel' }}</div>
+                      <div class="text-slate-500 mt-0.5">{{ isZh ? '在弹出的首选项窗口中，切换到【页面设置 (Page Setup)】标签页，点击右侧的【新建 (New...)】按钮。' : 'En la ventana de preferencias, vaya a la pestaña «Configurar página» y haga clic en «Nueva...».' }}</div>
                     </div>
                   </div>
 
                   <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
                     <span class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">4</span>
                     <div>
-                      <div class="font-bold text-slate-800">输入您的卷纸尺寸并保存</div>
+                      <div class="font-bold text-slate-800">{{ isZh ? '输入您的卷纸尺寸并保存' : 'Ingresar dimensiones del rollo y guardar' }}</div>
                       <div class="text-slate-500 mt-0.5">
-                        • <strong>纸张名称</strong>：输入便于识别的名字，如 <code class="font-bold text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200">70x30</code>（或 <code class="font-bold text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200">50x30</code>）
+                        {{ isZh ? '• 纸张名称：输入便于识别的名字，如 70x30（或 50x30）' : '• Nombre: Ingrese un nombre descriptivo, ej. 70x30 (o 50x30)' }}
                         <br />
-                        • <strong>宽度</strong>：输入实际测量宽度，如 <code class="font-bold text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200">70.0 mm</code>
+                        {{ isZh ? '• 宽度：输入实际测量宽度，如 70.0 mm' : '• Ancho: Ingrese el ancho real medido, ej. 70.0 mm' }}
                         <br />
-                        • <strong>高度</strong>：输入实际测量高度，如 <code class="font-bold text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200">30.0 mm</code>
+                        {{ isZh ? '• 高度：输入实际测量高度，如 30.0 mm' : '• Alto: Ingrese el alto real medido, ej. 30.0 mm' }}
                         <br />
-                        点击“确定”保存，再点击首选项窗口的“应用”和“确定”。
+                        {{ isZh ? '点击“确定”保存，再点击首选项窗口的“应用”和“确定”。' : 'Haga clic en «Aceptar» para guardar, y luego en «Aplicar» y «Aceptar» en la ventana principal.' }}
                       </div>
                     </div>
                   </div>
@@ -1705,16 +1704,16 @@
 
               <div class="p-3 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2">
                 <CheckCircle2 class="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                <span>完成设置后，刷新网页再次点击打印，系统打印弹窗下拉菜单中就会永久出现刚刚新建的尺寸！</span>
+                <span>{{ isZh ? '完成设置后，刷新网页再次点击打印，系统打印弹窗下拉菜单中就会永久出现刚刚新建的尺寸！' : 'Tras la configuración, recargue y pulse imprimir; el nuevo tamaño aparecerá permanentemente en el menú desplegable.' }}</span>
               </div>
             </div>
 
             <!-- TAB: borrowSize -->
             <div v-if="activeHelpTab === 'borrowSize'" class="space-y-4">
               <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
-                <div class="font-bold text-sm">🎯 方案 2 原理：热敏机走纸只认“高度”！</div>
+                <div class="font-bold text-sm">{{ isZh ? '🎯 方案 2 原理：热敏机走纸只认“高度”！' : '🎯 Opción 2: ¡El avance térmico se rige por la ALTURA!' }}</div>
                 <p class="leading-relaxed">
-                  热敏打印机是单向连续滚动的，<strong>每次吐纸多长是由「页面高度 mm」控制的</strong>。只要选中的尺寸高度与您的卷纸完全一致，即使宽度略大，打印机马达也会按同样的高度走纸，缝隙对齐完全正常，绝不会多吐白标！
+                  {{ isZh ? '热敏打印机是单向连续滚动的，每次吐纸多长是由「页面高度 mm」控制的。只要选中的尺寸高度与您的卷纸完全一致，即使宽度略大，打印机马达也会按同样的高度走纸，缝隙对齐完全正常，绝不会多吐白标！' : 'Las impresoras térmicas avanzan en una sola dirección; la longitud de salida está determinada por la «altura en mm». Mientras la altura coincida exactamente con su rollo, el avance del motor será el correcto, la separación se alineará con precisión y no se desperdiciarán etiquetas en blanco.' }}
                 </p>
               </div>
 
@@ -1722,47 +1721,47 @@
                 <table class="w-full text-xs text-left">
                   <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
                     <tr>
-                      <th class="p-3">您的实际卷纸尺寸</th>
-                      <th class="p-3">打印机下拉菜单没有该规格</th>
-                      <th class="p-3">可在下拉菜单中直接借用的替代尺寸</th>
-                      <th class="p-3">打印效果验证</th>
+                      <th class="p-3">{{ isZh ? '您的实际卷纸尺寸' : 'Tamaño real de su rollo' }}</th>
+                      <th class="p-3">{{ isZh ? '打印机下拉菜单没有该规格' : 'Si no aparece en la lista' }}</th>
+                      <th class="p-3">{{ isZh ? '可在下拉菜单中直接借用的替代尺寸' : 'Tamaño sustituto con igual altura' }}</th>
+                      <th class="p-3">{{ isZh ? '打印效果验证' : 'Resultado de impresión' }}</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-100">
                     <tr class="hover:bg-slate-50">
                       <td class="p-3 font-bold text-slate-800">70 × 30 mm</td>
-                      <td class="p-3 text-rose-600">无 70×30</td>
-                      <td class="p-3 font-bold text-emerald-600">80mm * 30mm（汉印自带）</td>
-                      <td class="p-3 text-slate-600">高度同为 30mm，单张精准停靠切口，完美出纸</td>
+                      <td class="p-3 text-rose-600">{{ isZh ? '无 70×30' : 'Falta 70×30' }}</td>
+                      <td class="p-3 font-bold text-emerald-600">{{ isZh ? '80mm * 30mm（汉印自带）' : '80mm * 30mm (HPRT nativo)' }}</td>
+                      <td class="p-3 text-slate-600">{{ isZh ? '高度同为 30mm，单张精准停靠切口，完美出纸' : 'Misma altura de 30mm, corte exacto y salida perfecta' }}</td>
                     </tr>
                     <tr class="hover:bg-slate-50">
                       <td class="p-3 font-bold text-slate-800">50 × 25 mm</td>
-                      <td class="p-3 text-rose-600">无 50×25</td>
-                      <td class="p-3 font-bold text-emerald-600">50*25 或 100mm*25mm</td>
-                      <td class="p-3 text-slate-600">高度同为 25mm，单张精准走纸</td>
+                      <td class="p-3 text-rose-600">{{ isZh ? '无 50×25' : 'Falta 50×25' }}</td>
+                      <td class="p-3 font-bold text-emerald-600">{{ isZh ? '50*25 或 100mm*25mm' : '50*25 o 100mm*25mm' }}</td>
+                      <td class="p-3 text-slate-600">{{ isZh ? '高度同为 25mm，单张精准走纸' : 'Misma altura de 25mm, avance unitario preciso' }}</td>
                     </tr>
                     <tr class="hover:bg-slate-50">
                       <td class="p-3 font-bold text-slate-800">50 × 20 mm</td>
                       <td class="p-3 text-slate-400">-</td>
-                      <td class="p-3 font-bold text-emerald-600">50mm * 20mm（汉印自带）</td>
-                      <td class="p-3 text-slate-600">直接原生支持</td>
+                      <td class="p-3 font-bold text-emerald-600">{{ isZh ? '50mm * 20mm（汉印自带）' : '50mm * 20mm (HPRT nativo)' }}</td>
+                      <td class="p-3 text-slate-600">{{ isZh ? '直接原生支持' : 'Soporte nativo directo' }}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
               <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1 text-slate-600">
-                <div class="font-bold text-slate-800">💡 避坑特别注意：</div>
-                <div>千万不要借用高度相差很大的尺寸！例如卷纸是 30mm 高，如果借用 150mm 或 60mm 高度，打印机就会按 150mm 持续走纸，导致连吐多张！</div>
+                <div class="font-bold text-slate-800">{{ isZh ? '💡 避坑特别注意：' : '💡 Precaución importante:' }}</div>
+                <div>{{ isZh ? '千万不要借用高度相差很大的尺寸！例如卷纸是 30mm 高，如果借用 150mm 或 60mm 高度，打印机就会按 150mm 持续走纸，导致连吐多张！' : '¡Nunca use tamaños con alturas diferentes! Si su rollo mide 30mm de alto y selecciona 150mm o 60mm, la máquina avanzará esa distancia continua expulsando varias hojas en blanco.' }}</div>
               </div>
             </div>
 
             <!-- TAB: pdfPrint -->
             <div v-if="activeHelpTab === 'pdfPrint'" class="space-y-4">
               <div class="p-3.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 space-y-1">
-                <div class="font-bold text-sm">📄 方案 3 原理：PDF 矢量流原生携带物理尺寸信息</div>
+                <div class="font-bold text-sm">{{ isZh ? '📄 方案 3 原理：PDF 矢量流原生携带物理尺寸信息' : '📄 Opción 3: El PDF vectorial incluye sus dimensiones físicas' }}</div>
                 <p class="leading-relaxed">
-                  本系统导出的 PDF 是标准 1:1 热敏矢量文件，文件内部已严格封装了目标物理尺寸（如 70mm × 30mm）。使用专业的 PDF 阅读器打印，阅读器会直接向打印机驱动发送此尺寸指令，完全绕过浏览器下拉菜单的手动选择。
+                  {{ isZh ? '本系统导出的 PDF 是标准 1:1 热敏矢量文件，文件内部已严格封装了目标物理尺寸（如 70mm × 30mm）。使用专业的 PDF 阅读器打印，阅读器会直接向打印机驱动发送此尺寸指令，完全绕过浏览器下拉菜单的手动选择。' : 'El PDF generado es un archivo vectorial térmico 1:1 estándar que contiene sus dimensiones físicas exactas (ej. 70×30 mm). Al imprimir desde un lector de PDF profesional, este envía las medidas directamente al driver sin depender del diálogo del navegador.' }}
                 </p>
               </div>
 
@@ -1770,24 +1769,24 @@
                 <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-start gap-3">
                   <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">1</span>
                   <div>
-                    <div class="font-bold text-slate-800">点击页面上的【导出标准热敏 PDF】下载文件</div>
-                    <div class="text-slate-500 mt-0.5">系统会自动生成已排版完成的高清矢量标签 PDF。</div>
+                    <div class="font-bold text-slate-800">{{ isZh ? '点击页面上的【导出标准热敏 PDF】下载文件' : 'Descargue el archivo con «Descargar PDF Térmico»' }}</div>
+                    <div class="text-slate-500 mt-0.5">{{ isZh ? '系统会自动生成已排版完成的高清矢量标签 PDF。' : 'El sistema generará el PDF vectorial listo para impresión.' }}</div>
                   </div>
                 </div>
 
                 <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-start gap-3">
                   <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">2</span>
                   <div>
-                    <div class="font-bold text-slate-800">用 Adobe Acrobat Reader 或极速 PDF 打开</div>
-                    <div class="text-slate-500 mt-0.5">不要用浏览器打开，请使用电脑已安装的 PDF 客户端软件打开。</div>
+                    <div class="font-bold text-slate-800">{{ isZh ? '用 Adobe Acrobat Reader 或极速 PDF 打开' : 'Abra el PDF con Adobe Acrobat Reader o software similar' }}</div>
+                    <div class="text-slate-500 mt-0.5">{{ isZh ? '不要用浏览器打开，请使用电脑已安装的 PDF 客户端软件打开。' : 'No use el navegador web; utilice una aplicación de lectura PDF de escritorio.' }}</div>
                   </div>
                 </div>
 
                 <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-start gap-3">
                   <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">3</span>
                   <div>
-                    <div class="font-bold text-slate-800">勾选「根据 PDF 页面大小选择纸张来源」</div>
-                    <div class="text-slate-500 mt-0.5">在打印对话框的页面处理中勾选此项，缩放选择“实际大小”，然后点击打印即可！</div>
+                    <div class="font-bold text-slate-800">{{ isZh ? '勾选「根据 PDF 页面大小选择纸张来源」' : 'Marque «Elegir origen del papel según tamaño de página PDF»' }}</div>
+                    <div class="text-slate-500 mt-0.5">{{ isZh ? '在打印对话框的页面处理中勾选此项，缩放选择“实际大小”，然后点击打印即可！' : 'Active esta opción en el diálogo de Acrobat, elija escala «Tamaño real / 100%» y pulse Imprimir.' }}</div>
                   </div>
                 </div>
               </div>
@@ -1796,41 +1795,41 @@
             <!-- TAB: calibration -->
             <div v-if="activeHelpTab === 'calibration'" class="space-y-4">
               <div class="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 space-y-1">
-                <div class="font-bold text-sm">⚡ 为什么换新纸后必须做机身缝隙校准？</div>
+                <div class="font-bold text-sm">{{ isZh ? '⚡ 为什么换新纸后必须做机身缝隙校准？' : '⚡ ¿Por qué es obligatoria la calibración de separación (FEED)?' }}</div>
                 <p class="leading-relaxed">
-                  热敏打印机内部有一个光学穿透传感器用来检测两张标签之间的透光缝隙。当更换了不同底纸厚度、不同间隙大小的卷纸时，如果不进行校准，传感器可能会误判缝隙，导致走纸停在标签正中间打乱。
+                  {{ isZh ? '热敏打印机内部有一个光学穿透传感器用来检测两张标签之间的透光缝隙。当更换了不同底纸厚度、不同间隙大小的卷纸时，如果不进行校准，传感器可能会误判缝隙，导致走纸停在标签正中间打乱。' : 'La impresora térmica utiliza un sensor óptico para detectar la separación entre etiquetas. Al cambiar de rollo o grosor, si no se calibra, el sensor puede perder la referencia y detener el papel a mitad de la etiqueta.' }}
                 </p>
               </div>
 
               <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 text-xs">
                 <div class="font-bold text-slate-800 flex items-center gap-2">
-                  <span class="px-2 py-0.5 bg-brand-600 text-white rounded font-mono text-[11px]">操作手法</span>
-                  <span>汉印 (HPRT N41BT / N41 / 汉印全系) 缝隙测纸操作：</span>
+                  <span class="px-2 py-0.5 bg-brand-600 text-white rounded font-mono text-[11px]">{{ isZh ? '操作手法' : 'Instrucciones' }}</span>
+                  <span>{{ isZh ? '汉印 (HPRT N41BT / N41 / 汉印全系) 缝隙测纸操作：' : 'Calibración de sensor FEED (HPRT serie N41 y compatibles):' }}</span>
                 </div>
                 <div class="space-y-1.5 text-slate-700 pl-2 border-l-2 border-brand-500">
-                  <div>1. 装好标签卷纸，拉出少许，合紧打印机左右两侧卡扣。</div>
-                  <div>2. 确保打印机处于开机通电状态（机身正面指示灯为蓝灯常亮）。</div>
-                  <div>3. <strong>用手指按住机身顶部的进纸键（FEED 键）不松手</strong>，持续约 2~3 秒。</div>
-                  <div>4. <strong>听到打印机“哔”的一声（或指示灯闪烁一下）时，立即松开手指</strong>。</div>
-                  <div>5. 打印机会自动向前吐出 1~2 张标签进行自动测距学习，随后自动向后回退对齐到第一张缝隙切口！</div>
+                  <div>{{ isZh ? '1. 装好标签卷纸，拉出少许，合紧打印机左右两侧卡扣。' : '1. Coloque el rollo, extienda una punta y cierre firmemente ambos seguros de la tapa.' }}</div>
+                  <div>{{ isZh ? '2. 确保打印机处于开机通电状态（机身正面指示灯为蓝灯常亮）。' : '2. Verifique que la impresora esté encendida con luz azul constante.' }}</div>
+                  <div>{{ isZh ? '3. 用手指按住机身顶部的进纸键（FEED 键）不松手，持续约 2~3 秒。' : '3. Mantenga presionado el botón FEED en la parte superior durante 2 a 3 segundos.' }}</div>
+                  <div>{{ isZh ? '4. 听到打印机“哔”的一声（或指示灯闪烁一下）时，立即松开手指。' : '4. Al escuchar un pitido ("bip") o destello de luz, suelte inmediatamente el dedo.' }}</div>
+                  <div>{{ isZh ? '5. 打印机会自动向前吐出 1~2 张标签进行自动测距学习，随后自动向后回退对齐到第一张缝隙切口！' : '5. La impresora expulsará 1 o 2 etiquetas para medir el espacio y retrocederá alineándose exactamente al primer corte.' }}</div>
                 </div>
               </div>
 
               <div class="p-3 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2">
                 <CheckCircle2 class="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                <span>校准完成后，每按一下 FEED 键就只会刚好吐出一张标签，位置精准无误！</span>
+                <span>{{ isZh ? '校准完成后，每按一下 FEED 键就只会刚好吐出一张标签，位置精准无误！' : '¡Listo! Tras calibrar, cada pulsación de FEED avanzará exactamente una etiqueta alineada.' }}</span>
               </div>
             </div>
           </div>
 
           <!-- Modal Footer -->
           <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>如遇疑难问题，可优先采用【方案 1】新建驱动尺寸或【方案 2】借用等高规格。</span>
+            <span>{{ isZh ? '如遇疑难问题，可优先采用【方案 1】新建驱动尺寸或【方案 2】借用等高规格。' : 'Si tiene dudas, cree el tamaño exacto en el driver o use un tamaño de igual altura.' }}</span>
             <button 
               @click="showPrintHelpModal = false"
               class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg transition-all"
             >
-              我知道了
+              {{ t('pdf.helpModalUnderstood') }}
             </button>
           </div>
         </div>
@@ -1858,7 +1857,7 @@ import {
   FolderOpen, Save, Plus, Trash2, Clock, FileText, Bookmark, Calendar, AlertTriangle, Info,
   HelpCircle, Laptop, Settings, Zap, RefreshCw
 } from 'lucide-vue-next';
-import { t } from '@/i18n';
+import { t, isZh, isEs, currentLang } from '@/i18n';
 import { 
   loadPdfDocument, detectSuggestedLayout, slicePdfLabels, 
   groupLabelsByBarcode, exportThermalPdf, trimWhiteBorder, binarizeCanvas
@@ -1956,12 +1955,12 @@ const printOffsetY = ref(0);
 const handleOpenPreferences = async () => {
   if (typeof window !== 'undefined' && window.electronAPI?.openPrinterPreferences) {
     if (!selectedElectronPrinter.value) {
-      alert('请先在下拉框中选择目标热敏打印机');
+      alert(isZh.value ? '请先在下拉框中选择目标热敏打印机' : 'Seleccione primero una impresora térmica de destino');
       return;
     }
     const res = await window.electronAPI.openPrinterPreferences(selectedElectronPrinter.value);
     if (!res?.success && res?.error) {
-      alert('无法打开打印首选项窗口: ' + res.error);
+      alert((isZh.value ? '无法打开打印首选项窗口: ' : 'No se pudo abrir las preferencias de impresión: ') + res.error);
     }
   }
 };
@@ -1989,28 +1988,28 @@ const targetHeightMm = ref(30);
 const autoRotate = ref(true);
 const fitMode = ref('proportional');
 
-const steps = [
+const steps = computed(() => [
   { title: t('pdf.step1') },
   { title: t('pdf.step2') },
   { title: t('pdf.step3') },
   { title: t('pdf.step4') },
-];
+]);
 
-const paperPresets = [
-  { id: '50x25', name: '50 × 25 mm (常见商品条码/单品贴)', width: 50, height: 25 },
-  { id: '50x30', name: '50 × 30 mm (小号单品标)', width: 50, height: 30 },
-  { id: '70x30', name: '70 × 30 mm (标准商品条码)', width: 70, height: 30 },
-  { id: '80x30', name: '80 × 30 mm (汉印自带规格/等高兼容)', width: 80, height: 30 },
-  { id: '75x50', name: '75 × 50 mm (中号商品贴)', width: 75, height: 50 },
-  { id: '100x100', name: '100 × 100 mm (合规/箱唛)', width: 100, height: 100 },
-  { id: '100x150', name: '100 × 150 mm (4×6寸美客多大箱唛)', width: 100, height: 150 },
-  { id: 'custom', name: '自定义尺寸...', width: targetWidthMm.value, height: targetHeightMm.value },
-];
+const paperPresets = computed(() => [
+  { id: '50x25', name: t('pdf.paper_50x25'), width: 50, height: 25 },
+  { id: '50x30', name: t('pdf.paper_50x30'), width: 50, height: 30 },
+  { id: '70x30', name: t('pdf.paper_70x30'), width: 70, height: 30 },
+  { id: '80x30', name: t('pdf.paper_80x30'), width: 80, height: 30 },
+  { id: '75x50', name: t('pdf.paper_75x50'), width: 75, height: 50 },
+  { id: '100x100', name: t('pdf.paper_100x100'), width: 100, height: 100 },
+  { id: '100x150', name: t('pdf.paper_100x150'), width: 100, height: 150 },
+  { id: 'custom', name: t('pdf.paperCustom'), width: targetWidthMm.value, height: targetHeightMm.value },
+]);
 
 const setQuickSize = (w, h) => {
   targetWidthMm.value = w;
   targetHeightMm.value = h;
-  const match = paperPresets.find(p => p.width === w && p.height === h);
+  const match = paperPresets.value.find(p => p.width === w && p.height === h);
   if (match) selectedPaperId.value = match.id;
   else selectedPaperId.value = 'custom';
 };
@@ -2037,10 +2036,10 @@ const processPdfFile = async (fileOrUrl, forcePreset = null) => {
     currentPdfDoc.value = markRaw(doc);
 
     // Initialize default project name from file
-    const rawName = fileOrUrl?.name || (typeof fileOrUrl === 'string' ? fileOrUrl.split('/').pop() : 'PDF标签');
+    const rawName = fileOrUrl?.name || (typeof fileOrUrl === 'string' ? fileOrUrl.split('/').pop() : (isZh.value ? 'PDF标签' : 'Etiqueta PDF'));
     currentSourceFileName.value = rawName;
     if (!currentProjectId.value || !currentProjectName.value) {
-      currentProjectName.value = rawName.replace(/\.[^/.]+$/, "") + ' - ' + new Date().toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+      currentProjectName.value = rawName.replace(/\.[^/.]+$/, "") + ' - ' + new Date().toLocaleDateString(isZh.value ? 'zh-CN' : 'es-ES', { month: 'numeric', day: 'numeric' });
     }
 
     if (forcePreset) {
@@ -2055,7 +2054,7 @@ const processPdfFile = async (fileOrUrl, forcePreset = null) => {
     }
   } catch (err) {
     console.error('Error loading PDF:', err);
-    alert(`无法解析文件: ${err.message || '请确认是否为有效的 PDF 文件'}`);
+    alert(isZh.value ? `无法解析文件: ${err.message || '请确认是否为有效的 PDF 文件'}` : `No se pudo analizar el archivo: ${err.message || 'Verifique que sea un archivo PDF válido'}`);
   }
 };
 
@@ -2080,9 +2079,9 @@ const processImageFile = async (file) => {
       const dataUrl = activeCanvas.toDataURL('image/png');
 
       const fileName = file.name ? file.name.replace(/\.[^/.]+$/, "") : 'IMAGE-LABEL';
-      currentSourceFileName.value = file.name || '图片标签';
+      currentSourceFileName.value = file.name || (isZh.value ? '图片标签' : 'Etiqueta Imagen');
       if (!currentProjectId.value || !currentProjectName.value) {
-        currentProjectName.value = fileName + ' - ' + new Date().toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+        currentProjectName.value = fileName + ' - ' + new Date().toLocaleDateString(isZh.value ? 'zh-CN' : 'es-ES', { month: 'numeric', day: 'numeric' });
       }
 
       rawLabels.value = [{
@@ -2103,9 +2102,9 @@ const processImageFile = async (file) => {
       }];
 
       if (trimmed.width > trimmed.height * 1.5) {
-        selectPaperPreset(paperPresets.find(p => p.id === '70x30'));
+        selectPaperPreset(paperPresets.value.find(p => p.id === '70x30'));
       } else {
-        selectPaperPreset(paperPresets.find(p => p.id === '100x100'));
+        selectPaperPreset(paperPresets.value.find(p => p.id === '100x100'));
       }
 
       currentStep.value = 2;
@@ -2113,7 +2112,7 @@ const processImageFile = async (file) => {
     reader.readAsDataURL(file);
   } catch (err) {
     console.error('Error processing image:', err);
-    alert('解析图片标签失败: ' + err.message);
+    alert((isZh.value ? '解析图片标签失败: ' : 'Error al procesar la imagen: ') + err.message);
   }
 };
 
@@ -2353,13 +2352,13 @@ const applyFreeCrop = async () => {
   const mmW = selectionMmWidth.value;
   const mmH = selectionMmHeight.value;
   if (mmW >= 90 && mmH >= 120) {
-    selectPaperPreset(paperPresets.find(p => p.id === '100x150'));
+    selectPaperPreset(paperPresets.value.find(p => p.id === '100x150'));
   } else if (mmW >= 85 && mmH >= 85) {
-    selectPaperPreset(paperPresets.find(p => p.id === '100x100'));
+    selectPaperPreset(paperPresets.value.find(p => p.id === '100x100'));
   } else if (mmW >= 60) {
-    selectPaperPreset(paperPresets.find(p => p.id === '70x30'));
+    selectPaperPreset(paperPresets.value.find(p => p.id === '70x30'));
   } else {
-    selectPaperPreset(paperPresets.find(p => p.id === '50x30'));
+    selectPaperPreset(paperPresets.value.find(p => p.id === '50x30'));
   }
 
   showFreeCropModal.value = false;
@@ -2400,7 +2399,7 @@ const reprocessPdf = async () => {
       canvas: activeCanvas,
       dataUrl: activeCanvas.toDataURL('image/png'),
       barcode: 'IMAGE-LABEL',
-      title: '图片自定义裁切标',
+      title: isZh.value ? '图片自定义裁切标' : 'Etiqueta recortada de imagen',
       sku: '',
       quantity: 1,
       selected: true,
@@ -2439,16 +2438,16 @@ const loadLocalSample = async (filePath, presetMode) => {
     
     const sampleBaseName = filePath.split('/').pop().replace(/\.[^/.]+$/, "");
     currentSourceFileName.value = sampleBaseName;
-    currentProjectName.value = `实测_${sampleBaseName} - ${new Date().toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })}`;
+    currentProjectName.value = `${isZh.value ? '实测_' : 'Muestra_'}${sampleBaseName} - ${new Date().toLocaleDateString(isZh.value ? 'zh-CN' : 'es-ES', { month: 'numeric', day: 'numeric' })}`;
     currentProjectId.value = null;
 
     const response = await fetch(fullUrl);
-    if (!response.ok) throw new Error(`无法获取样本文件 (${response.status})`);
+    if (!response.ok) throw new Error(isZh.value ? `无法获取样本文件 (${response.status})` : `No se pudo obtener el archivo de muestra (${response.status})`);
     const blob = await response.blob();
     await processPdfFile(blob, presetMode);
   } catch (err) {
     console.error('Could not load sample file directly:', err);
-    alert('载入样本失败: ' + err.message);
+    alert((isZh.value ? '载入样本失败: ' : 'Error al cargar la muestra: ') + err.message);
   }
 };
 
@@ -2509,7 +2508,7 @@ const selectOnlyFirstPage = () => {
 };
 
 const selectOddPages = () => {
-  pageRangeInput.value = '奇数页';
+  pageRangeInput.value = isZh.value ? '奇数页' : 'Páginas Impares';
   for (const item of rawLabels.value) {
     const pageNum = Number(item.page) || 1;
     if (pageNum % 2 !== 0) {
@@ -2523,7 +2522,7 @@ const selectOddPages = () => {
 };
 
 const selectEvenPages = () => {
-  pageRangeInput.value = '偶数页';
+  pageRangeInput.value = isZh.value ? '偶数页' : 'Páginas Pares';
   for (const item of rawLabels.value) {
     const pageNum = Number(item.page) || 1;
     if (pageNum % 2 === 0) {
@@ -2556,11 +2555,11 @@ const parsePageRange = (str, max) => {
   const result = new Set();
   if (!str || !str.trim()) return result;
   const rawStr = str.trim().toLowerCase();
-  if (rawStr === '奇数' || rawStr === '奇数页' || rawStr === 'odd') {
+  if (rawStr === '奇数' || rawStr === '奇数页' || rawStr === 'odd' || rawStr.includes('impar')) {
     for (let p = 1; p <= max; p += 2) result.add(p);
     return result;
   }
-  if (rawStr === '偶数' || rawStr === '偶数页' || rawStr === 'even') {
+  if (rawStr === '偶数' || rawStr === '偶数页' || rawStr === 'even' || rawStr.includes('par')) {
     for (let p = 2; p <= max; p += 2) result.add(p);
     return result;
   }
@@ -2590,7 +2589,7 @@ const applyPageRange = () => {
   }
   const targets = parsePageRange(pageRangeInput.value, maxPdfPages.value);
   if (targets.size === 0) {
-    alert(`请输入有效的页码范围（1 ~ ${maxPdfPages.value}）`);
+    alert(isZh.value ? `请输入有效的页码范围（1 ~ ${maxPdfPages.value}）` : `Ingrese un rango de páginas válido (1 ~ ${maxPdfPages.value})`);
     return;
   }
   for (const item of rawLabels.value) {
@@ -2718,7 +2717,7 @@ const downloadThermalPdf = async () => {
     URL.revokeObjectURL(url);
   } catch (err) {
     console.error('PDF export error:', err);
-    alert('导出 PDF 失败，请检查控制台。');
+    alert(isZh.value ? '导出 PDF 失败，请检查控制台。' : 'Error al exportar PDF. Consulte la consola.');
   } finally {
     isGeneratingPdf.value = false;
   }
@@ -2851,13 +2850,13 @@ const loadElectronPrinters = async () => {
 const triggerElectronSilentPrint = async () => {
   if (!isElectron.value || !window.electronAPI?.printSilent) return;
   if (previewList.value.length === 0) {
-    alert('暂无可打印标签');
+    alert(isZh.value ? '暂无可打印标签' : 'No hay etiquetas para imprimir');
     return;
   }
 
   isElectronPrinting.value = true;
   electronPrintSuccess.value = false;
-  electronPrintStatusMsg.value = '正在直接下发微米级硬件打印指令...';
+  electronPrintStatusMsg.value = isZh.value ? '正在直接下发微米级硬件打印指令...' : 'Enviando comando de impresión a nivel de hardware...';
 
   try {
     const isStretch = fitMode.value === 'stretch';
@@ -2892,15 +2891,15 @@ const triggerElectronSilentPrint = async () => {
 
     if (res && res.success) {
       electronPrintSuccess.value = true;
-      electronPrintStatusMsg.value = `✓ 任务已成功直达【${selectedElectronPrinter.value || '默认热敏机'}】，正按精确尺寸输出 ${totalPrintQuantity.value} 张标签！`;
+      electronPrintStatusMsg.value = isZh.value ? `✓ 任务已成功直达【${selectedElectronPrinter.value || '默认热敏机'}】，正按精确尺寸输出 ${totalPrintQuantity.value} 张标签！` : `✓ ¡Trabajo enviado a [${selectedElectronPrinter.value || 'Impresora predeterminada'}], imprimiendo ${totalPrintQuantity.value} etiquetas!`;
       setTimeout(() => {
         electronPrintSuccess.value = false;
       }, 6000);
     } else {
-      alert('静默打印失败: ' + (res?.error || '请确认打印机已开机并就绪'));
+      alert((isZh.value ? '静默打印失败: ' : 'Error en impresión silenciosa: ') + (res?.error || (isZh.value ? '请确认打印机已开机并就绪' : 'Verifique que la impresora esté encendida y lista')));
     }
   } catch (err) {
-    alert('打印调用异常: ' + err.message);
+    alert((isZh.value ? '打印调用异常: ' : 'Excepción al llamar a la impresora: ') + err.message);
   } finally {
     isElectronPrinting.value = false;
   }
@@ -2916,11 +2915,11 @@ onMounted(() => {
 
 const handleSaveCurrentProject = async () => {
   if (rawLabels.value.length === 0) {
-    alert('暂无标签可保存，请先上传并裁切标签');
+    alert(isZh.value ? '暂无标签可保存，请先上传并裁切标签' : 'No hay etiquetas para guardar. Primero suba y recorte un archivo.');
     return;
   }
 
-  const nameToSave = currentProjectName.value.trim() || `标签项目_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}_${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
+  const nameToSave = currentProjectName.value.trim() || `${isZh.value ? '标签项目_' : 'Proyecto_'}${new Date().toLocaleDateString(isZh.value ? 'zh-CN' : 'es-ES').replace(/\//g, '-')}_${new Date().toLocaleTimeString(isZh.value ? 'zh-CN' : 'es-ES', { hour: '2-digit', minute: '2-digit' })}`;
   currentProjectName.value = nameToSave;
 
   const cleanBox = freeCropBox.value ? {
@@ -2933,7 +2932,7 @@ const handleSaveCurrentProject = async () => {
   const projectPayload = {
     id: currentProjectId.value || `proj_${Date.now()}`,
     name: nameToSave,
-    sourceFileName: currentSourceFileName.value || '自定义标签',
+    sourceFileName: currentSourceFileName.value || (isZh.value ? '自定义标签' : 'Etiqueta personalizada'),
     layoutMode: selectedLayoutMode.value,
     freeCropBox: cleanBox,
     selectedPaperId: selectedPaperId.value,
@@ -2950,20 +2949,20 @@ const handleSaveCurrentProject = async () => {
     const saved = await saveProject(projectPayload);
     currentProjectId.value = saved.id;
     await loadSavedProjectsList();
-    saveToastMessage.value = `项目【${saved.name}】已成功保存！`;
+    saveToastMessage.value = isZh.value ? `项目【${saved.name}】已成功保存！` : `¡Proyecto [${saved.name}] guardado con éxito!`;
     setTimeout(() => {
       saveToastMessage.value = '';
     }, 3000);
   } catch (err) {
     console.error('Failed to save project:', err);
-    alert('保存项目失败: ' + err.message);
+    alert((isZh.value ? '保存项目失败: ' : 'Error al guardar proyecto: ') + err.message);
   }
 };
 
 const handleOpenProject = async (projectItem) => {
   try {
     const full = await getProject(projectItem.id);
-    if (!full) throw new Error('未找到该项目的完整数据');
+    if (!full) throw new Error(isZh.value ? '未找到该项目的完整数据' : 'No se encontraron los datos completos del proyecto');
 
     currentProjectId.value = full.id;
     currentProjectName.value = full.name;
@@ -2985,18 +2984,18 @@ const handleOpenProject = async (projectItem) => {
     showSavedProjectsModal.value = false;
     currentStep.value = 2;
 
-    saveToastMessage.value = `已打开项目【${full.name}】`;
+    saveToastMessage.value = isZh.value ? `已打开项目【${full.name}】` : `Proyecto [${full.name}] abierto`;
     setTimeout(() => {
       saveToastMessage.value = '';
     }, 2500);
   } catch (err) {
     console.error('Failed to open project:', err);
-    alert('打开项目失败: ' + err.message);
+    alert((isZh.value ? '打开项目失败: ' : 'Error al abrir proyecto: ') + err.message);
   }
 };
 
 const handleDeleteProject = async (id, name) => {
-  if (!confirm(`确定要删除保存项目【${name || '此项目'}】吗？此操作无法撤销。`)) return;
+  if (!confirm(isZh.value ? `确定要删除保存项目【${name || '此项目'}】吗？此操作无法撤销。` : `¿Está seguro de eliminar el proyecto guardado [${name || 'este proyecto'}]? Esta acción no se puede deshacer.`)) return;
   try {
     await deleteProject(id);
     if (currentProjectId.value === id) {
@@ -3004,7 +3003,7 @@ const handleDeleteProject = async (id, name) => {
     }
     await loadSavedProjectsList();
   } catch (err) {
-    alert('删除失败: ' + err.message);
+    alert((isZh.value ? '删除失败: ' : 'Error al eliminar: ') + err.message);
   }
 };
 
@@ -3027,7 +3026,7 @@ const handleExportProject = async (projectItem) => {
       exportProjectJson(full);
     }
   } catch (err) {
-    alert('导出项目失败: ' + err.message);
+    alert((isZh.value ? '导出项目失败: ' : 'Error al exportar proyecto: ') + err.message);
   }
 };
 
@@ -3037,10 +3036,10 @@ const onImportJsonFile = async (e) => {
   try {
     const imported = await importProjectJson(file);
     await loadSavedProjectsList();
-    alert(`成功导入项目【${imported.name}】！`);
+    alert(isZh.value ? `成功导入项目【${imported.name}】！` : `¡Proyecto [${imported.name}] importado con éxito!`);
     await handleOpenProject(imported);
   } catch (err) {
-    alert('导入失败: ' + err.message);
+    alert((isZh.value ? '导入失败: ' : 'Error al importar: ') + err.message);
   } finally {
     e.target.value = '';
   }

@@ -34,8 +34,8 @@
             :class="currentTab === 'extractor' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
           >
             <Sparkles class="w-3.5 h-3.5 text-amber-500" />
-            <span class="font-bold">PDF 提取排版</span>
-            <span class="px-1.5 py-0.2 bg-amber-100 text-amber-800 text-[9px] rounded-full font-black">矢量超清</span>
+            <span class="font-bold">{{ t('nav.pdfExtractor') }}</span>
+            <span class="px-1.5 py-0.2 bg-amber-100 text-amber-800 text-[9px] rounded-full font-black">{{ t('nav.vectorHd') }}</span>
           </button>
 
           <button 
@@ -62,7 +62,7 @@
           <!-- Printer Status Pill -->
           <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-full text-xs font-semibold">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>热敏驱动: 203 DPI · 零边距锁死</span>
+            <span>{{ t('app.driverStatus') }}</span>
           </div>
 
           <!-- Bilingual Toggle Button -->
@@ -89,7 +89,7 @@
 
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
-      LabelMaster Pro · 专为跨境电商/海外仓打造的高保真热敏打印与智能拆分工作站
+      {{ t('app.footerText') }}
     </footer>
   </div>
 </template>

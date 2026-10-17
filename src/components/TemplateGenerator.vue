@@ -36,7 +36,7 @@
             <!-- Excel Import Trigger -->
             <label class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg cursor-pointer border border-emerald-200 transition-colors">
               <FileSpreadsheet class="w-3.5 h-3.5" />
-              <span>导入 Excel 批量打</span>
+              <span>{{ t('template.excelImport') }}</span>
               <input type="file" accept=".xlsx, .xls, .csv" class="hidden" @change="handleExcelUpload" />
             </label>
           </div>
@@ -44,35 +44,35 @@
           <!-- Template 1 Form: Spanish Compliance Table (Fabricante) -->
           <div v-if="activeTemplateId === 'compliance'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="sm:col-span-2">
-              <label class="text-xs text-slate-500 font-semibold block mb-1">制造商 (Fabricante)</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.fabricante') }}</label>
               <input v-model="formData.fabricante" type="text" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500" />
             </div>
             <div class="sm:col-span-2">
-              <label class="text-xs text-slate-500 font-semibold block mb-1">制造商地址 (Dirección de Fabricante)</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.dirFabricante') }}</label>
               <textarea v-model="formData.dirFabricante" rows="2" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500"></textarea>
             </div>
             <div class="sm:col-span-2">
-              <label class="text-xs text-slate-500 font-semibold block mb-1">进口商/分销商 (Distribuidor/Importador)</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.distribuidor') }}</label>
               <input v-model="formData.distribuidor" type="text" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500" />
             </div>
             <div class="sm:col-span-2">
-              <label class="text-xs text-slate-500 font-semibold block mb-1">进口商地址 (Dirección Distribuidor)</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.dirDistribuidor') }}</label>
               <textarea v-model="formData.dirDistribuidor" rows="2" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500"></textarea>
             </div>
             <div>
-              <label class="text-xs text-slate-500 font-semibold block mb-1">产品名称 (Nombre del producto)</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.nombreProducto') }}</label>
               <input v-model="formData.nombreProducto" type="text" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500" />
             </div>
             <div>
-              <label class="text-xs text-slate-500 font-semibold block mb-1">净含量/规格 (Contenido neto)</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.contenidoNeto') }}</label>
               <input v-model="formData.contenidoNeto" type="text" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500" />
             </div>
             <div>
-              <label class="text-xs text-slate-500 font-semibold block mb-1">生产批次 (Lote)</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.lote') }}</label>
               <input v-model="formData.lote" type="text" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500" />
             </div>
             <div>
-              <label class="text-xs text-slate-500 font-semibold block mb-1">生产日期 (Fecha de fabricación)</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.fechaFab') }}</label>
               <input v-model="formData.fechaFab" type="text" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500" />
             </div>
           </div>
@@ -80,19 +80,19 @@
           <!-- Template 2 Form: Carton Box Label (Etiqueta de Bulto) -->
           <div v-if="activeTemplateId === 'boxLabel'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="sm:col-span-2">
-              <label class="text-xs text-slate-500 font-semibold block mb-1">货件单号 (ENVÍO)</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.envioCode') }}</label>
               <input v-model="formData.envioCode" type="text" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500" />
             </div>
             <div class="sm:col-span-2">
-              <label class="text-xs text-slate-500 font-semibold block mb-1">卖家/店铺账号代码</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.sellerAccount') }}</label>
               <input v-model="formData.sellerAccount" type="text" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500" />
             </div>
             <div>
-              <label class="text-xs text-slate-500 font-semibold block mb-1">货件 ID (ID)</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.shipmentId') }}</label>
               <input v-model="formData.bultoId" type="text" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500" />
             </div>
             <div>
-              <label class="text-xs text-slate-500 font-semibold block mb-1">目的仓代码 (如 MXRC03)</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.destinationCode') }}</label>
               <input v-model="formData.destinationCode" type="text" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500" />
             </div>
           </div>
@@ -100,20 +100,20 @@
           <!-- Template 3 Form: Standard SKU Barcode Label -->
           <div v-if="activeTemplateId === 'skuBarcode'" class="space-y-4">
             <div>
-              <label class="text-xs text-slate-500 font-semibold block mb-1">条形码编号 (Code 128)</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.barcodeValue') }}</label>
               <input v-model="formData.barcodeValue" type="text" class="w-full px-3 py-1.5 text-sm font-mono font-bold bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500" />
             </div>
             <div>
-              <label class="text-xs text-slate-500 font-semibold block mb-1">西班牙语产品标题 (智能词组换行，绝不切断单词)</label>
+              <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.productTitle') }}</label>
               <textarea v-model="formData.productTitle" rows="3" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500"></textarea>
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="text-xs text-slate-500 font-semibold block mb-1">规格/颜色 (Variant)</label>
+                <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.variant') }}</label>
                 <input v-model="formData.variant" type="text" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500" />
               </div>
               <div>
-                <label class="text-xs text-slate-500 font-semibold block mb-1">SKU 编码</label>
+                <label class="text-xs text-slate-500 font-semibold block mb-1">{{ t('template.skuCode') }}</label>
                 <input v-model="formData.skuCode" type="text" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500" />
               </div>
             </div>
@@ -122,7 +122,7 @@
           <!-- Print Quantity and Actions -->
           <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="text-xs text-slate-500 font-semibold">打印份数:</span>
+              <span class="text-xs text-slate-500 font-semibold">{{ t('template.copies') }}</span>
               <input v-model.number="printCopies" type="number" min="1" class="w-16 px-2 py-1 text-center font-bold text-sm border border-slate-200 rounded-lg bg-slate-50" />
             </div>
 
@@ -132,14 +132,14 @@
                 class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5"
               >
                 <Download class="w-3.5 h-3.5" />
-                <span>导出 PDF</span>
+                <span>{{ t('template.exportPdf') }}</span>
               </button>
               <button 
                 @click="printTemplateDirect"
                 class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5"
               >
                 <Printer class="w-3.5 h-3.5" />
-                <span>立即静默出纸</span>
+                <span>{{ t('template.silentPrint') }}</span>
               </button>
             </div>
           </div>
@@ -148,14 +148,14 @@
         <!-- Excel Batch Queue Table (If uploaded) -->
         <div v-if="batchList.length > 0" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-800">Excel 批量待打队列 ({{ batchList.length }} 条)</span>
-            <button @click="batchList = []" class="text-xs text-rose-500 hover:underline">清空队列</button>
+            <span class="text-xs font-bold text-slate-800">{{ t('template.batchQueue', { count: batchList.length }) }}</span>
+            <button @click="batchList = []" class="text-xs text-rose-500 hover:underline">{{ t('template.clearQueue') }}</button>
           </div>
           <div class="max-h-48 overflow-y-auto divide-y divide-slate-100 text-xs">
             <div v-for="(row, idx) in batchList" :key="idx" class="py-2 flex items-center justify-between">
               <span class="font-mono text-slate-700 font-bold truncate max-w-[200px]">{{ row.barcodeValue || row.skuCode }}</span>
               <span class="text-slate-500 truncate max-w-[200px]">{{ row.productTitle || row.nombreProducto }}</span>
-              <span class="text-brand-600 font-bold">1 张</span>
+              <span class="text-brand-600 font-bold">1 {{ t('pdf.piecesUnit') }}</span>
             </div>
           </div>
           <button 
@@ -163,7 +163,7 @@
             class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center justify-center gap-2"
           >
             <Printer class="w-4 h-4" />
-            <span>连续打印全部 {{ batchList.length }} 张 Excel 标签</span>
+            <span>{{ t('template.printAllBatch', { count: batchList.length }) }}</span>
           </button>
         </div>
       </div>
@@ -172,7 +172,7 @@
       <div class="lg:col-span-6 bg-slate-100 rounded-2xl p-8 border border-slate-200 flex flex-col items-center justify-center min-h-[520px]">
         <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
           <Eye class="w-4 h-4 text-brand-600" />
-          1:1 毫米级绝对尺寸所见即所得输出
+          {{ t('template.wysiwygDesc') }}
         </div>
 
         <!-- The Physical Paper Shell -->
@@ -188,7 +188,7 @@
         </div>
 
         <div class="text-center mt-3 text-xs text-slate-400 font-mono">
-          纸张: {{ currentWidthMm }} × {{ currentHeightMm }} mm · 边距 0mm · 缩放 100%
+          {{ t('template.paperInfo', { w: currentWidthMm, h: currentHeightMm }) }}
         </div>
       </div>
     </div>
@@ -196,7 +196,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted, nextTick } from 'vue';
+import { ref, reactive, watch, onMounted, nextTick, computed } from 'vue';
 import { FileEdit, FileSpreadsheet, Download, Printer, Eye } from 'lucide-vue-next';
 import * as XLSX from 'xlsx';
 import { t } from '@/i18n';
@@ -208,11 +208,11 @@ const previewCanvasRef = ref(null);
 const printCopies = ref(1);
 const batchList = ref([]);
 
-const templateList = [
-  { id: 'compliance', name: '西语合规表 (100×100mm)', width: 100, height: 100 },
-  { id: 'boxLabel', name: '外箱箱唛 (100×100mm)', width: 100, height: 100 },
-  { id: 'skuBarcode', name: '商品条码贴 (70×30mm)', width: 70, height: 30 },
-];
+const templateList = computed(() => [
+  { id: 'compliance', name: t('template.tplCompliance'), width: 100, height: 100 },
+  { id: 'boxLabel', name: t('template.tplBoxLabel'), width: 100, height: 100 },
+  { id: 'skuBarcode', name: t('template.tplSkuBarcode'), width: 70, height: 30 },
+]);
 
 const currentWidthMm = ref(100);
 const currentHeightMm = ref(100);
@@ -497,9 +497,9 @@ const printTemplateDirect = async () => {
       copies: copies,
     });
     if (res?.success) {
-      alert('✓ 模板标签已直接发送至打印机！');
+      alert(t('template.printSuccess'));
     } else {
-      alert('打印失败: ' + (res?.error || '请确认打印机连接正常'));
+      alert(t('template.printFail') + (res?.error || ''));
     }
     return;
   }
@@ -509,7 +509,7 @@ const printTemplateDirect = async () => {
 };
 
 const printAllBatch = () => {
-  alert(`已开始连续处理并输出 ${batchList.value.length} 张标签！`);
+  alert(t('template.batchStarted', { count: batchList.value.length }));
 };
 
 watch(formData, () => renderLabel(), { deep: true });

@@ -131,23 +131,23 @@
 
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="text-slate-500 font-semibold block mb-1">X 坐标 (mm)</label>
+              <label class="text-slate-500 font-semibold block mb-1">{{ t('designer.coordX') }}</label>
               <input v-model.number="selectedElem.x" type="number" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded" />
             </div>
             <div>
-              <label class="text-slate-500 font-semibold block mb-1">Y 坐标 (mm)</label>
+              <label class="text-slate-500 font-semibold block mb-1">{{ t('designer.coordY') }}</label>
               <input v-model.number="selectedElem.y" type="number" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded" />
             </div>
           </div>
 
           <div v-if="selectedElem.type === 'text'" class="space-y-3 pt-2 border-t border-slate-100">
             <div>
-              <label class="text-slate-500 font-semibold block mb-1">字号大小 (px)</label>
+              <label class="text-slate-500 font-semibold block mb-1">{{ t('designer.fontSize') }}</label>
               <input v-model.number="selectedElem.fontSize" type="number" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded" />
             </div>
             <div class="flex items-center gap-2">
               <input v-model="selectedElem.bold" type="checkbox" id="boldCheck" class="rounded text-brand-600" />
-              <label for="boldCheck" class="text-slate-700 font-semibold">加粗字体 (Bold)</label>
+              <label for="boldCheck" class="text-slate-700 font-semibold">{{ t('designer.bold') }}</label>
             </div>
           </div>
         </div>
@@ -200,7 +200,7 @@ const addElement = (type) => {
   const newEl = {
     id: Date.now(),
     type,
-    value: type === 'barcode' ? 'NEW_SKU_01' : type === 'qrcode' ? 'https://example.com' : '双击编辑文字',
+    value: type === 'barcode' ? 'NEW_SKU_01' : type === 'qrcode' ? 'https://example.com' : t('designer.defaultText'),
     x: 5,
     y: 5,
     fontSize: 14,
@@ -297,7 +297,7 @@ const generatePrintHtml = async () => {
 
 const printDesignerLabel = async () => {
   if (elements.value.length === 0) {
-    alert('画布中暂无元素，请先添加元素。');
+    alert(t('designer.emptyCanvasAlert'));
     return;
   }
   isPrinting.value = true;
@@ -312,10 +312,10 @@ const printDesignerLabel = async () => {
         copies: 1
       });
       if (res?.success) {
-        printSuccessMsg.value = '✓ 设计器标签已成功发送至打印机！';
+        printSuccessMsg.value = t('designer.printSuccess');
         setTimeout(() => printSuccessMsg.value = '', 4000);
       } else {
-        alert('打印失败: ' + (res?.error || '请确认打印机连接正常'));
+        alert(t('designer.printFail') + (res?.error || ''));
       }
     } else {
       // Browser print fallback
@@ -355,7 +355,7 @@ const printDesignerLabel = async () => {
       }, 350);
     }
   } catch (err) {
-    alert('打印调用异常: ' + err.message);
+    alert(t('designer.printException') + err.message);
   } finally {
     isPrinting.value = false;
   }
