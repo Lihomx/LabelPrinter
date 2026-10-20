@@ -123,10 +123,76 @@ export function trimWhiteBorder(canvas) {
 }
 
 /**
- * Smart Pure Black Binarization & Sharpening for Thermal Printing
+ * Detect vertical rows that contain a 1D barcode or 2D matrix/QR code.
+ * In a barcode or QR code, horizontal transitions (edges) are dense (typically >= 20)
+ * and vertically consistent over multiple consecutive lines.
+ */
+function findBarcodeRegions(data, width, height) {
+  const minTransitions = Math.max(20, Math.floor(width * 0.04));
+  const rowTrans = new Int32Array(height);
+  const rowMinX = new Int32Array(height).fill(width);
+  const rowMaxX = new Int32Array(height).fill(0);
+
+  for (let y = 0; y < height; y++) {
+    let trans = 0;
+    let prevDark = false;
+    let firstX = -1;
+    let lastX = -1;
+    const rowOffset = y * width * 4;
+
+    for (let x = 0; x < width; x++) {
+      const idx = rowOffset + x * 4;
+      const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+      const isDark = lum < 185;
+      if (x > 0 && isDark !== prevDark) {
+        trans++;
+        if (firstX === -1) firstX = x;
+        lastX = x;
+      }
+      prevDark = isDark;
+    }
+    rowTrans[y] = trans;
+    if (trans >= minTransitions) {
+      rowMinX[y] = firstX;
+      rowMaxX[y] = lastX;
+    }
+  }
+
+  // Find contiguous blocks >= 12 rows (barcodes/QR are tall, text lines are short)
+  const isBarcode = new Uint8Array(height);
+  let bStart = -1;
+  for (let y = 0; y < height; y++) {
+    if (rowTrans[y] >= minTransitions) {
+      if (bStart === -1) bStart = y;
+    } else {
+      if (bStart !== -1) {
+        if (y - bStart >= 12) {
+          for (let k = Math.max(0, bStart - 2); k < Math.min(height, y + 2); k++) {
+            isBarcode[k] = 1;
+          }
+        }
+        bStart = -1;
+      }
+    }
+  }
+  if (bStart !== -1 && (height - bStart) >= 12) {
+    for (let k = Math.max(0, bStart - 2); k < height; k++) {
+      isBarcode[k] = 1;
+    }
+  }
+
+  return { isBarcode, rowMinX, rowMaxX };
+}
+
+/**
+ * Smart Pure Black Binarization & Sharpening for Thermal Printing with Barcode Protection
  * Converts anti-aliased gray pixels along letter and barcode edges into 100% solid pure black (#000000)
  * or pure white background (#FFFFFF). Completely eliminates halftone dithering (网点抖动), making printed
  * thermal letters, numbers, and barcodes solid, bold, and razor-sharp.
+ * 
+ * In 'heavy' mode, barcode/QR regions are automatically detected and protected with the standard optimal
+ * barcode threshold (175) to prevent bar widening and space bleeding, ensuring 100% instant scannability,
+ * while fine text and product titles receive the deep black threshold (215) for maximum boldness.
  * 
  * @param {HTMLCanvasElement} canvas
  * @param {string|number} mode - 'standard' (190), 'heavy' (215), 'light' (165), 'none'
@@ -136,14 +202,17 @@ export function binarizeCanvas(canvas, mode = 'standard') {
   if (!canvas || !canvas.width || !canvas.height) return canvas;
   if (mode === 'none') return canvas;
 
-  let threshold = 190;
+  let textThreshold = 190;
   if (mode === 'heavy') {
-    threshold = 215; // Thickens fine text, captures thin strokes
+    textThreshold = 215; // Thickens fine text, captures thin strokes
   } else if (mode === 'light') {
-    threshold = 165; // Thinner strokes, prevents bleeding
+    textThreshold = 165; // Thinner strokes, prevents bleeding
   } else if (typeof mode === 'number') {
-    threshold = Math.max(50, Math.min(245, mode));
+    textThreshold = Math.max(50, Math.min(245, mode));
   }
+
+  // Optical barcode safe threshold: keeps 1X/2X/3X/4X bar-to-space ratios intact, eliminates bar bleeding
+  const barcodeSafeThreshold = 175;
 
   const outCanvas = document.createElement('canvas');
   outCanvas.width = canvas.width;
@@ -157,23 +226,39 @@ export function binarizeCanvas(canvas, mode = 'standard') {
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imgData.data;
 
-    for (let i = 0; i < data.length; i += 4) {
-      const a = data[i + 3];
-      if (a < 50) {
-        data[i] = 255;
-        data[i + 1] = 255;
-        data[i + 2] = 255;
-        data[i + 3] = 255;
-        continue;
+    // Detect barcode/QR regions when textThreshold > barcodeSafeThreshold
+    const barcodeRegion = (textThreshold > 180) 
+      ? findBarcodeRegions(data, canvas.width, canvas.height) 
+      : null;
+
+    for (let y = 0; y < canvas.height; y++) {
+      const rowOffset = y * canvas.width * 4;
+      const isBarcodeRow = barcodeRegion && barcodeRegion.isBarcode[y];
+      const minX = isBarcodeRow ? barcodeRegion.rowMinX[y] - 4 : 0;
+      const maxX = isBarcodeRow ? barcodeRegion.rowMaxX[y] + 4 : 0;
+
+      for (let x = 0; x < canvas.width; x++) {
+        const idx = rowOffset + x * 4;
+        const a = data[idx + 3];
+        if (a < 50) {
+          data[idx] = 255;
+          data[idx + 1] = 255;
+          data[idx + 2] = 255;
+          data[idx + 3] = 255;
+          continue;
+        }
+
+        const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+        const inBarcode = isBarcodeRow && (x >= minX && x <= maxX);
+        const activeThreshold = inBarcode ? barcodeSafeThreshold : textThreshold;
+
+        const val = lum < activeThreshold ? 0 : 255;
+
+        data[idx] = val;
+        data[idx + 1] = val;
+        data[idx + 2] = val;
+        data[idx + 3] = 255;
       }
-
-      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-      const val = lum < threshold ? 0 : 255;
-
-      data[i] = val;
-      data[i + 1] = val;
-      data[i + 2] = val;
-      data[i + 3] = 255;
     }
 
     ctx.putImageData(imgData, 0, 0);

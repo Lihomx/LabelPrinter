@@ -193,7 +193,7 @@ export const messages = {
       none: '原图灰度 (未处理)',
       modeLabel: '💡 模式说明：',
       standardDesc: '【标准纯黑】：阈值 190，保留原版字形笔锋同时彻底清除抗锯齿灰色网点，字母与数字边缘整齐无毛刺。',
-      heavyDesc: '【加重黑度】：阈值 215，强化细笔画与浅灰字体，适合 Spanish 西语品名小字（如 7pt~9pt）让文字更粗黑易读。',
+      heavyDesc: '【加重黑度】：文字与标题强化至阈值 215 深度加粗，条码与二维码自动启用智能防粘连保护（阈值 175），细字粗黑易读且条码 100% 灵敏秒扫！',
       noneDesc: '【原图灰度】：保留原始渲染抗锯齿（热敏驱动通常会以半色调网点模拟灰色，可能产生微细颗粒感）。',
     },
     station: {
@@ -619,7 +619,7 @@ export const messages = {
       none: 'Escala de Grises Original',
       modeLabel: '💡 Modo:',
       standardDesc: '[Estándar]: Umbral 190, elimina tramados grises y mantiene contornos de letras nítidos.',
-      heavyDesc: '[Intenso]: Umbral 215, refuerza trazos finos y texto pequeño en español (7pt~9pt).',
+      heavyDesc: '[Intenso]: Textos y títulos con umbral 215. Códigos de barras y QR protegidos automáticamente (umbral 175) para evitar empastes y garantizar lectura 100% instantánea.',
       noneDesc: '[Original]: Mantiene degradado gris original (puede generar puntos por tramado térmico).',
     },
     station: {
