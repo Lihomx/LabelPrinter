@@ -107,8 +107,8 @@ export function trimWhiteBorder(canvas) {
     }
   }
 
-  const cropW = Math.max(10, right - left);
-  const cropH = Math.max(10, bottom - top);
+  const cropW = Math.max(10, (right - left) + 1);
+  const cropH = Math.max(10, (bottom - top) + 1);
 
   try {
     const croppedCanvas = document.createElement('canvas');
@@ -257,6 +257,64 @@ export async function detectSuggestedLayout(pdfDoc) {
 }
 
 /**
+ * Detect vector bounding boxes of labels on standard sticker sheets (e.g. A4 4x10, A4 3x10).
+ * By extracting the actual stroke/fill bounding boxes from the PDF's internal graphics operators,
+ * we get the exact pixel-perfect label dimensions, avoiding any borders being clipped.
+ */
+export async function extractLabelVectorBoxes(page) {
+  try {
+    const vp = page.getViewport({ scale: 1.0 });
+    const ops = await page.getOperatorList();
+    const rawBoxes = [];
+    for (let i = 0; i < ops.fnArray.length; i++) {
+      if (ops.fnArray[i] === pdfjsLib.OPS.constructPath) {
+        const coords = ops.argsArray[i][1];
+        for (let j = 0; j < coords.length; j += 4) {
+          const x = coords[j], y = coords[j+1], w = coords[j+2], h = coords[j+3];
+          if (w >= 60 && h >= 30 && w <= vp.width * 0.85 && h <= vp.height * 0.6) {
+            rawBoxes.push({
+              x: Math.round(x * 10) / 10,
+              y: Math.round(y * 10) / 10,
+              w: Math.round(w * 10) / 10,
+              h: Math.round(h * 10) / 10,
+            });
+          }
+        }
+      }
+    }
+
+    if (rawBoxes.length < 8) return null;
+
+    // Deduplicate nested / double border strokes, keeping the outermost box
+    const unique = [];
+    for (const b of rawBoxes) {
+      const existingIdx = unique.findIndex(u => 
+        Math.abs(u.x - b.x) < 4 && Math.abs(u.y - b.y) < 4
+      );
+      if (existingIdx === -1) {
+        unique.push(b);
+      } else {
+        if (b.w * b.h > unique[existingIdx].w * unique[existingIdx].h) {
+          unique[existingIdx] = b;
+        }
+      }
+    }
+
+    if (unique.length < 4) return null;
+
+    // Sort top-to-bottom (higher Y first in PDF coords), then left-to-right
+    unique.sort((a, b) => {
+      if (Math.abs(b.y - a.y) > 8) return b.y - a.y;
+      return a.x - b.x;
+    });
+
+    return unique;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
  * Slice PDF into individual label objects based on grid/mode
  */
 export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = null, customBox = null, sharpenMode = 'standard') {
@@ -324,13 +382,79 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
       continue;
     }
 
+    // 2. Vector-drawn label box detection (guarantees 100% border preservation for A4 40-up / 30-up)
+    const detectedBoxes = (mode === 'presetA4_40' || mode === 'presetA4_30') ? await extractLabelVectorBoxes(page) : null;
+    if (detectedBoxes && detectedBoxes.length >= 8) {
+      const pageHeightPt = unscaledVp.height;
+      const padPt = 4; // 4pt margin ensures outer black borders are never cut off
+
+      for (let idx = 0; idx < detectedBoxes.length; idx++) {
+        const box = detectedBoxes[idx];
+        const cropX = Math.max(0, (box.x - padPt) * renderScale);
+        const cropY = Math.max(0, (pageHeightPt - (box.y + box.h) - padPt) * renderScale);
+        const cropW = Math.min(canvas.width - cropX, (box.w + 2 * padPt) * renderScale);
+        const cropH = Math.min(canvas.height - cropY, (box.h + 2 * padPt) * renderScale);
+
+        if (isRegionBlank(ctx, cropX + 5, cropY + 5, cropW - 10, cropH - 10)) {
+          continue;
+        }
+
+        const cellCanvas = document.createElement('canvas');
+        cellCanvas.width = cropW;
+        cellCanvas.height = cropH;
+        const cellCtx = cellCanvas.getContext('2d');
+        cellCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+        const trimmed = trimWhiteBorder(cellCanvas);
+        const activeCanvas = sharpenMode !== 'none' ? binarizeCanvas(trimmed, sharpenMode) : trimmed;
+        const cellBox = { x: cropX, y: cropY, w: cropW, h: cropH };
+        const cellText = extractCellText(textContent.items, cellBox, viewport, renderScale);
+
+        labels.push({
+          id: `p${pageNum}_vec_${idx}`,
+          page: pageNum,
+          index: idx + 1,
+          rawCanvas: trimmed,
+          canvas: activeCanvas,
+          dataUrl: activeCanvas.toDataURL('image/png'),
+          barcode: cellText.barcode || `ITEM-${labels.length + 1}`,
+          title: cellText.title || '',
+          sku: cellText.sku || '',
+          quantity: 1,
+          selected: true,
+          width: activeCanvas.width,
+          height: activeCanvas.height,
+        });
+      }
+      continue;
+    }
+
     let gridCols = 1;
     let gridRows = 1;
     let customSlicing = null;
+    let colBounds = null;
+    let rowBounds = null;
 
     if (mode === 'presetA4_40') {
       gridCols = 4;
       gridRows = 10;
+      // Precise column cutlines between column gaps (midpoints):
+      const colCutsPt = [0, 156.4, 285.0, 413.6, unscaledVp.width];
+      colBounds = [];
+      for (let c = 0; c < 4; c++) {
+        colBounds.push({
+          x: colCutsPt[c] * renderScale,
+          w: (colCutsPt[c+1] - colCutsPt[c]) * renderScale,
+        });
+      }
+      const rowCutsPt = [0, 88.0, 171.3, 254.6, 337.8, 421.1, 504.3, 587.6, 670.9, 754.1, unscaledVp.height];
+      rowBounds = [];
+      for (let r = 0; r < 10; r++) {
+        rowBounds.push({
+          y: rowCutsPt[r] * renderScale,
+          h: (rowCutsPt[r+1] - rowCutsPt[r]) * renderScale,
+        });
+      }
     } else if (mode === 'presetA4_30') {
       gridCols = 3;
       gridRows = 10;
@@ -388,22 +512,24 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
 
     for (let r = 0; r < gridRows; r++) {
       for (let c = 0; c < gridCols; c++) {
-        const x = c * cellW;
-        const y = r * cellH;
+        const x = colBounds ? colBounds[c].x : c * cellW;
+        const y = rowBounds ? rowBounds[r].y : r * cellH;
+        const w = colBounds ? colBounds[c].w : cellW;
+        const h = rowBounds ? rowBounds[r].h : cellH;
 
-        if (isRegionBlank(ctx, x + 5, y + 5, cellW - 10, cellH - 10)) {
+        if (isRegionBlank(ctx, x + 5, y + 5, w - 10, h - 10)) {
           continue;
         }
 
         const cellCanvas = document.createElement('canvas');
-        cellCanvas.width = cellW;
-        cellCanvas.height = cellH;
+        cellCanvas.width = w;
+        cellCanvas.height = h;
         const cellCtx = cellCanvas.getContext('2d');
-        cellCtx.drawImage(canvas, x, y, cellW, cellH, 0, 0, cellW, cellH);
+        cellCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
 
         const trimmed = trimWhiteBorder(cellCanvas);
         const activeCanvas = sharpenMode !== 'none' ? binarizeCanvas(trimmed, sharpenMode) : trimmed;
-        const cellBox = { x, y, w: cellW, h: cellH };
+        const cellBox = { x, y, w, h };
         const cellText = extractCellText(textContent.items, cellBox, viewport, renderScale);
 
         labels.push({
