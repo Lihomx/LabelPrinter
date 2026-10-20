@@ -230,8 +230,16 @@ export async function detectSuggestedLayout(pdfDoc) {
     }
   }
 
-  // 2. Check for A4 30-up
+  // 2. Check for A4 Grid (30-up vs 40-up)
   if (textItems.includes('SKU:') || textItems.includes('Pantalla') || textContent.items.length > 50) {
+    const col4Counts = [0, 0, 0, 0];
+    for (const item of textContent.items) {
+      const c = Math.min(3, Math.max(0, Math.floor((item.transform[4] / viewport.width) * 4)));
+      col4Counts[c]++;
+    }
+    if (col4Counts[3] >= 8) {
+      return 'presetA4_40';
+    }
     return 'presetA4_30';
   }
 
@@ -320,7 +328,10 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
     let gridRows = 1;
     let customSlicing = null;
 
-    if (mode === 'presetA4_30') {
+    if (mode === 'presetA4_40') {
+      gridCols = 4;
+      gridRows = 10;
+    } else if (mode === 'presetA4_30') {
       gridCols = 3;
       gridRows = 10;
     } else if (mode === 'presetML_2') {

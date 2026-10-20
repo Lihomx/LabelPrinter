@@ -94,19 +94,26 @@ export async function extractLabelsFromPdf(fileOrBuffer, onProgress = null) {
         });
       }
     } else {
-      // Multi-item page (e.g. A4 30-up or grid)
+      // Multi-item page (e.g. A4 30-up or A4 40-up grid)
       // Group items by spatial proximity
-      // We know A4 30-up has ~3 columns and ~10 rows
-      const colWidth = viewport.width / 3;
-      const rowHeight = viewport.height / 10;
+      // Detect if 4 columns (col4Counts[3] >= 8) or standard 3 columns
+      const col4Counts = [0, 0, 0, 0];
+      for (const item of items) {
+        const c = Math.min(3, Math.max(0, Math.floor((item.transform[4] / viewport.width) * 4)));
+        col4Counts[c]++;
+      }
+      const cols = col4Counts[3] >= 8 ? 4 : 3;
+      const rows = 10;
+      const colWidth = viewport.width / cols;
+      const rowHeight = viewport.height / rows;
 
       // Group items into grid cells
       const grid = {};
       for (const item of items) {
         const x = item.transform[4];
         const y = viewport.height - item.transform[5];
-        const col = Math.min(2, Math.max(0, Math.floor(x / colWidth)));
-        const row = Math.min(9, Math.max(0, Math.floor(y / rowHeight)));
+        const col = Math.min(cols - 1, Math.max(0, Math.floor(x / colWidth)));
+        const row = Math.min(rows - 1, Math.max(0, Math.floor(y / rowHeight)));
         const key = `${row}_${col}`;
         if (!grid[key]) grid[key] = [];
         grid[key].push(item);

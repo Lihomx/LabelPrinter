@@ -176,7 +176,7 @@
             <FlaskConical class="w-4 h-4 text-brand-500" />
             {{ t('pdf.sampleTitle') }}
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <button 
               @click="loadLocalSample('samples/labels_152.pdf', 'presetA4_30')"
               class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
@@ -207,6 +207,14 @@
             >
               <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">{{ t('pdf.sample4Title') }}</span>
               <span class="text-[11px] text-slate-500 mt-0.5">{{ t('pdf.sample4Desc') }}</span>
+            </button>
+
+            <button 
+              @click="loadLocalSample('samples/labels_40_4x10.pdf', 'presetA4_40')"
+              class="flex flex-col text-left p-3 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition-all group"
+            >
+              <span class="text-xs font-bold text-slate-800 group-hover:text-brand-600">{{ t('pdf.sample5Title') }}</span>
+              <span class="text-[11px] text-slate-500 mt-0.5">{{ t('pdf.sample5Desc') }}</span>
             </button>
           </div>
         </div>
@@ -408,6 +416,7 @@
           >
             <option value="presetFreeform">{{ t('pdf.presetFreeform') }}</option>
             <option value="presetA4_30">{{ t('pdf.presetA4_30') }}</option>
+            <option value="presetA4_40">{{ t('pdf.presetA4_40') }}</option>
             <option value="presetML_2">{{ t('pdf.presetML_2') }}</option>
             <option value="presetVertical_2">{{ t('pdf.presetVertical_2') }}</option>
             <option value="presetSingleTL">{{ t('pdf.presetSingleTL') }}</option>
