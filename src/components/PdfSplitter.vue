@@ -422,15 +422,29 @@
             <option value="presetSingleTL">{{ t('pdf.presetSingleTL') }}</option>
           </select>
 
-          <!-- Freeform Edit Button -->
-          <button 
-            v-if="selectedLayoutMode === 'presetFreeform'"
-            @click="openFreeCropModal"
-            class="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold rounded-lg border border-brand-200 flex items-center gap-1.5 transition-all shadow-xs"
-          >
-            <Crop class="w-3.5 h-3.5" />
-            <span>{{ t('pdf.recrop') }}</span>
-          </button>
+          <!-- Freeform Edit Button & AutoTrim toggle -->
+          <div v-if="selectedLayoutMode === 'presetFreeform'" class="flex items-center gap-2">
+            <button 
+              @click="openFreeCropModal"
+              type="button"
+              class="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold rounded-lg border border-brand-200 flex items-center gap-1.5 transition-all shadow-xs"
+            >
+              <Crop class="w-3.5 h-3.5" />
+              <span>{{ t('pdf.recrop') }}</span>
+            </button>
+            <label 
+              class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 cursor-pointer select-none transition-all shadow-2xs"
+              :title="t('pdf.freeCropAutoTrimDesc')"
+            >
+              <input 
+                type="checkbox" 
+                v-model="freeCropAutoTrim" 
+                @change="onFreeCropAutoTrimChange"
+                class="w-3.5 h-3.5 text-brand-600 rounded border-slate-300 focus:ring-brand-500 cursor-pointer"
+              />
+              <span>{{ t('pdf.freeCropAutoTrim') }}</span>
+            </label>
+          </div>
         </div>
 
         <!-- View Mode Switch: Grouped vs Flat -->
@@ -1414,8 +1428,23 @@
             </div>
 
             <div class="flex items-center gap-2">
+              <label 
+                class="inline-flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg cursor-pointer transition-colors text-xs font-semibold text-slate-700 select-none shadow-2xs"
+                :title="t('pdf.freeCropAutoTrimDesc')"
+              >
+                <input 
+                  type="checkbox" 
+                  v-model="freeCropAutoTrim" 
+                  class="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500 cursor-pointer"
+                />
+                <span class="flex items-center gap-1">
+                  <span>{{ t('pdf.freeCropAutoTrim') }}</span>
+                </span>
+              </label>
+
               <button 
                 @click="resetSelection" 
+                type="button"
                 class="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1"
               >
                 <RotateCcw class="w-3.5 h-3.5" />
@@ -2155,6 +2184,19 @@ const dragMode = ref(null); // 'draw' | 'move' | 'nw' | 'ne' | 'se' | 'sw' | 'n'
 const dragStartX = ref(0);
 const dragStartY = ref(0);
 const freeCropBox = ref(null);
+const freeCropAutoTrim = ref(localStorage.getItem('labelmaster_freecrop_autotrim') === 'true');
+watch(freeCropAutoTrim, (val) => {
+  try {
+    localStorage.setItem('labelmaster_freecrop_autotrim', val ? 'true' : 'false');
+  } catch (e) {}
+});
+
+const onFreeCropAutoTrimChange = async () => {
+  if (freeCropBox.value) {
+    freeCropBox.value.autoTrim = freeCropAutoTrim.value;
+  }
+  await reprocessPdf();
+};
 const cropPageWidth = ref(1);
 const cropPageHeight = ref(1);
 const pdfOriginalWidthMm = ref(210);
@@ -2482,6 +2524,9 @@ const onLayoutModeChange = () => {
 };
 
 const openFreeCropModal = async () => {
+  if (freeCropBox.value && freeCropBox.value.autoTrim !== undefined) {
+    freeCropAutoTrim.value = Boolean(freeCropBox.value.autoTrim);
+  }
   showFreeCropModal.value = true;
   await nextTick();
   await renderCropCanvas();
@@ -2694,6 +2739,7 @@ const applyFreeCrop = async () => {
     yRatio: selectionBox.value.y / rect.height,
     wRatio: selectionBox.value.w / rect.width,
     hRatio: selectionBox.value.h / rect.height,
+    autoTrim: freeCropAutoTrim.value,
   };
 
   // Auto select best target paper size based on ratio
@@ -2736,7 +2782,8 @@ const reprocessPdf = async () => {
     const cellCtx = cellCanvas.getContext('2d');
     cellCtx.drawImage(orig, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
 
-    const activeCanvas = sharpenMode.value !== 'none' ? binarizeCanvas(cellCanvas, sharpenMode.value) : cellCanvas;
+    const finalCanvas = (freeCropBox.value.autoTrim ?? freeCropAutoTrim.value) ? trimWhiteBorder(cellCanvas) : cellCanvas;
+    const activeCanvas = sharpenMode.value !== 'none' ? binarizeCanvas(finalCanvas, sharpenMode.value) : finalCanvas;
 
     rawLabels.value = [{
       id: `img_${Date.now()}`,
@@ -3275,6 +3322,7 @@ const handleSaveCurrentProject = async () => {
     yRatio: Number(freeCropBox.value.yRatio) || 0,
     wRatio: Number(freeCropBox.value.wRatio) || 0,
     hRatio: Number(freeCropBox.value.hRatio) || 0,
+    autoTrim: Boolean(freeCropBox.value.autoTrim ?? freeCropAutoTrim.value),
   } : null;
 
   const projectPayload = {
@@ -3317,6 +3365,9 @@ const handleOpenProject = async (projectItem) => {
     currentSourceFileName.value = full.sourceFileName || '';
     selectedLayoutMode.value = full.layoutMode || 'presetFreeform';
     freeCropBox.value = full.freeCropBox || null;
+    if (full.freeCropBox && full.freeCropBox.autoTrim !== undefined) {
+      freeCropAutoTrim.value = Boolean(full.freeCropBox.autoTrim);
+    }
     selectedPaperId.value = full.selectedPaperId || '70x30';
     targetWidthMm.value = full.targetWidthMm || 70;
     targetHeightMm.value = full.targetHeightMm || 30;

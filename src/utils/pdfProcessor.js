@@ -430,7 +430,7 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
 
     const textContent = await page.getTextContent();
 
-    // 1. Freeform exact crop (strictly as framed by user mouse, no auto-trim)
+    // 1. Freeform crop (strictly as framed by user mouse, or auto-trim if requested)
     if (mode === 'presetFreeform' && customBox) {
       const box = {
         x: Math.max(0, customBox.xRatio * canvas.width),
@@ -446,13 +446,14 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
         const cellCtx = cellCanvas.getContext('2d');
         cellCtx.drawImage(canvas, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
 
-        const activeCanvas = sharpenMode !== 'none' ? binarizeCanvas(cellCanvas, sharpenMode) : cellCanvas;
+        const finalCanvas = customBox.autoTrim ? trimWhiteBorder(cellCanvas) : cellCanvas;
+        const activeCanvas = sharpenMode !== 'none' ? binarizeCanvas(finalCanvas, sharpenMode) : finalCanvas;
         const cellText = extractCellText(textContent.items, box, viewport, renderScale);
 
         labels.push({
           id: `p${pageNum}_free_${labels.length}`,
           page: pageNum,
-          rawCanvas: cellCanvas,
+          rawCanvas: finalCanvas,
           canvas: activeCanvas,
           dataUrl: activeCanvas.toDataURL('image/png'),
           barcode: cellText.barcode || `ITEM-${labels.length + 1}`,
