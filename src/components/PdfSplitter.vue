@@ -736,24 +736,85 @@
     <!-- Step 3: Target Paper & Sizing (Ajuste de Papel) -->
     <div v-if="currentStep === 3" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
       <div class="max-w-2xl mx-auto space-y-6">
-        <h3 class="text-lg font-bold text-slate-800 pb-2 border-b border-slate-100">
-          {{ t('pdf.targetPaper') }}
-        </h3>
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <h3 class="text-lg font-bold text-slate-800">
+            {{ t('pdf.targetPaper') }}
+          </h3>
+          <div class="flex items-center gap-2">
+            <button 
+              v-if="isCustomizedPapers"
+              @click="resetDefaultPapers"
+              type="button"
+              class="px-2.5 py-1 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-all flex items-center gap-1 border border-slate-200"
+              :title="t('pdf.resetDefaultPapers')"
+            >
+              <RotateCcw class="w-3.5 h-3.5" />
+              <span>{{ t('pdf.resetDefaultPapers') }}</span>
+            </button>
+            <button 
+              @click="openAddPaperModal"
+              type="button"
+              class="px-3 py-1 text-xs font-bold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-lg transition-all flex items-center gap-1.5 shadow-xs"
+            >
+              <Plus class="w-3.5 h-3.5" />
+              <span>{{ t('pdf.addPaperPreset') }}</span>
+            </button>
+          </div>
+        </div>
 
         <!-- Paper Presets -->
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <button 
+          <div 
             v-for="paper in paperPresets" 
             :key="paper.id"
             @click="selectPaperPreset(paper)"
-            class="p-4 rounded-xl border text-left transition-all relative overflow-hidden"
-            :class="selectedPaperId === paper.id ? 'border-brand-600 bg-brand-50/40 text-brand-900 shadow-sm' : 'border-slate-200 hover:border-slate-300'"
+            role="button"
+            tabindex="0"
+            class="group p-4 rounded-xl border text-left transition-all relative overflow-hidden cursor-pointer select-none"
+            :class="selectedPaperId === paper.id ? 'border-brand-600 bg-brand-50/40 text-brand-900 shadow-sm ring-1 ring-brand-500/30' : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/50'"
           >
-            <div class="font-bold text-sm">{{ paper.name }}</div>
-            <div class="text-xs text-slate-500 mt-1 font-mono">{{ paper.width }} × {{ paper.height }} mm</div>
+            <div class="font-bold text-sm pr-6 truncate" :title="paper.name">{{ paper.name }}</div>
+            <div class="text-xs text-slate-500 mt-1 font-mono">
+              <span v-if="paper.id === 'custom'">{{ targetWidthMm }} × {{ targetHeightMm }} mm</span>
+              <span v-else>{{ paper.width }} × {{ paper.height }} mm</span>
+            </div>
             <div v-if="selectedPaperId === paper.id" class="absolute top-2 right-2 text-brand-600">
               <CheckCircle2 class="w-4 h-4" />
             </div>
+
+            <!-- Edit & Delete buttons (hover) for custom / editable presets -->
+            <div 
+              v-if="paper.id !== 'custom'"
+              class="absolute bottom-2 right-2 flex items-center gap-1 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-white/95 rounded-lg border border-slate-200/80 shadow-xs px-1 py-0.5"
+              @click.stop
+            >
+              <button 
+                type="button"
+                @click.stop="openEditPaperModal(paper)"
+                class="p-1 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded transition-colors"
+                :title="t('pdf.editPaperPreset')"
+              >
+                <Edit2 class="w-3.5 h-3.5" />
+              </button>
+              <button 
+                type="button"
+                @click.stop="deletePaperPreset(paper)"
+                class="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                :title="t('pdf.deletePaperPreset')"
+              >
+                <Trash2 class="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Add Paper Button Card in Grid -->
+          <button 
+            type="button"
+            @click="openAddPaperModal"
+            class="p-4 rounded-xl border-2 border-dashed border-slate-200 hover:border-brand-400 hover:bg-brand-50/20 text-slate-500 hover:text-brand-600 transition-all flex flex-col items-center justify-center gap-1 min-h-[82px] group"
+          >
+            <Plus class="w-5 h-5 text-slate-400 group-hover:text-brand-600 transition-colors" />
+            <span class="text-xs font-bold">{{ t('pdf.addPaperPreset') }}</span>
           </button>
         </div>
 
@@ -973,32 +1034,21 @@
           <div class="flex flex-wrap items-center gap-2">
             <span class="text-xs text-slate-300 font-medium">{{ t('station.currentPaper') }}</span>
             <button 
-              @click="setQuickSize(50, 25)"
+              v-for="paper in userPaperList"
+              :key="paper.id"
+              @click="setQuickSize(paper.width, paper.height)"
               class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all border"
-              :class="targetWidthMm === 50 && targetHeightMm === 25 ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'"
+              :class="targetWidthMm === paper.width && targetHeightMm === paper.height ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'"
             >
-              50 × 25 mm
+              {{ paper.width }} × {{ paper.height }} mm
             </button>
             <button 
-              @click="setQuickSize(50, 30)"
-              class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all border"
-              :class="targetWidthMm === 50 && targetHeightMm === 30 ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'"
+              @click="currentStep = 3"
+              type="button"
+              class="p-1 text-slate-400 hover:text-emerald-400 rounded-lg hover:bg-slate-800 transition-colors"
+              :title="t('pdf.targetPaper')"
             >
-              50 × 30 mm
-            </button>
-            <button 
-              @click="setQuickSize(70, 30)"
-              class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all border"
-              :class="targetWidthMm === 70 && targetHeightMm === 30 ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'"
-            >
-              70 × 30 mm
-            </button>
-            <button 
-              @click="setQuickSize(80, 30)"
-              class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all border"
-              :class="targetWidthMm === 80 && targetHeightMm === 30 ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'"
-            >
-              80 × 30 mm
+              <Settings class="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -1870,6 +1920,102 @@
       </div>
     </Teleport>
 
+    <!-- Paper Preset Add / Edit Modal -->
+    <Teleport to="body">
+      <div 
+        v-if="showPaperModal"
+        class="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+        @click.self="showPaperModal = false"
+      >
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+          <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center font-bold">
+                <Layers class="w-4 h-4" />
+              </div>
+              <h3 class="font-bold text-slate-800 text-base">
+                {{ isEditingPaper ? t('pdf.paperModalEditTitle') : t('pdf.paperModalAddTitle') }}
+              </h3>
+            </div>
+            <button 
+              @click="showPaperModal = false" 
+              type="button"
+              class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
+            >
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+
+          <form @submit.prevent="handleSavePaper" class="p-6 space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                {{ t('pdf.paperNameLabel') }}
+              </label>
+              <input 
+                v-model="paperForm.name"
+                type="text"
+                :placeholder="t('pdf.paperNamePlaceholder')"
+                class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                  {{ t('pdf.paperWidthLabel') }} (mm) *
+                </label>
+                <input 
+                  v-model.number="paperForm.width"
+                  type="number"
+                  step="1"
+                  min="10"
+                  max="500"
+                  required
+                  class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                  {{ t('pdf.paperHeightLabel') }} (mm) *
+                </label>
+                <input 
+                  v-model.number="paperForm.height"
+                  type="number"
+                  step="1"
+                  min="10"
+                  max="500"
+                  required
+                  class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+                />
+              </div>
+            </div>
+
+            <!-- Preview ratio badge -->
+            <div class="p-3 bg-brand-50/50 rounded-xl border border-brand-100 flex items-center justify-between text-xs text-brand-900">
+              <span class="font-medium">{{ t('pdf.paperRatioLabel') }}</span>
+              <span class="font-mono font-bold">{{ paperForm.width || 0 }} × {{ paperForm.height || 0 }} mm ({{ paperForm.width && paperForm.height ? (paperForm.width / paperForm.height).toFixed(2) : '-' }}:1)</span>
+            </div>
+
+            <div class="pt-2 flex items-center justify-end gap-2.5">
+              <button 
+                type="button" 
+                @click="showPaperModal = false"
+                class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              >
+                {{ isZh ? '取消' : 'Cancelar' }}
+              </button>
+              <button 
+                type="submit"
+                class="px-5 py-2 text-sm font-bold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-sm transition-all"
+              >
+                {{ t('pdf.paperSaveBtn') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Save Notification Toast -->
     <Teleport to="body">
       <div 
@@ -1888,7 +2034,7 @@ import { ref, shallowRef, markRaw, computed, nextTick, onMounted, watch } from '
 import { 
   UploadCloud, FileUp, Layers, LayoutGrid, Search, ArrowRight, 
   CheckCircle2, Download, Printer, Scroll, FlaskConical, Crop, Check, RotateCcw, X,
-  FolderOpen, Save, Plus, Trash2, Clock, FileText, Bookmark, Calendar, AlertTriangle, Info,
+  FolderOpen, Save, Plus, Trash2, Edit2, Clock, FileText, Bookmark, Calendar, AlertTriangle, Info,
   HelpCircle, Laptop, Settings, Zap, RefreshCw
 } from 'lucide-vue-next';
 import { t, isZh, isEs, currentLang } from '@/i18n';
@@ -2029,16 +2175,177 @@ const steps = computed(() => [
   { title: t('pdf.step4') },
 ]);
 
-const paperPresets = computed(() => [
-  { id: '50x25', name: t('pdf.paper_50x25'), width: 50, height: 25 },
-  { id: '50x30', name: t('pdf.paper_50x30'), width: 50, height: 30 },
-  { id: '70x30', name: t('pdf.paper_70x30'), width: 70, height: 30 },
-  { id: '80x30', name: t('pdf.paper_80x30'), width: 80, height: 30 },
-  { id: '75x50', name: t('pdf.paper_75x50'), width: 75, height: 50 },
-  { id: '100x100', name: t('pdf.paper_100x100'), width: 100, height: 100 },
-  { id: '100x150', name: t('pdf.paper_100x150'), width: 100, height: 150 },
-  { id: 'custom', name: t('pdf.paperCustom'), width: targetWidthMm.value, height: targetHeightMm.value },
-]);
+const defaultPaperPresetsList = [
+  { id: '50x25', nameKey: 'pdf.paper_50x25', fallbackName: '50 × 25 mm', width: 50, height: 25 },
+  { id: '50x30', nameKey: 'pdf.paper_50x30', fallbackName: '50 × 30 mm', width: 50, height: 30 },
+  { id: '70x30', nameKey: 'pdf.paper_70x30', fallbackName: '70 × 30 mm', width: 70, height: 30 },
+  { id: '80x30', nameKey: 'pdf.paper_80x30', fallbackName: '80 × 30 mm', width: 80, height: 30 },
+  { id: '75x50', nameKey: 'pdf.paper_75x50', fallbackName: '75 × 50 mm', width: 75, height: 50 },
+  { id: '100x100', nameKey: 'pdf.paper_100x100', fallbackName: '100 × 100 mm', width: 100, height: 100 },
+  { id: '100x150', nameKey: 'pdf.paper_100x150', fallbackName: '100 × 150 mm', width: 100, height: 150 },
+];
+
+const loadUserPaperPresets = () => {
+  try {
+    const saved = localStorage.getItem('labelmaster_paper_presets');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error('Error loading custom papers:', e);
+  }
+  return JSON.parse(JSON.stringify(defaultPaperPresetsList));
+};
+
+const userPaperList = ref(loadUserPaperPresets());
+
+const saveUserPaperPresets = () => {
+  try {
+    localStorage.setItem('labelmaster_paper_presets', JSON.stringify(userPaperList.value));
+  } catch (e) {
+    console.error('Error saving custom papers:', e);
+  }
+};
+
+const isCustomizedPapers = computed(() => {
+  return JSON.stringify(userPaperList.value) !== JSON.stringify(defaultPaperPresetsList);
+});
+
+const paperPresets = computed(() => {
+  const list = userPaperList.value.map(p => ({
+    id: p.id,
+    name: p.nameKey ? t(p.nameKey) : (p.name || `${p.width} × ${p.height} mm`),
+    rawName: p.name || (p.nameKey ? t(p.nameKey) : `${p.width} × ${p.height} mm`),
+    width: Number(p.width),
+    height: Number(p.height),
+    nameKey: p.nameKey,
+  }));
+  list.push({
+    id: 'custom',
+    name: t('pdf.paperCustom'),
+    rawName: t('pdf.paperCustom'),
+    width: targetWidthMm.value,
+    height: targetHeightMm.value
+  });
+  return list;
+});
+
+const triggerToast = (msg) => {
+  saveToastMessage.value = msg;
+  setTimeout(() => {
+    saveToastMessage.value = '';
+  }, 2500);
+};
+
+const resetDefaultPapers = () => {
+  userPaperList.value = JSON.parse(JSON.stringify(defaultPaperPresetsList));
+  saveUserPaperPresets();
+  const matched = paperPresets.value.find(p => p.id === selectedPaperId.value);
+  if (!matched && selectedPaperId.value !== 'custom') {
+    selectPaperPreset(paperPresets.value[0]);
+  }
+  triggerToast(isZh.value ? '已恢复默认预设纸张规格' : 'Valores predeterminados restaurados');
+};
+
+// Paper Modal State
+const showPaperModal = ref(false);
+const isEditingPaper = ref(false);
+const editingPaperId = ref(null);
+const paperForm = ref({
+  name: '',
+  width: 60,
+  height: 40,
+});
+
+const openAddPaperModal = () => {
+  isEditingPaper.value = false;
+  editingPaperId.value = null;
+  paperForm.value = {
+    name: '',
+    width: 60,
+    height: 40,
+  };
+  showPaperModal.value = true;
+};
+
+const openEditPaperModal = (paper) => {
+  isEditingPaper.value = true;
+  editingPaperId.value = paper.id;
+  paperForm.value = {
+    name: paper.rawName || paper.name,
+    width: paper.width,
+    height: paper.height,
+  };
+  showPaperModal.value = true;
+};
+
+const handleSavePaper = () => {
+  const w = Math.round(Number(paperForm.value.width));
+  const h = Math.round(Number(paperForm.value.height));
+  if (!w || !h || w <= 0 || h <= 0) return;
+
+  const displayName = paperForm.value.name?.trim() || `${w} × ${h} mm`;
+
+  if (isEditingPaper.value && editingPaperId.value) {
+    const idx = userPaperList.value.findIndex(p => p.id === editingPaperId.value);
+    if (idx !== -1) {
+      userPaperList.value[idx] = {
+        id: editingPaperId.value,
+        name: displayName,
+        width: w,
+        height: h,
+      };
+      if (selectedPaperId.value === editingPaperId.value) {
+        targetWidthMm.value = w;
+        targetHeightMm.value = h;
+      }
+    }
+    triggerToast(isZh.value ? '纸张规格已更新' : 'Tamaño actualizado');
+  } else {
+    const newId = `paper_${Date.now()}`;
+    const newPaper = {
+      id: newId,
+      name: displayName,
+      width: w,
+      height: h,
+    };
+    userPaperList.value.push(newPaper);
+    selectedPaperId.value = newId;
+    targetWidthMm.value = w;
+    targetHeightMm.value = h;
+    triggerToast(isZh.value ? '已添加新纸张规格' : 'Nuevo tamaño agregado');
+  }
+
+  saveUserPaperPresets();
+  showPaperModal.value = false;
+};
+
+const deletePaperPreset = (paper) => {
+  if (userPaperList.value.length <= 1) {
+    alert(t('pdf.paperAtLeastOne'));
+    return;
+  }
+
+  const confirmMsg = t('pdf.paperDeleteConfirm').replace('{name}', paper.name);
+  if (!confirm(confirmMsg)) return;
+
+  userPaperList.value = userPaperList.value.filter(p => p.id !== paper.id);
+  saveUserPaperPresets();
+
+  if (selectedPaperId.value === paper.id) {
+    const fallback = paperPresets.value[0];
+    if (fallback) {
+      selectPaperPreset(fallback);
+    } else {
+      selectedPaperId.value = 'custom';
+    }
+  }
+
+  triggerToast(isZh.value ? '已删除纸张规格' : 'Tamaño eliminado');
+};
 
 const setQuickSize = (w, h) => {
   targetWidthMm.value = w;
@@ -2049,6 +2356,13 @@ const setQuickSize = (w, h) => {
 };
 
 const selectPaperPreset = (preset) => {
+  if (!preset) {
+    if (paperPresets.value.length > 0) {
+      preset = paperPresets.value[0];
+    } else {
+      return;
+    }
+  }
   selectedPaperId.value = preset.id;
   if (preset.id !== 'custom') {
     targetWidthMm.value = preset.width;
