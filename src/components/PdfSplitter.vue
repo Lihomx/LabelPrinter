@@ -2203,20 +2203,7 @@ const pdfOriginalWidthMm = ref(210);
 const pdfOriginalHeightMm = ref(297);
 const originalImageCanvas = shallowRef(null);
 
-// Paper settings
-const selectedPaperId = ref('70x30');
-const targetWidthMm = ref(70);
-const targetHeightMm = ref(30);
-const autoRotate = ref(true);
-const fitMode = ref('proportional');
-
-const steps = computed(() => [
-  { title: t('pdf.step1') },
-  { title: t('pdf.step2') },
-  { title: t('pdf.step3') },
-  { title: t('pdf.step4') },
-]);
-
+// Paper settings & presets
 const defaultPaperPresetsList = [
   { id: '50x25', nameKey: 'pdf.paper_50x25', fallbackName: '50 × 25 mm', width: 50, height: 25 },
   { id: '50x30', nameKey: 'pdf.paper_50x30', fallbackName: '50 × 30 mm', width: 50, height: 30 },
@@ -2255,6 +2242,63 @@ const saveUserPaperPresets = () => {
 const isCustomizedPapers = computed(() => {
   return JSON.stringify(userPaperList.value) !== JSON.stringify(defaultPaperPresetsList);
 });
+
+// Load previously chosen target paper from localStorage or fallback to default
+const getInitialSelectedPaper = () => {
+  try {
+    const savedId = localStorage.getItem('labelmaster_selected_paper_id');
+    const savedW = Number(localStorage.getItem('labelmaster_target_width_mm'));
+    const savedH = Number(localStorage.getItem('labelmaster_target_height_mm'));
+
+    if (savedId === 'custom' && savedW > 0 && savedH > 0) {
+      return { id: 'custom', width: savedW, height: savedH };
+    }
+
+    if (savedId) {
+      const match = userPaperList.value.find(p => p.id === savedId);
+      if (match) {
+        return { id: match.id, width: Number(match.width), height: Number(match.height) };
+      }
+    }
+  } catch (e) {
+    console.warn('Error reading saved paper preset:', e);
+  }
+
+  const defaultPreset = userPaperList.value.find(p => p.id === '70x30') || userPaperList.value[0];
+  if (defaultPreset) {
+    return { id: defaultPreset.id, width: Number(defaultPreset.width), height: Number(defaultPreset.height) };
+  }
+  return { id: '70x30', width: 70, height: 30 };
+};
+
+const initialPaper = getInitialSelectedPaper();
+const selectedPaperId = ref(initialPaper.id);
+const targetWidthMm = ref(initialPaper.width);
+const targetHeightMm = ref(initialPaper.height);
+const autoRotate = ref(true);
+const fitMode = ref('proportional');
+
+// Persist paper selection whenever changed
+const persistSelectedPaper = () => {
+  try {
+    localStorage.setItem('labelmaster_selected_paper_id', selectedPaperId.value);
+    localStorage.setItem('labelmaster_target_width_mm', targetWidthMm.value.toString());
+    localStorage.setItem('labelmaster_target_height_mm', targetHeightMm.value.toString());
+  } catch (e) {
+    console.warn('Failed to save paper selection to localStorage:', e);
+  }
+};
+
+watch([selectedPaperId, targetWidthMm, targetHeightMm], () => {
+  persistSelectedPaper();
+});
+
+const steps = computed(() => [
+  { title: t('pdf.step1') },
+  { title: t('pdf.step2') },
+  { title: t('pdf.step3') },
+  { title: t('pdf.step4') },
+]);
 
 const paperPresets = computed(() => {
   const list = userPaperList.value.map(p => ({
@@ -2490,12 +2534,6 @@ const processImageFile = async (file) => {
         width: activeCanvas.width,
         height: activeCanvas.height,
       }];
-
-      if (trimmed.width > trimmed.height * 1.5) {
-        selectPaperPreset(paperPresets.value.find(p => p.id === '70x30'));
-      } else {
-        selectPaperPreset(paperPresets.value.find(p => p.id === '100x100'));
-      }
 
       currentStep.value = 2;
     };
@@ -2741,19 +2779,6 @@ const applyFreeCrop = async () => {
     hRatio: selectionBox.value.h / rect.height,
     autoTrim: freeCropAutoTrim.value,
   };
-
-  // Auto select best target paper size based on ratio
-  const mmW = selectionMmWidth.value;
-  const mmH = selectionMmHeight.value;
-  if (mmW >= 90 && mmH >= 120) {
-    selectPaperPreset(paperPresets.value.find(p => p.id === '100x150'));
-  } else if (mmW >= 85 && mmH >= 85) {
-    selectPaperPreset(paperPresets.value.find(p => p.id === '100x100'));
-  } else if (mmW >= 60) {
-    selectPaperPreset(paperPresets.value.find(p => p.id === '70x30'));
-  } else {
-    selectPaperPreset(paperPresets.value.find(p => p.id === '50x30'));
-  }
 
   showFreeCropModal.value = false;
   await reprocessPdf();
