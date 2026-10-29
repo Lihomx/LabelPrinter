@@ -35,7 +35,7 @@ function createWindow() {
   });
 }
 
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
 
 // 注册 IPC 通信
 ipcMain.handle('get-printers', async () => {
@@ -53,7 +53,7 @@ ipcMain.handle('open-printer-preferences', async (event, printerName) => {
     return { success: false, error: '请先在下拉列表中选中目标打印机' };
   }
   return new Promise((resolve) => {
-    exec(`rundll32 printui.dll,PrintUIEntry /e /n "${printerName.trim()}"`, (err) => {
+    execFile('rundll32.exe', ['printui.dll,PrintUIEntry', '/e', '/n', printerName.trim()], { windowsHide: true }, (err) => {
       if (err) resolve({ success: false, error: err.message });
       else resolve({ success: true });
     });

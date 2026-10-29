@@ -16,27 +16,26 @@
   "author": "",
   "license": "ISC",
   "description": "LabelMaster Pro - 智能标签工作站",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
     "@vitejs/plugin-vue": "^6.0.10",
     "autoprefixer": "^10.6.1",
+    "cross-env": "^10.1.0",
+    "electron": "^41.7.1",
+    "electron-builder": "^26.15.3",
     "jsbarcode": "^3.12.3",
     "jszip": "^3.10.2",
     "lucide-vue-next": "^1.0.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^3.11.174",
+    "playwright-core": "^1.64.1",
     "postcss": "^8.5.30",
     "qrcode": "^1.5.4",
     "tailwindcss": "^4.3.3",
     "vite": "^8.3.4",
     "vue": "^3.5.44",
     "xlsx": "^0.18.5"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.3",
-    "cross-env": "^10.1.0",
-    "electron": "^41.7.1",
-    "electron-builder": "^26.15.3",
-    "playwright-core": "^1.64.1"
   },
   "build": {
     "appId": "com.labelprinter.master",
