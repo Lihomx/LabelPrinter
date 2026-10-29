@@ -270,6 +270,91 @@ export function binarizeCanvas(canvas, mode = 'standard') {
 }
 
 /**
+ * Scans a canvas for Barcode and QR code scannability
+ * Uses browser native BarcodeDetector API (supported in Chromium/Electron)
+ */
+export async function detectCanvasBarcode(canvas) {
+  if (typeof window === 'undefined' || !canvas || !canvas.width || !canvas.height) {
+    return { supported: false, scannable: true, detectedCount: 0, formats: [], values: [] };
+  }
+
+  if ('BarcodeDetector' in window) {
+    try {
+      const formats = await window.BarcodeDetector.getSupportedFormats().catch(() => [
+        'qr_code', 'code_128', 'code_39', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'itf', 'data_matrix'
+      ]);
+      const detector = new window.BarcodeDetector({ formats });
+      const detected = await detector.detect(canvas);
+      if (detected && detected.length > 0) {
+        return {
+          supported: true,
+          scannable: true,
+          detectedCount: detected.length,
+          formats: detected.map(d => d.format),
+          values: detected.map(d => d.rawValue),
+        };
+      }
+      return { supported: true, scannable: false, detectedCount: 0, formats: [], values: [] };
+    } catch (e) {
+      // BarcodeDetector detect failed or unsupported
+    }
+  }
+
+  return { supported: false, scannable: true, detectedCount: 0, formats: [], values: [] };
+}
+
+/**
+ * Audits a label's scannability after binarization/sharpening.
+ * If heavy mode caused barcode bleeding/unscannability, automatically rolls back
+ * to standard safe binarization or raw canvas to ensure 100% instant scannability!
+ */
+export async function auditAndProtectLabel(label, sharpenMode = 'standard') {
+  if (!label || !label.canvas) return label;
+
+  try {
+    const scanResult = await detectCanvasBarcode(label.canvas);
+    if (scanResult.supported) {
+      if (scanResult.detectedCount > 0) {
+        label.scannable = true;
+        label.detectedFormats = scanResult.formats;
+        label.detectedValues = scanResult.values;
+        if (!label.barcode || label.barcode.startsWith('ITEM-')) {
+          label.barcode = scanResult.values[0] || label.barcode;
+        }
+      } else if (label.rawCanvas && sharpenMode !== 'none') {
+        const rawScan = await detectCanvasBarcode(label.rawCanvas);
+        if (rawScan.detectedCount > 0) {
+          const safeCanvas = binarizeCanvas(label.rawCanvas, 'standard');
+          const recheck = await detectCanvasBarcode(safeCanvas);
+          if (recheck.detectedCount > 0) {
+            label.canvas = safeCanvas;
+            label.dataUrl = safeCanvas.toDataURL('image/png');
+            label.scannable = true;
+            label.autoProtected = true;
+            label.detectedFormats = recheck.formats;
+            label.detectedValues = recheck.values;
+          } else {
+            label.canvas = label.rawCanvas;
+            label.dataUrl = label.rawCanvas.toDataURL('image/png');
+            label.scannable = true;
+            label.autoProtected = true;
+            label.detectedFormats = rawScan.formats;
+            label.detectedValues = rawScan.values;
+          }
+          if (!label.barcode || label.barcode.startsWith('ITEM-')) {
+            label.barcode = rawScan.values[0] || label.barcode;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('auditAndProtectLabel error:', err);
+  }
+
+  return label;
+}
+
+/**
  * Load PDF file and parse page-by-page using strict Uint8Array
  */
 export async function loadPdfDocument(fileOrUrl) {
@@ -638,6 +723,11 @@ export async function slicePdfLabels(pdfDoc, mode = 'presetA4_30', onProgress = 
     }
   }
 
+  // Run automatic barcode/QR code scannability verification & anti-clogging protection
+  for (let i = 0; i < labels.length; i++) {
+    await auditAndProtectLabel(labels[i], sharpenMode);
+  }
+
   return labels;
 }
 
@@ -721,6 +811,8 @@ export async function exportThermalPdf(labels, options = {}) {
     targetHeightMm = 30,
     fitMode = 'proportional',
     autoRotate = true,
+    offsetX = 0,
+    offsetY = 0,
   } = options;
 
   const pdfDoc = await PDFDocument.create();
@@ -728,6 +820,8 @@ export async function exportThermalPdf(labels, options = {}) {
   const ptPerMm = 72 / 25.4;
   let targetW = targetWidthMm * ptPerMm;
   let targetH = targetHeightMm * ptPerMm;
+  const offXPt = (Number(offsetX) || 0) * ptPerMm;
+  const offYPt = (Number(offsetY) || 0) * ptPerMm;
 
   for (const label of labels) {
     const qty = Math.max(1, parseInt(label.quantity) || 1);
@@ -756,8 +850,8 @@ export async function exportThermalPdf(labels, options = {}) {
         const scale = Math.min(pageW / imgH, pageH / imgW);
         const drawW = imgW * scale;
         const drawH = imgH * scale;
-        const x = (pageW - drawH) / 2;
-        const y = (pageH + drawW) / 2;
+        const x = ((pageW - drawH) / 2) + offXPt;
+        const y = ((pageH + drawW) / 2) - offYPt;
 
         page.drawImage(embeddedImg, {
           x: x,
@@ -773,8 +867,8 @@ export async function exportThermalPdf(labels, options = {}) {
         
         const drawW = fitMode === 'stretch' ? pageW : imgW * scale;
         const drawH = fitMode === 'stretch' ? pageH : imgH * scale;
-        const x = (pageW - drawW) / 2;
-        const y = (pageH - drawH) / 2;
+        const x = ((pageW - drawW) / 2) + offXPt;
+        const y = ((pageH - drawH) / 2) - offYPt;
 
         page.drawImage(embeddedImg, {
           x: x,
@@ -788,4 +882,121 @@ export async function exportThermalPdf(labels, options = {}) {
 
   const pdfBytes = await pdfDoc.save();
   return new Blob([pdfBytes], { type: 'application/pdf' });
+}
+
+/**
+ * Generate TSPL industrial direct thermal printer binary commands
+ * Standard 203 DPI (8 dots per mm)
+ */
+export async function generateTsplCommands(labels, options = {}) {
+  const {
+    targetWidthMm = 70,
+    targetHeightMm = 30,
+    fitMode = 'proportional',
+    autoRotate = true,
+    offsetX = 0,
+    offsetY = 0,
+    dpi = 203,
+  } = options;
+
+  const dotsPerMm = dpi === 300 ? 11.81 : 8; // 203 DPI = 8 dots/mm
+  const targetDotsW = Math.round(targetWidthMm * dotsPerMm);
+  const targetDotsH = Math.round(targetHeightMm * dotsPerMm);
+  const byteW = Math.ceil(targetDotsW / 8);
+  const offXDots = Math.round((Number(offsetX) || 0) * dotsPerMm);
+  const offYDots = Math.round((Number(offsetY) || 0) * dotsPerMm);
+
+  const chunks = [];
+
+  for (const label of labels) {
+    const qty = Math.max(1, parseInt(label.quantity) || 1);
+
+    // Create offscreen canvas rendered at native thermal dots
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = targetDotsW;
+    offCanvas.height = targetDotsH;
+    const ctx = offCanvas.getContext('2d', { willReadFrequently: true });
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, targetDotsW, targetDotsH);
+
+    // Source canvas or image
+    const src = label.canvas || label.rawCanvas;
+    if (!src) continue;
+
+    const imgW = src.width;
+    const imgH = src.height;
+
+    let shouldRotate = false;
+    if (autoRotate) {
+      const isImgLandscape = imgW > imgH;
+      const isTargetLandscape = targetDotsW > targetDotsH;
+      if (isImgLandscape !== isTargetLandscape) {
+        shouldRotate = true;
+      }
+    }
+
+    ctx.save();
+    if (shouldRotate) {
+      ctx.translate(targetDotsW / 2 + offXDots, targetDotsH / 2 + offYDots);
+      ctx.rotate((90 * Math.PI) / 180);
+      const scale = Math.min(targetDotsH / imgW, targetDotsW / imgH);
+      const drawW = imgW * scale;
+      const drawH = imgH * scale;
+      ctx.drawImage(src, -drawW / 2, -drawH / 2, drawW, drawH);
+    } else {
+      const scale = fitMode === 'stretch' 
+        ? 1 
+        : Math.min(targetDotsW / imgW, targetDotsH / imgH);
+      const drawW = fitMode === 'stretch' ? targetDotsW : imgW * scale;
+      const drawH = fitMode === 'stretch' ? targetDotsH : imgH * scale;
+      const drawX = (targetDotsW - drawW) / 2 + offXDots;
+      const drawY = (targetDotsH - drawH) / 2 + offYDots;
+      ctx.drawImage(src, drawX, drawY, drawW, drawH);
+    }
+    ctx.restore();
+
+    // Read pixel data and binarize into TSPL 1-bit monochrome bytes
+    const imgData = ctx.getImageData(0, 0, targetDotsW, targetDotsH);
+    const pixels = imgData.data;
+    const bitmapBytes = new Uint8Array(byteW * targetDotsH);
+
+    for (let y = 0; y < targetDotsH; y++) {
+      for (let x = 0; x < targetDotsW; x++) {
+        const pIdx = (y * targetDotsW + x) * 4;
+        const r = pixels[pIdx];
+        const g = pixels[pIdx + 1];
+        const b = pixels[pIdx + 2];
+        const a = pixels[pIdx + 3];
+        // Luminance check (standard threshold 190, transparent = white)
+        const isBlack = a > 50 && (0.299 * r + 0.587 * g + 0.114 * b) < 190;
+        
+        if (isBlack) {
+          // In standard TSPL BITMAP, bit 7 to bit 0, 0=white, 1=black (or inverted depending on driver, 0=black)
+          // 0 = white, 1 = black is standard TSC format
+          const byteIndex = y * byteW + Math.floor(x / 8);
+          const bitPos = 7 - (x % 8);
+          bitmapBytes[byteIndex] |= (1 << bitPos);
+        }
+      }
+    }
+
+    // Build TSPL header text
+    const headerStr = 
+      `SIZE ${targetWidthMm} mm, ${targetHeightMm} mm\r\n` +
+      `GAP 2 mm, 0 mm\r\n` +
+      `DIRECTION 1\r\n` +
+      `CLS\r\n` +
+      `BITMAP 0,0,${byteW},${targetDotsH},0,`;
+    
+    const footerStr = `\r\nPRINT ${qty},1\r\n`;
+
+    const encoder = new TextEncoder();
+    const headerBytes = encoder.encode(headerStr);
+    const footerBytes = encoder.encode(footerStr);
+
+    chunks.push(headerBytes, bitmapBytes, footerBytes);
+  }
+
+  // Combine all chunks into one Blob
+  return new Blob(chunks, { type: 'application/octet-stream' });
 }

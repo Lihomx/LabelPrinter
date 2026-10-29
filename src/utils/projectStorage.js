@@ -217,3 +217,46 @@ export function importProjectJson(file) {
     reader.readAsText(file);
   });
 }
+
+/**
+ * Estimate storage usage of IndexedDB & web storage
+ */
+export async function getStorageUsage() {
+  let usageMB = 0;
+  let quotaMB = 0;
+  let projectCount = 0;
+
+  try {
+    const list = await getAllProjects();
+    projectCount = list.length;
+  } catch (e) {}
+
+  if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.estimate) {
+    try {
+      const estimate = await navigator.storage.estimate();
+      usageMB = ((estimate.usage || 0) / (1024 * 1024)).toFixed(1);
+      quotaMB = ((estimate.quota || 0) / (1024 * 1024)).toFixed(0);
+    } catch (e) {}
+  }
+
+  return {
+    usageMB: Number(usageMB) || 0,
+    quotaMB: Number(quotaMB) || 0,
+    projectCount,
+  };
+}
+
+/**
+ * Clear all saved projects
+ */
+export async function clearAllProjects() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.clear();
+    request.onsuccess = () => resolve(true);
+    request.onerror = () => reject(request.error);
+  });
+}
+

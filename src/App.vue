@@ -70,9 +70,20 @@
         <!-- Right Side: Printer Status & Language Toggle -->
         <div class="flex items-center gap-3">
           <!-- Printer Status Pill -->
-          <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-full text-xs font-semibold">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>{{ t('app.driverStatus') }}</span>
+          <div 
+            class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border"
+            :class="isElectron 
+              ? (hasPrinters ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs' : 'bg-amber-50 text-amber-800 border-amber-300') 
+              : 'bg-indigo-50 text-indigo-800 border-indigo-200'"
+            :title="isElectron ? (activePrinterName ? '当前目标打印机: ' + activePrinterName : '正在连接热敏机') : '浏览器免驱运行'"
+          >
+            <span 
+              class="w-2 h-2 rounded-full" 
+              :class="isElectron ? (hasPrinters ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500') : 'bg-indigo-500 animate-pulse'"
+            ></span>
+            <span v-if="isElectron && activePrinterName">⚡ {{ activePrinterName }}</span>
+            <span v-else-if="isElectron">⚡ 桌面客户端就绪</span>
+            <span v-else>🌐 浏览器免驱模式 (高清矢量输出)</span>
           </div>
 
           <!-- Bilingual Toggle Button -->
@@ -106,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { Printer, Scissors, Sparkles, Layers, FileSpreadsheet, Palette, Languages } from 'lucide-vue-next';
 import { t, toggleLang } from '@/i18n';
 import PdfSplitter from '@/components/PdfSplitter.vue';
@@ -115,7 +126,45 @@ import PdfMergeSplit from '@/components/PdfMergeSplit.vue';
 import TemplateGenerator from '@/components/TemplateGenerator.vue';
 import LabelDesigner from '@/components/LabelDesigner.vue';
 
-const currentTab = ref('splitter');
+const validTabs = ['splitter', 'extractor', 'tools', 'template', 'designer'];
+const savedTab = typeof window !== 'undefined' ? localStorage.getItem('labelmaster_current_tab') : null;
+const currentTab = ref(validTabs.includes(savedTab) ? savedTab : 'splitter');
+
+watch(currentTab, (val) => {
+  try {
+    localStorage.setItem('labelmaster_current_tab', val);
+  } catch (e) {}
+});
+
+const isElectron = ref(typeof window !== 'undefined' && Boolean(window.electronAPI));
+const activePrinterName = ref((typeof window !== 'undefined' && localStorage.getItem('labelmaster_selected_printer')) || '');
+const hasPrinters = ref(false);
+
+const checkPrinters = async () => {
+  if (isElectron.value && window.electronAPI?.getPrinters) {
+    try {
+      const res = await window.electronAPI.getPrinters();
+      if (res?.success && res.printers?.length > 0) {
+        hasPrinters.value = true;
+        const saved = localStorage.getItem('labelmaster_selected_printer');
+        const match = res.printers.find(p => p.name === saved) || res.printers.find(p => p.isDefault) || res.printers[0];
+        if (match) {
+          activePrinterName.value = match.name;
+        }
+      }
+    } catch (e) {}
+  }
+};
+
+onMounted(() => {
+  checkPrinters();
+  // Listen for storage changes from other components
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'labelmaster_selected_printer') {
+      activePrinterName.value = e.newValue || '';
+    }
+  });
+});
 </script>
 
 <style scoped>

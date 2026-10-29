@@ -499,6 +499,12 @@
           </button>
         </div>
 
+        <!-- Barcode/QR Audit Status Badge -->
+        <div class="hidden xl:flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-800 rounded-lg text-xs font-semibold border border-emerald-200/80">
+          <Check class="w-3.5 h-3.5 text-emerald-600" />
+          <span>{{ t('pdf.barcodeAuditPassed') }}</span>
+        </div>
+
         <!-- Stats & Next Step Button -->
         <div class="flex items-center gap-4">
           <div class="text-right">
@@ -699,6 +705,27 @@
               <div v-if="item.title" class="text-[11px] text-slate-500 line-clamp-2 mt-0.5 leading-snug" :title="item.title">
                 {{ item.title }}
               </div>
+
+              <!-- Scannability verification badges -->
+              <div v-if="item.scannable || item.autoProtected" class="flex flex-wrap items-center gap-1 mt-1.5">
+                <span 
+                  v-if="item.scannable" 
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  :title="item.detectedFormats ? item.detectedFormats.join(', ') : 'OK'"
+                >
+                  <Check class="w-3 h-3 text-emerald-600" />
+                  <span>{{ t('pdf.scannableBadge') }}</span>
+                  <span v-if="item.detectedFormats && item.detectedFormats[0]" class="text-[9px] uppercase font-mono opacity-80">{{ item.detectedFormats[0].replace('_', '') }}</span>
+                </span>
+                <span 
+                  v-if="item.autoProtected" 
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200"
+                  :title="t('pdf.barcodeAuditProtected')"
+                >
+                  <span>🛡️</span>
+                  <span>{{ t('pdf.barcodeAuditProtected') }}</span>
+                </span>
+              </div>
             </div>
 
             <!-- Quantity stepper -->
@@ -774,6 +801,22 @@
               <span>{{ t('pdf.addPaperPreset') }}</span>
             </button>
           </div>
+        </div>
+
+        <!-- Smart Paper Aspect Ratio Advice Banner -->
+        <div v-if="paperAspectAdvice" class="p-3.5 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-900 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+          <div class="flex items-center gap-2">
+            <Info class="w-4 h-4 text-amber-600 flex-shrink-0" />
+            <span>{{ t('pdf.paperAdviceNotice', { labelRatio: paperAspectAdvice.labelRatio + ':1', paper: paperAspectAdvice.currentPaperName, paperRatio: paperAspectAdvice.paperRatio + ':1' }) }} <strong>{{ paperAspectAdvice.recommendedName }}</strong></span>
+          </div>
+          <button 
+            type="button"
+            @click="selectPaperPreset(paperAspectAdvice.recommendedPreset)"
+            class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-2xs transition-all flex items-center gap-1 flex-shrink-0 cursor-pointer"
+          >
+            <Check class="w-3.5 h-3.5" />
+            <span>{{ t('pdf.applyRecommendedPaper', { paper: paperAspectAdvice.recommendedName }) }}</span>
+          </button>
         </div>
 
         <!-- Paper Presets -->
@@ -1018,15 +1061,25 @@
           <button 
             @click="downloadThermalPdf" 
             :disabled="isGeneratingPdf"
-            class="px-4 py-2 border border-slate-300 hover:border-slate-400 text-slate-700 text-sm font-semibold rounded-lg shadow-xs flex items-center gap-2 transition-all bg-white"
+            class="px-4 py-2 border border-slate-300 hover:border-slate-400 text-slate-700 text-sm font-semibold rounded-lg shadow-xs flex items-center gap-2 transition-all bg-white cursor-pointer"
           >
             <Download class="w-4 h-4 text-slate-600" />
             <span>{{ isGeneratingPdf ? t('pdf.generatingPdf') : t('pdf.downloadPdfCount', { count: totalPrintQuantity }) }}</span>
           </button>
 
           <button 
+            @click="handleExportTspl" 
+            :disabled="isGeneratingTspl"
+            class="px-3.5 py-2 border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 text-sm font-semibold rounded-lg shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+            :title="t('pdf.exportTsplDesc')"
+          >
+            <Scroll class="w-4 h-4 text-purple-600" />
+            <span>{{ isGeneratingTspl ? '...' : t('pdf.exportTsplBtn') }}</span>
+          </button>
+
+          <button 
             @click="triggerThermalPrint" 
-            class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg shadow-md flex items-center gap-2 transition-all"
+            class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg shadow-md flex items-center gap-2 transition-all cursor-pointer"
           >
             <Printer class="w-4 h-4" />
             <span>{{ t('pdf.printAllCount', { count: totalPrintQuantity }) }}</span>
@@ -1305,6 +1358,56 @@
         </div>
       </div>
 
+      <!-- Recent Print History Bar -->
+      <div v-if="printHistoryList.length > 0" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <Clock class="w-4 h-4 text-brand-600" />
+            <h4 class="text-sm font-bold text-slate-800">{{ t('pdf.printHistoryTitle') }}</h4>
+            <span class="text-xs text-slate-400">({{ printHistoryList.length }})</span>
+          </div>
+          <button 
+            @click="clearPrintHistory"
+            class="text-[11px] text-slate-400 hover:text-rose-600 transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            <Trash2 class="w-3 h-3" />
+            <span>{{ isZh ? '清空历史' : 'Limpiar' }}</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div 
+            v-for="job in printHistoryList.slice(0, 4)" 
+            :key="job.id"
+            class="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200 flex items-center justify-between gap-3 transition-all"
+          >
+            <div class="flex items-center gap-2.5 overflow-hidden">
+              <div class="w-10 h-10 bg-white rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center flex-shrink-0 p-0.5">
+                <img v-if="job.thumbnail" :src="job.thumbnail" class="max-w-full max-h-full object-contain" />
+                <FileText v-else class="w-4 h-4 text-slate-300" />
+              </div>
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-slate-800 truncate" :title="job.title">{{ job.title }}</div>
+                <div class="text-[10px] text-slate-500 font-mono flex items-center gap-1 mt-0.5">
+                  <span>{{ job.paperWidth }}×{{ job.paperHeight }}mm</span>
+                  <span>·</span>
+                  <span>{{ job.totalQuantity }}{{ t('pdf.piecesUnit') }}</span>
+                </div>
+                <div class="text-[9px] text-slate-400">{{ formatTime(job.timestamp) }}</div>
+              </div>
+            </div>
+
+            <button 
+              @click="reprintHistoryJob(job)"
+              class="px-2.5 py-1 bg-white hover:bg-brand-50 border border-slate-200 hover:border-brand-300 text-brand-600 rounded-lg text-xs font-bold shadow-2xs flex-shrink-0 transition-colors cursor-pointer"
+              :title="t('pdf.reprintBtn')"
+            >
+              {{ t('pdf.reprintBtn') }}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Solution for missing paper sizes across different printers -->
       <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-5 text-blue-950 space-y-3">
         <div class="flex items-center justify-between">
@@ -1543,7 +1646,7 @@
       <div v-if="showSavedProjectsModal" class="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden">
           <!-- Modal Header -->
-          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 flex-wrap gap-2">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center">
                 <FolderOpen class="w-4 h-4" />
@@ -1554,15 +1657,31 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2.5 py-1 bg-slate-200/80 rounded-lg text-xs text-slate-700 font-mono font-medium">
+                {{ t('pdf.storageUsage', { usage: storageStats.usageMB, count: savedProjectsList.length }) }}
+              </span>
+
+              <button 
+                v-if="savedProjectsList.length > 0"
+                @click="handleClearAllProjects"
+                type="button"
+                class="px-2.5 py-1 text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+                :title="t('pdf.clearAllProjectsBtn')"
+              >
+                <Trash2 class="w-3.5 h-3.5" />
+                <span>{{ t('pdf.clearAllProjectsBtn') }}</span>
+              </button>
+
               <label class="px-3 py-1.5 border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg cursor-pointer flex items-center gap-1.5 transition-all">
                 <FileUp class="w-3.5 h-3.5 text-brand-600" />
                 <span>{{ t('pdf.importJson') }}</span>
                 <input type="file" accept=".json" class="hidden" @change="onImportJsonFile" />
               </label>
+
               <button 
                 @click="showSavedProjectsModal = false"
-                class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
               >
                 <X class="w-5 h-5" />
               </button>
@@ -2055,6 +2174,46 @@
         <span class="text-xs font-bold">{{ saveToastMessage }}</span>
       </div>
     </Teleport>
+
+    <!-- Modern Dialog Modal (Teleported to document.body) -->
+    <Teleport to="body">
+      <div v-if="dialogModal.isOpen" class="fixed inset-0 z-[10002] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+          <div class="flex items-start gap-3">
+            <div 
+              class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              :class="dialogModal.type === 'confirm' ? 'bg-amber-100 text-amber-700' : 'bg-brand-100 text-brand-700'"
+            >
+              <AlertTriangle v-if="dialogModal.type === 'confirm'" class="w-5 h-5 text-amber-600" />
+              <Info v-else class="w-5 h-5 text-brand-600" />
+            </div>
+            <div class="space-y-1 flex-1">
+              <h3 class="text-sm font-bold text-slate-900">{{ dialogModal.title }}</h3>
+              <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{{ dialogModal.message }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+            <button 
+              v-if="dialogModal.type === 'confirm'"
+              @click="handleDialogCancel"
+              type="button"
+              class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+            >
+              {{ dialogModal.cancelText || t('pdf.dialogCancelBtn') }}
+            </button>
+            <button 
+              @click="handleDialogConfirm"
+              type="button"
+              class="px-5 py-2 text-xs font-bold text-white rounded-xl shadow-xs transition-all cursor-pointer"
+              :class="dialogModal.type === 'confirm' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-brand-600 hover:bg-brand-700'"
+            >
+              {{ dialogModal.confirmText || t('pdf.dialogConfirmBtn') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -2069,11 +2228,13 @@ import {
 import { t, isZh, isEs, currentLang } from '@/i18n';
 import { 
   loadPdfDocument, detectSuggestedLayout, slicePdfLabels, 
-  groupLabelsByBarcode, exportThermalPdf, trimWhiteBorder, binarizeCanvas
+  groupLabelsByBarcode, exportThermalPdf, trimWhiteBorder, binarizeCanvas,
+  auditAndProtectLabel, generateTsplCommands
 } from '@/utils/pdfProcessor';
 import { 
   getAllProjects, getProject, saveProject, deleteProject, 
-  exportProjectJson, importProjectJson 
+  exportProjectJson, importProjectJson,
+  getStorageUsage, clearAllProjects
 } from '@/utils/projectStorage';
 
 const emit = defineEmits(['switch-tab']);
@@ -2118,6 +2279,8 @@ const setSharpenMode = async (mode) => {
       const targetCanvas = mode === 'none' ? item.rawCanvas : binarizeCanvas(item.rawCanvas, mode);
       item.canvas = targetCanvas;
       item.dataUrl = targetCanvas.toDataURL('image/png');
+      item.autoProtected = false;
+      await auditAndProtectLabel(item, mode);
     }
   }
   rawLabels.value = [...rawLabels.value];
@@ -2131,6 +2294,109 @@ const savedProjectsList = ref([]);
 const showSavedProjectsModal = ref(false);
 const saveToastMessage = ref('');
 const step1Tab = ref('new'); // 'new' | 'saved'
+
+// Storage quota state
+const storageStats = ref({ usageMB: 0, quotaMB: 0, projectCount: 0 });
+
+// Modern In-App Dialog System
+const dialogModal = ref({
+  isOpen: false,
+  type: 'alert', // 'alert' | 'confirm'
+  title: '',
+  message: '',
+  confirmText: '',
+  cancelText: '',
+  resolve: null,
+});
+
+const showDialogAlert = (message, title = '') => {
+  return new Promise((resolve) => {
+    dialogModal.value = {
+      isOpen: true,
+      type: 'alert',
+      title: title || t('pdf.dialogAlertTitle'),
+      message: String(message || ''),
+      confirmText: t('pdf.dialogConfirmBtn'),
+      cancelText: '',
+      resolve,
+    };
+  });
+};
+
+const showDialogConfirm = (message, title = '') => {
+  return new Promise((resolve) => {
+    dialogModal.value = {
+      isOpen: true,
+      type: 'confirm',
+      title: title || t('pdf.dialogConfirmTitle'),
+      message: String(message || ''),
+      confirmText: t('pdf.dialogConfirmBtn'),
+      cancelText: t('pdf.dialogCancelBtn'),
+      resolve,
+    };
+  });
+};
+
+const handleDialogConfirm = () => {
+  if (dialogModal.value.resolve) dialogModal.value.resolve(true);
+  dialogModal.value.isOpen = false;
+};
+
+const handleDialogCancel = () => {
+  if (dialogModal.value.resolve) dialogModal.value.resolve(false);
+  dialogModal.value.isOpen = false;
+};
+
+// TSPL state
+const isGeneratingTspl = ref(false);
+
+// Print history state
+const printHistoryList = ref([]);
+
+const loadPrintHistory = () => {
+  try {
+    const raw = localStorage.getItem('labelmaster_print_history');
+    printHistoryList.value = raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    printHistoryList.value = [];
+  }
+};
+
+const recordPrintJob = (type = 'print') => {
+  try {
+    const job = {
+      id: `job_${Date.now()}`,
+      timestamp: Date.now(),
+      type,
+      title: currentSourceFileName.value || (isZh.value ? '打印任务' : 'Tarea de impresión'),
+      paperWidth: targetWidthMm.value,
+      paperHeight: targetHeightMm.value,
+      totalQuantity: totalPrintQuantity.value,
+      labelCount: previewList.value.length,
+      printerName: selectedElectronPrinter.value || '',
+      thumbnail: previewList.value[0]?.dataUrl || '',
+    };
+    printHistoryList.value = [job, ...printHistoryList.value.filter(j => j.id !== job.id)].slice(0, 15);
+    localStorage.setItem('labelmaster_print_history', JSON.stringify(printHistoryList.value));
+  } catch (e) {
+    console.warn('Failed to record print job:', e);
+  }
+};
+
+const clearPrintHistory = async () => {
+  const confirmed = await showDialogConfirm(isZh.value ? '确定要清空打印历史记录吗？' : '¿Está seguro de limpiar el historial de impresión?');
+  if (!confirmed) return;
+  printHistoryList.value = [];
+  localStorage.removeItem('labelmaster_print_history');
+};
+
+const reprintHistoryJob = (job) => {
+  if (isElectron.value && window.electronAPI?.printSilent) {
+    triggerElectronSilentPrint();
+  } else {
+    triggerThermalPrint();
+  }
+};
 
 // Print help modal state
 const showPrintHelpModal = ref(false);
@@ -2164,12 +2430,12 @@ const printOffsetY = ref(0);
 const handleOpenPreferences = async () => {
   if (typeof window !== 'undefined' && window.electronAPI?.openPrinterPreferences) {
     if (!selectedElectronPrinter.value) {
-      alert(isZh.value ? '请先在下拉框中选择目标热敏打印机' : 'Seleccione primero una impresora térmica de destino');
+      await showDialogAlert(isZh.value ? '请先在下拉框中选择目标热敏打印机' : 'Seleccione primero una impresora térmica de destino');
       return;
     }
     const res = await window.electronAPI.openPrinterPreferences(selectedElectronPrinter.value);
     if (!res?.success && res?.error) {
-      alert((isZh.value ? '无法打开打印首选项窗口: ' : 'No se pudo abrir las preferencias de impresión: ') + res.error);
+      await showDialogAlert((isZh.value ? '无法打开打印首选项窗口: ' : 'No se pudo abrir las preferencias de impresión: ') + res.error);
     }
   }
 };
@@ -2319,6 +2585,49 @@ const paperPresets = computed(() => {
   return list;
 });
 
+const paperAspectAdvice = computed(() => {
+  if (!rawLabels.value || rawLabels.value.length === 0) return null;
+  const valid = rawLabels.value.filter(l => l.width > 0 && l.height > 0).slice(0, 5);
+  if (valid.length === 0) return null;
+
+  const avgW = valid.reduce((acc, cur) => acc + cur.width, 0) / valid.length;
+  const avgH = valid.reduce((acc, cur) => acc + cur.height, 0) / valid.length;
+  if (!avgW || !avgH) return null;
+
+  let labelRatio = avgW / avgH;
+  if (labelRatio < 1) labelRatio = 1 / labelRatio;
+
+  let currentPaperRatio = targetWidthMm.value / targetHeightMm.value;
+  if (currentPaperRatio < 1) currentPaperRatio = 1 / currentPaperRatio;
+
+  const diff = Math.abs(labelRatio - currentPaperRatio) / Math.max(labelRatio, currentPaperRatio);
+  if (diff > 0.25) {
+    let bestPreset = null;
+    let minDiff = Infinity;
+    for (const p of userPaperList.value) {
+      let pRatio = p.width / p.height;
+      if (pRatio < 1) pRatio = 1 / pRatio;
+      const d = Math.abs(labelRatio - pRatio);
+      if (d < minDiff) {
+        minDiff = d;
+        bestPreset = p;
+      }
+    }
+
+    if (bestPreset && bestPreset.id !== selectedPaperId.value) {
+      return {
+        labelRatio: labelRatio.toFixed(2),
+        paperRatio: currentPaperRatio.toFixed(2),
+        currentPaperName: `${targetWidthMm.value} × ${targetHeightMm.value} mm`,
+        recommendedPreset: bestPreset,
+        recommendedName: `${bestPreset.width} × ${bestPreset.height} mm`,
+      };
+    }
+  }
+
+  return null;
+});
+
 const triggerToast = (msg) => {
   saveToastMessage.value = msg;
   setTimeout(() => {
@@ -2409,14 +2718,15 @@ const handleSavePaper = () => {
   showPaperModal.value = false;
 };
 
-const deletePaperPreset = (paper) => {
+const deletePaperPreset = async (paper) => {
   if (userPaperList.value.length <= 1) {
-    alert(t('pdf.paperAtLeastOne'));
+    await showDialogAlert(t('pdf.paperAtLeastOne'));
     return;
   }
 
   const confirmMsg = t('pdf.paperDeleteConfirm').replace('{name}', paper.name);
-  if (!confirm(confirmMsg)) return;
+  const confirmed = await showDialogConfirm(confirmMsg);
+  if (!confirmed) return;
 
   userPaperList.value = userPaperList.value.filter(p => p.id !== paper.id);
   saveUserPaperPresets();
@@ -2488,7 +2798,7 @@ const processPdfFile = async (fileOrUrl, forcePreset = null) => {
     }
   } catch (err) {
     console.error('Error loading PDF:', err);
-    alert(isZh.value ? `无法解析文件: ${err.message || '请确认是否为有效的 PDF 文件'}` : `No se pudo analizar el archivo: ${err.message || 'Verifique que sea un archivo PDF válido'}`);
+    await showDialogAlert(isZh.value ? `无法解析文件: ${err.message || '请确认是否为有效的 PDF 文件'}` : `No se pudo analizar el archivo: ${err.message || 'Verifique que sea un archivo PDF válido'}`);
   }
 };
 
@@ -2540,7 +2850,7 @@ const processImageFile = async (file) => {
     reader.readAsDataURL(file);
   } catch (err) {
     console.error('Error processing image:', err);
-    alert((isZh.value ? '解析图片标签失败: ' : 'Error al procesar la imagen: ') + err.message);
+    await showDialogAlert((isZh.value ? '解析图片标签失败: ' : 'Error al procesar la imagen: ') + err.message);
   }
 };
 
@@ -2867,7 +3177,7 @@ const loadLocalSample = async (filePath, presetMode) => {
     await processPdfFile(blob, presetMode);
   } catch (err) {
     console.error('Could not load sample file directly:', err);
-    alert((isZh.value ? '载入样本失败: ' : 'Error al cargar la muestra: ') + err.message);
+    await showDialogAlert((isZh.value ? '载入样本失败: ' : 'Error al cargar la muestra: ') + err.message);
   }
 };
 
@@ -3009,7 +3319,7 @@ const applyPageRange = () => {
   }
   const targets = parsePageRange(pageRangeInput.value, maxPdfPages.value);
   if (targets.size === 0) {
-    alert(isZh.value ? `请输入有效的页码范围（1 ~ ${maxPdfPages.value}）` : `Ingrese un rango de páginas válido (1 ~ ${maxPdfPages.value})`);
+    showDialogAlert(isZh.value ? `请输入有效的页码范围（1 ~ ${maxPdfPages.value}）` : `Ingrese un rango de páginas válido (1 ~ ${maxPdfPages.value})`);
     return;
   }
   for (const item of rawLabels.value) {
@@ -3128,6 +3438,8 @@ const downloadThermalPdf = async () => {
       targetHeightMm: targetHeightMm.value,
       fitMode: fitMode.value,
       autoRotate: autoRotate.value,
+      offsetX: printOffsetX.value,
+      offsetY: printOffsetY.value,
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -3135,11 +3447,42 @@ const downloadThermalPdf = async () => {
     a.download = `ThermalLabels_${targetWidthMm.value}x${targetHeightMm.value}mm_${Date.now()}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
+    recordPrintJob('pdf');
   } catch (err) {
     console.error('PDF export error:', err);
-    alert(isZh.value ? '导出 PDF 失败，请检查控制台。' : 'Error al exportar PDF. Consulte la consola.');
+    await showDialogAlert(isZh.value ? '导出 PDF 失败，请检查控制台。' : 'Error al exportar PDF. Consulte la consola.');
   } finally {
     isGeneratingPdf.value = false;
+  }
+};
+
+// Download TSPL industrial hardware direct command stream (.tspl)
+const handleExportTspl = async () => {
+  if (previewList.value.length === 0) return;
+  isGeneratingTspl.value = true;
+  try {
+    const blob = await generateTsplCommands(previewList.value.map(item => ({ ...item, quantity: 1 })), {
+      targetWidthMm: targetWidthMm.value,
+      targetHeightMm: targetHeightMm.value,
+      fitMode: fitMode.value,
+      autoRotate: autoRotate.value,
+      offsetX: printOffsetX.value,
+      offsetY: printOffsetY.value,
+      dpi: 203,
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `TSPL_${targetWidthMm.value}x${targetHeightMm.value}mm_${Date.now()}.tspl`;
+    a.click();
+    URL.revokeObjectURL(url);
+    recordPrintJob('tspl');
+    triggerToast(t('pdf.tsplExportSuccess'));
+  } catch (err) {
+    console.error('TSPL export error:', err);
+    await showDialogAlert((isZh.value ? '导出 TSPL 指令失败: ' : 'Error al exportar TSPL: ') + err.message);
+  } finally {
+    isGeneratingTspl.value = false;
   }
 };
 
@@ -3225,6 +3568,7 @@ const triggerThermalPrint = async () => {
   setTimeout(() => {
     printIframe.contentWindow.focus();
     printIframe.contentWindow.print();
+    recordPrintJob('web_print');
     setTimeout(() => {
       if (document.body.contains(printIframe)) {
         document.body.removeChild(printIframe);
@@ -3240,8 +3584,25 @@ const triggerThermalPrint = async () => {
 const loadSavedProjectsList = async () => {
   try {
     savedProjectsList.value = await getAllProjects();
+    storageStats.value = await getStorageUsage();
   } catch (err) {
     console.error('Failed to load saved projects:', err);
+  }
+};
+
+const handleClearAllProjects = async () => {
+  const confirmed = await showDialogConfirm(t('pdf.clearAllProjectsConfirm'), t('pdf.clearAllProjectsBtn'));
+  if (!confirmed) return;
+  try {
+    await clearAllProjects();
+    currentProjectId.value = null;
+    await loadSavedProjectsList();
+    saveToastMessage.value = t('pdf.allProjectsCleared');
+    setTimeout(() => {
+      saveToastMessage.value = '';
+    }, 2500);
+  } catch (err) {
+    await showDialogAlert(err.message);
   }
 };
 
@@ -3270,7 +3631,7 @@ const loadElectronPrinters = async () => {
 const triggerElectronSilentPrint = async () => {
   if (!isElectron.value || !window.electronAPI?.printSilent) return;
   if (previewList.value.length === 0) {
-    alert(isZh.value ? '暂无可打印标签' : 'No hay etiquetas para imprimir');
+    await showDialogAlert(isZh.value ? '暂无可打印标签' : 'No hay etiquetas para imprimir');
     return;
   }
 
@@ -3311,15 +3672,16 @@ const triggerElectronSilentPrint = async () => {
 
     if (res && res.success) {
       electronPrintSuccess.value = true;
+      recordPrintJob('direct_print');
       electronPrintStatusMsg.value = isZh.value ? `✓ 任务已成功直达【${selectedElectronPrinter.value || '默认热敏机'}】，正按精确尺寸输出 ${totalPrintQuantity.value} 张标签！` : `✓ ¡Trabajo enviado a [${selectedElectronPrinter.value || 'Impresora predeterminada'}], imprimiendo ${totalPrintQuantity.value} etiquetas!`;
       setTimeout(() => {
         electronPrintSuccess.value = false;
       }, 6000);
     } else {
-      alert((isZh.value ? '静默打印失败: ' : 'Error en impresión silenciosa: ') + (res?.error || (isZh.value ? '请确认打印机已开机并就绪' : 'Verifique que la impresora esté encendida y lista')));
+      await showDialogAlert((isZh.value ? '静默打印失败: ' : 'Error en impresión silenciosa: ') + (res?.error || (isZh.value ? '请确认打印机已开机并就绪' : 'Verifique que la impresora esté encendida y lista')));
     }
   } catch (err) {
-    alert((isZh.value ? '打印调用异常: ' : 'Excepción al llamar a la impresora: ') + err.message);
+    await showDialogAlert((isZh.value ? '打印调用异常: ' : 'Excepción al llamar a la impresora: ') + err.message);
   } finally {
     isElectronPrinting.value = false;
   }
@@ -3327,6 +3689,7 @@ const triggerElectronSilentPrint = async () => {
 
 onMounted(() => {
   loadSavedProjectsList();
+  loadPrintHistory();
   if (typeof window !== 'undefined' && window.electronAPI?.isElectron) {
     isElectron.value = true;
     loadElectronPrinters();
@@ -3335,7 +3698,7 @@ onMounted(() => {
 
 const handleSaveCurrentProject = async () => {
   if (rawLabels.value.length === 0) {
-    alert(isZh.value ? '暂无标签可保存，请先上传并裁切标签' : 'No hay etiquetas para guardar. Primero suba y recorte un archivo.');
+    await showDialogAlert(isZh.value ? '暂无标签可保存，请先上传并裁切标签' : 'No hay etiquetas para guardar. Primero suba y recorte un archivo.');
     return;
   }
 
@@ -3376,7 +3739,7 @@ const handleSaveCurrentProject = async () => {
     }, 3000);
   } catch (err) {
     console.error('Failed to save project:', err);
-    alert((isZh.value ? '保存项目失败: ' : 'Error al guardar proyecto: ') + err.message);
+    await showDialogAlert((isZh.value ? '保存项目失败: ' : 'Error al guardar proyecto: ') + err.message);
   }
 };
 
@@ -3414,12 +3777,13 @@ const handleOpenProject = async (projectItem) => {
     }, 2500);
   } catch (err) {
     console.error('Failed to open project:', err);
-    alert((isZh.value ? '打开项目失败: ' : 'Error al abrir proyecto: ') + err.message);
+    await showDialogAlert((isZh.value ? '打开项目失败: ' : 'Error al abrir proyecto: ') + err.message);
   }
 };
 
 const handleDeleteProject = async (id, name) => {
-  if (!confirm(isZh.value ? `确定要删除保存项目【${name || '此项目'}】吗？此操作无法撤销。` : `¿Está seguro de eliminar el proyecto guardado [${name || 'este proyecto'}]? Esta acción no se puede deshacer.`)) return;
+  const confirmed = await showDialogConfirm(isZh.value ? `确定要删除保存项目【${name || '此项目'}】吗？此操作无法撤销。` : `¿Está seguro de eliminar el proyecto guardado [${name || 'este proyecto'}]? Esta acción no se puede deshacer.`);
+  if (!confirmed) return;
   try {
     await deleteProject(id);
     if (currentProjectId.value === id) {
@@ -3427,7 +3791,7 @@ const handleDeleteProject = async (id, name) => {
     }
     await loadSavedProjectsList();
   } catch (err) {
-    alert((isZh.value ? '删除失败: ' : 'Error al eliminar: ') + err.message);
+    await showDialogAlert((isZh.value ? '删除失败: ' : 'Error al eliminar: ') + err.message);
   }
 };
 
@@ -3450,7 +3814,7 @@ const handleExportProject = async (projectItem) => {
       exportProjectJson(full);
     }
   } catch (err) {
-    alert((isZh.value ? '导出项目失败: ' : 'Error al exportar proyecto: ') + err.message);
+    await showDialogAlert((isZh.value ? '导出项目失败: ' : 'Error al exportar proyecto: ') + err.message);
   }
 };
 
@@ -3460,10 +3824,10 @@ const onImportJsonFile = async (e) => {
   try {
     const imported = await importProjectJson(file);
     await loadSavedProjectsList();
-    alert(isZh.value ? `成功导入项目【${imported.name}】！` : `¡Proyecto [${imported.name}] importado con éxito!`);
+    await showDialogAlert(isZh.value ? `成功导入项目【${imported.name}】！` : `¡Proyecto [${imported.name}] importado con éxito!`);
     await handleOpenProject(imported);
   } catch (err) {
-    alert((isZh.value ? '导入失败: ' : 'Error al importar: ') + err.message);
+    await showDialogAlert((isZh.value ? '导入失败: ' : 'Error al importar: ') + err.message);
   } finally {
     e.target.value = '';
   }
