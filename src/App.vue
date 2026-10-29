@@ -2,26 +2,26 @@
   <div class="min-h-screen bg-slate-50 flex flex-col">
     <!-- Top Navigation Header -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-xs">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[4rem] sm:min-h-[4.25rem] py-2 flex items-center justify-between gap-3">
         <!-- Logo & Brand -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-shrink-0">
           <div class="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-brand-500/20">
             <Printer class="w-6 h-6" />
           </div>
           <div>
             <div class="flex items-center gap-2">
               <span class="font-extrabold text-base tracking-tight text-slate-900">{{ t('app.title') }}</span>
-              <span class="px-2 py-0.5 text-[10px] font-bold bg-brand-100 text-brand-700 rounded-full">v1.0 Pro</span>
+              <span class="px-2 py-0.5 text-[10px] font-black bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xs rounded-full">v2.0 Pro</span>
             </div>
-            <div class="text-[11px] text-slate-400 font-medium hidden sm:block">{{ t('app.tagline') }}</div>
+            <div class="text-[11px] text-slate-400 font-medium hidden sm:block whitespace-nowrap truncate max-w-[200px] md:max-w-[260px] lg:max-w-xs xl:max-w-none mt-0.5">{{ t('app.tagline') }}</div>
           </div>
         </div>
 
         <!-- Navigation Tabs -->
-        <nav class="flex items-center bg-slate-100 p-1 rounded-xl">
+        <nav class="flex items-center bg-slate-100 p-1 rounded-xl overflow-x-auto max-w-full">
           <button 
             @click="currentTab = 'splitter'"
-            class="px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
+            class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap"
             :class="currentTab === 'splitter' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
           >
             <Scissors class="w-3.5 h-3.5" />
@@ -30,7 +30,7 @@
 
           <button 
             @click="currentTab = 'extractor'"
-            class="px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
+            class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap"
             :class="currentTab === 'extractor' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
           >
             <Sparkles class="w-3.5 h-3.5 text-amber-500" />
@@ -40,7 +40,7 @@
 
           <button 
             @click="currentTab = 'tools'"
-            class="px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
+            class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap"
             :class="currentTab === 'tools' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
           >
             <Layers class="w-3.5 h-3.5" />
@@ -50,7 +50,7 @@
 
           <button 
             @click="currentTab = 'template'"
-            class="px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
+            class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap"
             :class="currentTab === 'template' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
           >
             <FileSpreadsheet class="w-3.5 h-3.5" />
@@ -59,7 +59,7 @@
 
           <button 
             @click="currentTab = 'designer'"
-            class="px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
+            class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap"
             :class="currentTab === 'designer' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
           >
             <Palette class="w-3.5 h-3.5" />
@@ -68,20 +68,25 @@
         </nav>
 
         <!-- Right Side: Printer Status & Language Toggle -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
           <!-- Printer Status Pill -->
           <div 
             class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border"
             :class="isElectron 
-              ? (hasPrinters ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs' : 'bg-amber-50 text-amber-800 border-amber-300') 
+              ? (hasPrinters ? (is4Barcode ? 'bg-amber-50 text-amber-900 border-amber-300 shadow-2xs' : 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs') : 'bg-amber-50 text-amber-800 border-amber-300') 
               : 'bg-indigo-50 text-indigo-800 border-indigo-200'"
             :title="isElectron ? (activePrinterName ? '当前目标打印机: ' + activePrinterName : '正在连接热敏机') : '浏览器免驱运行'"
           >
             <span 
+              v-if="!is4Barcode"
               class="w-2 h-2 rounded-full" 
               :class="isElectron ? (hasPrinters ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500') : 'bg-indigo-500 animate-pulse'"
             ></span>
-            <span v-if="isElectron && activePrinterName">⚡ {{ activePrinterName }}</span>
+            <span v-if="isElectron && is4Barcode" class="flex items-center gap-1.5 font-bold">
+              <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+              <span>🏷️ 4BARCODE 4B-2054L (TSPL 就绪)</span>
+            </span>
+            <span v-else-if="isElectron && activePrinterName">⚡ {{ activePrinterName }}</span>
             <span v-else-if="isElectron">⚡ 桌面客户端就绪</span>
             <span v-else>🌐 浏览器免驱模式 (高清矢量输出)</span>
           </div>
@@ -117,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Printer, Scissors, Sparkles, Layers, FileSpreadsheet, Palette, Languages } from 'lucide-vue-next';
 import { t, toggleLang } from '@/i18n';
 import PdfSplitter from '@/components/PdfSplitter.vue';
@@ -139,6 +144,10 @@ watch(currentTab, (val) => {
 const isElectron = ref(typeof window !== 'undefined' && Boolean(window.electronAPI));
 const activePrinterName = ref((typeof window !== 'undefined' && localStorage.getItem('labelmaster_selected_printer')) || '');
 const hasPrinters = ref(false);
+
+const is4Barcode = computed(() => {
+  return /4b-2054|4barcode|tspl/i.test(activePrinterName.value || '');
+});
 
 const checkPrinters = async () => {
   if (isElectron.value && window.electronAPI?.getPrinters) {

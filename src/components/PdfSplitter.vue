@@ -1213,6 +1213,27 @@
           </button>
         </div>
 
+        <!-- 4BARCODE Hardware Recognition Banner -->
+        <div v-if="is4BarcodeSelected" class="bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-500/15 border border-amber-500/40 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs text-amber-200">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xl">🏷️</span>
+            <div>
+              <div class="font-bold text-amber-100 flex items-center gap-2">
+                <span>{{ t('pdf.fourBarcodeDetected') }}</span>
+                <span class="px-1.5 py-0.2 bg-amber-400 text-slate-950 font-black text-[10px] rounded">TSPL 203 DPI</span>
+              </div>
+              <div class="text-[11px] text-amber-300/80 mt-0.5">{{ t('pdf.fourBarcodeSetupNotice') }}</div>
+            </div>
+          </div>
+          <button 
+            @click="showPrintHelpModal = true; activeHelpTab = 'fourBarcode'"
+            class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg transition-all shadow-xs flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
+          >
+            <HelpCircle class="w-3.5 h-3.5 text-slate-950" />
+            <span>{{ t('pdf.fourBarcodeGuideBtn') }}</span>
+          </button>
+        </div>
+
         <!-- Position offset & hardware alignment toolbox -->
         <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/80 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div class="flex flex-wrap items-center gap-3">
@@ -1796,6 +1817,14 @@
               <span>{{ t('pdf.helpModalTabClient') }}</span>
             </button>
             <button 
+              @click="activeHelpTab = 'fourBarcode'" 
+              class="px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap"
+              :class="activeHelpTab === 'fourBarcode' ? 'border-amber-500 text-amber-600 font-black' : 'border-transparent text-slate-500 hover:text-slate-800'"
+            >
+              <Printer class="w-3.5 h-3.5 text-amber-600" />
+              <span>{{ t('pdf.helpModalTab4Barcode') }}</span>
+            </button>
+            <button 
               @click="activeHelpTab = 'customSize'" 
               class="px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap"
               :class="activeHelpTab === 'customSize' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
@@ -2050,6 +2079,56 @@
               <div class="p-3 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2">
                 <CheckCircle2 class="w-4 h-4 text-emerald-600 flex-shrink-0" />
                 <span>{{ isZh ? '校准完成后，每按一下 FEED 键就只会刚好吐出一张标签，位置精准无误！' : '¡Listo! Tras calibrar, cada pulsación de FEED avanzará exactamente una etiqueta alineada.' }}</span>
+              </div>
+            </div>
+
+            <!-- TAB: fourBarcode -->
+            <div v-if="activeHelpTab === 'fourBarcode'" class="space-y-4">
+              <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
+                <div class="font-bold text-sm flex items-center gap-2">
+                  <Printer class="w-4 h-4 text-amber-600" />
+                  <span>{{ isZh ? '🏷️ 黑色 4BARCODE 4B-2054L 工业热敏打印机专用指引' : '🏷️ Guía Especial Impresora Térmica 4BARCODE 4B-2054L' }}</span>
+                </div>
+                <p class="leading-relaxed">
+                  {{ isZh ? '针对您正在使用的【4BARCODE 4B-2054L】(Seagull Scientific TSPL 驱动 · USB001 · 203 DPI)，本工作站已深度优化点对点像素直绘。以下为驱动设置与换纸校准的关键技巧：' : 'Optimizada específicamente para 4BARCODE 4B-2054L con driver Seagull Scientific TSPL en USB001 (203 DPI, 8 dots/mm).' }}
+                </p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <!-- Step 1: FEED 2-Beep Calibration -->
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+                  <div class="font-bold text-slate-800 flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">1</span>
+                    <span>{{ isZh ? '4B-2054L 硬件「2声蜂鸣」缝隙校准法' : 'Calibración de Sensor FEED (2 Pitidos)' }}</span>
+                  </div>
+                  <div class="space-y-1.5 text-slate-600 pl-2 border-l-2 border-amber-500">
+                    <div>{{ isZh ? '1. 关闭打印机背面电源开关（O 档关机）。' : '1. Apague la impresora desde el interruptor trasero.' }}</div>
+                    <div>{{ isZh ? '2. 按住机身顶部的绿色【FEED 进纸键】不松手。' : '2. Mantenga presionado el botón FEED verde superior.' }}</div>
+                    <div>{{ isZh ? '3. 开启机身背面电源开关（I 档开机），手指继续长按 FEED 键。' : '3. Encienda el interruptor trasero manteniendo pulsado FEED.' }}</div>
+                    <div>{{ isZh ? '4. 仔细听机身蜂鸣器：“哔”1声不要松手，听到连续第 2 声“哔”时立即松开手指！' : '4. Escuche: al 1er bip mantenga; ¡al 2do bip ("bip bip") SUELTE INMEDIATAMENTE!' }}</div>
+                    <div>{{ isZh ? '5. 打印机会自动吐出 2~3 张纸检测缝隙透光率，随后精准自动回退停在第一张撕纸线上！' : '5. Expulsará 2-3 etiquetas para calibrar y retrocederá alineada a la línea de corte.' }}</div>
+                  </div>
+                </div>
+
+                <!-- Step 2: Seagull Scientific Driver Settings -->
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+                  <div class="font-bold text-slate-800 flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">2</span>
+                    <span>{{ isZh ? 'Seagull Scientific 驱动首选项参数推荐' : 'Ajustes en Driver Seagull Scientific' }}</span>
+                  </div>
+                  <div class="space-y-1.5 text-slate-600 pl-2 border-l-2 border-indigo-500">
+                    <div>{{ isZh ? '• 卷（Stock 设置）：类型选择「有间距的标签 (Labels with Gaps)」' : '• Tipo de soporte (Stock): «Etiquetas con separación»' }}</div>
+                    <div>{{ isZh ? '• 缝隙高度：标准为 2.0 mm（间距偏移 0.0 mm）' : '• Altura de separación (Gap): 2.0 mm (Desplazamiento 0.0 mm)' }}</div>
+                    <div>{{ isZh ? '• 传感器类型：选择「穿透式缝隙传感器 (Gap Sensor)」' : '• Sensor: Sensor de separación por transmisión (Gap)' }}</div>
+                    <div>{{ isZh ? '• 打印选项：打印速度 4.0 ips (101 mm/s)，打印浓度 8~10' : '• Opciones: Velocidad 4.0 ips, Oscuridad (Darkness) 8~10' }}</div>
+                    <div>{{ isZh ? '• 提示：在本客户端中点击【打开驱动首选项】可直达此面板修改。' : '• Consejo: Pulse «Abrir Preferencias» en el cliente para ir directo.' }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-3 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 class="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>{{ isZh ? '配合 LabelMaster Pro 的【静默打印】或【TSPL 指令导出】，4B-2054L 即可实现 0 毫米边距高保真打印，完全不用担心条码失真或多吐纸！' : 'Con la impresión silenciosa o comando TSPL de LabelMaster Pro, la 4B-2054L imprimirá sin márgenes y con nitidez perfecta.' }}</span>
               </div>
             </div>
           </div>
@@ -2408,6 +2487,9 @@ const electronPrinters = ref([]);
 const selectedElectronPrinter = ref(
   (typeof window !== 'undefined' && localStorage.getItem('labelmaster_selected_printer')) || ''
 );
+const is4BarcodeSelected = computed(() => {
+  return /4b-2054|4barcode|tspl/i.test(selectedElectronPrinter.value || '');
+});
 const isElectronPrinting = ref(false);
 const electronPrintSuccess = ref(false);
 const electronPrintStatusMsg = ref('');
